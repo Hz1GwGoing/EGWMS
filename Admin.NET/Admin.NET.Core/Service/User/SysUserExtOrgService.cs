@@ -28,6 +28,7 @@ public class SysUserExtOrgService : ITransient
     /// <returns></returns>
     public async Task<List<SysUserExtOrg>> GetUserExtOrgList(long userId)
     {
+        //return await _sysUserExtOrgRep.GetListAsync(u => u.UserId == userId);
         return await _sysUserExtOrgRep.GetListAsync(u => u.UserId == userId);
     }
 
