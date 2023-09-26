@@ -1,12 +1,4 @@
-﻿using Admin.NET.Application.Const;
-using Admin.NET.Application.Entity;
-using Admin.NET.Application.Service.EGWareHouse.Dto;
-using Admin.NET.Core;
-using Furion.DependencyInjection;
-using Furion.FriendlyException;
-using System.Collections.Generic;
-
-namespace Admin.NET.Application;
+﻿namespace Admin.NET.Application;
 
 
 /// <summary>

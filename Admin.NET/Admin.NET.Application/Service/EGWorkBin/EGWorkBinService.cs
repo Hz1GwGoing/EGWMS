@@ -1,11 +1,5 @@
-﻿using Admin.NET.Application.Const;
-using Admin.NET.Application.Entity;
-using Admin.NET.Core;
-using Furion.DependencyInjection;
-using Furion.FriendlyException;
-using System.Collections.Generic;
+﻿namespace Admin.NET.Application;
 
-namespace Admin.NET.Application;
 /// <summary>
 /// 料箱信息接口
 /// </summary>
@@ -18,6 +12,8 @@ public class EGWorkBinService : IDynamicApiController, ITransient
         _rep = rep;
     }
 
+
+    #region 分页查询料箱信息
     /// <summary>
     /// 分页查询料箱信息
     /// </summary>
@@ -27,17 +23,17 @@ public class EGWorkBinService : IDynamicApiController, ITransient
     [ApiDescriptionSettings(Name = "Page")]
     public async Task<SqlSugarPagedList<EGWorkBinOutput>> Page(EGWorkBinInput input)
     {
-        var query= _rep.AsQueryable()
+        var query = _rep.AsQueryable()
                     .WhereIF(!string.IsNullOrWhiteSpace(input.WorkBinNum), u => u.WorkBinNum.Contains(input.WorkBinNum.Trim()))
                     .WhereIF(!string.IsNullOrWhiteSpace(input.WorkBinName), u => u.WorkBinName.Contains(input.WorkBinName.Trim()))
-                    .WhereIF(input.WorkBinSpecs>0, u => u.WorkBinSpecs == input.WorkBinSpecs)
-                    .WhereIF(input.MachineNum>0, u => u.MachineNum == input.MachineNum)
+                    .WhereIF(input.WorkBinSpecs > 0, u => u.WorkBinSpecs == input.WorkBinSpecs)
+                    .WhereIF(input.MachineNum > 0, u => u.MachineNum == input.MachineNum)
                     .WhereIF(!string.IsNullOrWhiteSpace(input.Classes), u => u.Classes.Contains(input.Classes.Trim()))
                     .WhereIF(!string.IsNullOrWhiteSpace(input.ProductionLot), u => u.ProductionLot.Contains(input.ProductionLot.Trim()))
                     .WhereIF(!string.IsNullOrWhiteSpace(input.ProductionStaff), u => u.ProductionStaff.Contains(input.ProductionStaff.Trim()))
                     .WhereIF(!string.IsNullOrWhiteSpace(input.Inspector), u => u.Inspector.Contains(input.Inspector.Trim()))
                     .WhereIF(!string.IsNullOrWhiteSpace(input.Printer), u => u.Printer.Contains(input.Printer.Trim()))
-                    .WhereIF(input.WorkBinStatus>0, u => u.WorkBinStatus == input.WorkBinStatus)
+                    .WhereIF(input.WorkBinStatus > 0, u => u.WorkBinStatus == input.WorkBinStatus)
                     .WhereIF(!string.IsNullOrWhiteSpace(input.MaterielNum), u => u.MaterielNum.Contains(input.MaterielNum.Trim()))
                     .WhereIF(!string.IsNullOrWhiteSpace(input.WorkBinRemake), u => u.WorkBinRemake.Contains(input.WorkBinRemake.Trim()))
                     .WhereIF(!string.IsNullOrWhiteSpace(input.StorageNum), u => u.StorageNum.Contains(input.StorageNum.Trim()))
@@ -47,30 +43,32 @@ public class EGWorkBinService : IDynamicApiController, ITransient
                     .WhereIF(input.CreateTime > DateTime.MinValue, u => u.CreateTime >= input.CreateTime)
                     .Select<EGWorkBinOutput>()
 ;
-        if(input.ProductionDateRange != null && input.ProductionDateRange.Count >0)
+        if (input.ProductionDateRange != null && input.ProductionDateRange.Count > 0)
         {
-                DateTime? start= input.ProductionDateRange[0]; 
-                query = query.WhereIF(start.HasValue, u => u.ProductionDate > start);
-                if (input.ProductionDateRange.Count >1 && input.ProductionDateRange[1].HasValue)
-                {
-                    var end = input.ProductionDateRange[1].Value.AddDays(1);
-                    query = query.Where(u => u.ProductionDate < end);
-                }
-        } 
-        if(input.PrintTimeRange != null && input.PrintTimeRange.Count >0)
+            DateTime? start = input.ProductionDateRange[0];
+            query = query.WhereIF(start.HasValue, u => u.ProductionDate > start);
+            if (input.ProductionDateRange.Count > 1 && input.ProductionDateRange[1].HasValue)
+            {
+                var end = input.ProductionDateRange[1].Value.AddDays(1);
+                query = query.Where(u => u.ProductionDate < end);
+            }
+        }
+        if (input.PrintTimeRange != null && input.PrintTimeRange.Count > 0)
         {
-                DateTime? start= input.PrintTimeRange[0]; 
-                query = query.WhereIF(start.HasValue, u => u.PrintTime > start);
-                if (input.PrintTimeRange.Count >1 && input.PrintTimeRange[1].HasValue)
-                {
-                    var end = input.PrintTimeRange[1].Value.AddDays(1);
-                    query = query.Where(u => u.PrintTime < end);
-                }
-        } 
+            DateTime? start = input.PrintTimeRange[0];
+            query = query.WhereIF(start.HasValue, u => u.PrintTime > start);
+            if (input.PrintTimeRange.Count > 1 && input.PrintTimeRange[1].HasValue)
+            {
+                var end = input.PrintTimeRange[1].Value.AddDays(1);
+                query = query.Where(u => u.PrintTime < end);
+            }
+        }
         query = query.OrderBuilder(input);
         return await query.ToPagedListAsync(input.Page, input.PageSize);
     }
+    #endregion
 
+    #region 增加料箱信息
     /// <summary>
     /// 增加料箱信息
     /// </summary>
@@ -83,7 +81,9 @@ public class EGWorkBinService : IDynamicApiController, ITransient
         var entity = input.Adapt<EGWorkBin>();
         await _rep.InsertAsync(entity);
     }
+    #endregion
 
+    #region 删除料箱信息
     /// <summary>
     /// 删除料箱信息
     /// </summary>
@@ -96,7 +96,9 @@ public class EGWorkBinService : IDynamicApiController, ITransient
         var entity = await _rep.GetFirstAsync(u => u.Id == input.Id) ?? throw Oops.Oh(ErrorCodeEnum.D1002);
         await _rep.FakeDeleteAsync(entity);   //假删除
     }
+    #endregion
 
+    #region 更新料箱信息
     /// <summary>
     /// 更新料箱信息
     /// </summary>
@@ -109,7 +111,9 @@ public class EGWorkBinService : IDynamicApiController, ITransient
         var entity = input.Adapt<EGWorkBin>();
         await _rep.AsUpdateable(entity).IgnoreColumns(ignoreAllNullColumns: true).ExecuteCommandAsync();
     }
+    #endregion
 
+    #region 获取料箱信息
     /// <summary>
     /// 获取料箱信息
     /// </summary>
@@ -125,7 +129,9 @@ public class EGWorkBinService : IDynamicApiController, ITransient
         return await _rep.GetFirstAsync(u => u.WorkBinNum.Contains(input.WorkBinNum) || u.WorkBinName.Contains(input.WorkBinName));
 
     }
+    #endregion
 
+    #region 获取料箱信息列表
     /// <summary>
     /// 获取料箱信息列表
     /// </summary>
@@ -138,9 +144,7 @@ public class EGWorkBinService : IDynamicApiController, ITransient
         return await _rep.AsQueryable().Select<EGWorkBinOutput>().ToListAsync();
     }
 
-
-
+    #endregion
 
 
 }
-

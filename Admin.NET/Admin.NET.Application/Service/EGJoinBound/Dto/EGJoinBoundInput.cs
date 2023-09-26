@@ -27,7 +27,12 @@ public class EGJoinBoundBaseInput
     /// <summary>
     /// 入库数量
     /// </summary>
-    public virtual int? JoinBoundCount { get; set; }
+    public virtual int? JoinBoundCount { get; set; } = 0;
+
+    /// <summary>
+    /// 入库状态 0 未入库 1 已入库（保存在库存表中）
+    /// </summary>
+    public int? JoinBoundStatus { get; set; }
 
     /// <summary>
     /// 入库时间
@@ -87,9 +92,14 @@ public class EGJoinBoundInput : BasePageInput
     public string? JoinBoundUser { get; set; }
 
     /// <summary>
+    /// 入库状态
+    /// </summary>
+    public int? JoinBoundStatus { get; set; }
+
+    /// <summary>
     /// 入库数量
     /// </summary>
-    public int? JoinBoundCount { get; set; }
+    public int? JoinBoundCount { get; set; } = 0;
 
     /// <summary>
     /// 入库时间
@@ -159,19 +169,20 @@ public class EGJoinBoundInput : BasePageInput
 //    public int? JoinBoundCount { get; set; }
 //}
 
-
+/// <summary>
+/// EGJoinBound增加输入参数
+/// </summary>
 public class AddEGJoinBoundInput
 {
     /// <summary>
-    /// 入库编号
+    /// 入库编号（业务单据）
     /// </summary>
-    [Required(ErrorMessage = "入库编号不能为空")]
     public string JoinBoundNum { get; set; }
 
     /// <summary>
     /// 入库数量
     /// </summary>
-    public int? JoinBoundCount { get; set; }
+    public int? JoinBoundCount { get; set; } = 0;
 
     /// <summary>
     /// 库存编号
@@ -181,8 +192,37 @@ public class AddEGJoinBoundInput
     /// <summary>
     /// 库存总数
     /// </summary>
-    public virtual int? ICountAll { get; set; }
+    public virtual int? ICountAll { get; set; } = 0;
 
+    /// <summary>
+    /// 入库状态
+    /// </summary>
+    public int? JoinBoundStatus { get; set; }
+
+    /// <summary>
+    /// 仓库编号
+    /// </summary>
+    public string? WHNum { get; set; }
+
+    /// <summary>
+    /// 物料编号
+    /// </summary>
+    public string? MaterielNum { get; set; }
+
+    /// <summary>
+    /// 入库人
+    /// </summary>
+    public string? JoinBoundUser { get; set; }
+
+    /// <summary>
+    /// 入库时间
+    /// </summary>
+    public DateTime? JoinBoundTime { get; set; }
+
+    /// <summary>
+    /// 入库备注
+    /// </summary>
+    public string? JoinBoundRemake { get; set; }
 }
 
 

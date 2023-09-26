@@ -36,17 +36,17 @@ public class EGWareHouseBaseInput
     /// <summary>
     /// 区域数量
     /// </summary>
-    public virtual int? RegionCount { get; set; }
+    public virtual int? RegionCount { get; set; } = 0;
 
     /// <summary>
     /// 库位总数
     /// </summary>
-    public virtual int? StoreroomCount { get; set; }
+    public virtual int? StoreroomCount { get; set; } = 0;
 
     /// <summary>
     /// 可用库位
     /// </summary>
-    public virtual int? StoreroomUsable { get; set; }
+    public virtual int? StoreroomUsable { get; set; } = 0;
 
     /// <summary>
     /// 创建者姓名
@@ -98,17 +98,17 @@ public class EGWareHouseInput : BasePageInput
     /// <summary>
     /// 区域数量
     /// </summary>
-    public int? RegionCount { get; set; }
+    public int? RegionCount { get; set; } = 0;
 
     /// <summary>
     /// 库位总数
     /// </summary>
-    public int? StoreroomCount { get; set; }
+    public int? StoreroomCount { get; set; } = 0;
 
     /// <summary>
     /// 可用库位
     /// </summary>
-    public int? StoreroomUsable { get; set; }
+    public int? StoreroomUsable { get; set; } = 0;
 
     /// <summary>
     /// 创建者姓名

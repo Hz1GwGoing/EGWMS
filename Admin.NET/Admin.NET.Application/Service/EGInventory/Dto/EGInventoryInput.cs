@@ -33,6 +33,10 @@ public class EGInventoryBaseInput
     /// </summary>
     public virtual int? IWaitingCount { get; set; }
 
+    /// <summary>
+    /// 出库状态
+    /// </summary>
+    public int? OutboundStatus { get; set; } = 0;
 }
 
 /// <summary>
@@ -43,7 +47,7 @@ public class EGInventoryInput : BasePageInput
     /// <summary>
     /// 库存编号
     /// </summary>
-    public string? InventoryNum { get; set; }
+    //public string? InventoryNum { get; set; }
 
     /// <summary>
     /// 库存总数
@@ -71,6 +75,22 @@ public class EGInventoryInput : BasePageInput
     /// </summary>
     /// ！
     public virtual DateTime? CreateTime { get; set; }
+
+    /// <summary>
+    /// 物料编号
+    /// </summary>
+    public string? MaterielNum { get; set; }
+
+    /// <summary>
+    /// 备注
+    /// </summary>
+    public string? InventoryRemake { get; set; }
+
+    /// <summary>
+    /// 出库状态
+    /// </summary>
+    public int? OutboundStatus { get; set; } = 0;
+
 }
 
 /// <summary>
@@ -81,9 +101,18 @@ public class AddEGInventoryInput : EGInventoryBaseInput
     /// <summary>
     /// 库存编号
     /// </summary>
-    [Required(ErrorMessage = "库存编号不能为空")]
-    public override string? InventoryNum { get; set; }
+    //[Required(ErrorMessage = "库存编号不能为空")]
+    //public override string? InventoryNum { get; set; }
 
+    /// <summary>
+    /// 物料编号
+    /// </summary>
+    public string? MaterielNum { get; set; }
+
+    /// <summary>
+    /// 备注
+    /// </summary>
+    public string? InventoryRemake { get; set; }
 }
 
 /// <summary>
@@ -104,6 +133,12 @@ public class UpdateEGInventoryInput : EGInventoryBaseInput
     [Required(ErrorMessage = "Id不能为空")]
     public long Id { get; set; }
 
+    /// <summary>
+    /// 备注
+    /// </summary>
+    public string? InventoryRemake { get; set; }
+
+
 }
 
 /// <summary>
@@ -115,6 +150,11 @@ public class QueryByIdEGInventoryInput
     /// <summary>
     /// 库存编号
     /// </summary>
-    public virtual string? InventoryNum { get; set; }
+    //public virtual string? InventoryNum { get; set; }
+
+    /// <summary>
+    /// 物料编号
+    /// </summary>
+    public virtual string? MaterielNum { get; set; }
 
 }

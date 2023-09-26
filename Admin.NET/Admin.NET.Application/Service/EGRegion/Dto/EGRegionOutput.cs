@@ -33,12 +33,12 @@
        /// <summary>
        /// 库位总数
        /// </summary>
-       public int? StoreroomCount { get; set; }
+       public int? StoreroomCount { get; set; } = 0;
     
        /// <summary>
        /// 可用库位
        /// </summary>
-       public int? StoreroomUsable { get; set; }
+       public int? StoreroomUsable { get; set; } = 0;
     
        /// <summary>
        /// 创建者姓名

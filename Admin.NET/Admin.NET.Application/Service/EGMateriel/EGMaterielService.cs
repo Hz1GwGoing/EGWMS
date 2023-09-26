@@ -1,11 +1,5 @@
-﻿using Admin.NET.Application.Const;
-using Admin.NET.Application.Entity;
-using Admin.NET.Core;
-using Furion.DependencyInjection;
-using Furion.FriendlyException;
-using System.Collections.Generic;
+﻿namespace Admin.NET.Application;
 
-namespace Admin.NET.Application;
 /// <summary>
 /// 物料管理接口
 /// </summary>
@@ -125,9 +119,17 @@ public class EGMaterielService : IDynamicApiController, ITransient
     [ApiDescriptionSettings(Name = "List")]
     public async Task<List<EGMaterielOutput>> List([FromQuery] EGMaterielInput input)
     {
-        return await _rep.AsQueryable().Select<EGMaterielOutput>().ToListAsync();
+        //return await _rep.AsQueryable().Select<EGMaterielOutput>().ToListAsync();
+        // 模糊查询
+        return await _rep.AsQueryable()
+               .Where(x => x.MaterielName.Contains(input.MaterielName))
+               .Select<EGMaterielOutput>()
+               .ToListAsync();
     }
     #endregion
+
+    //-------------------------------------//-------------------------------------//
+
 
 }
 

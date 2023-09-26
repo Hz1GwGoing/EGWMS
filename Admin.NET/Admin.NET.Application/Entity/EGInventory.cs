@@ -18,8 +18,9 @@ public class EGInventory : EntityBase
     /// <summary>
     /// 库存编号
     /// </summary>
-    [SugarColumn(ColumnDescription = "库存编号", Length = 50)]
-    public string? InventoryNum { get; set; }
+
+    //[SugarColumn(ColumnDescription = "库存编号", Length = 50)]
+    //public string? InventoryNum { get; set; }
 
     /// <summary>
     /// 库存总数
@@ -44,5 +45,37 @@ public class EGInventory : EntityBase
     /// </summary>
     [SugarColumn(ColumnDescription = "待检数量")]
     public int? IWaitingCount { get; set; }
+
+
+    /// <summary>
+    /// 入库编号
+    /// </summary>
+    [SugarColumn(ColumnDescription = "入库编号", Length = 50)]
+    public string JoinBoundNum { get; set; }
+
+
+    /// <summary>
+    /// 仓库编号
+    /// </summary>
+    [SugarColumn(ColumnDescription = "仓库编号", Length = 50)]
+    public string? WHNum { get; set; }
+
+    /// <summary>
+    /// 物料编号
+    /// </summary>
+    [SugarColumn(ColumnDescription = "物料编号", Length = 50)]
+    public string? MaterielNum { get; set; }
+
+    /// <summary>
+    /// 库存主表备注
+    /// </summary>
+    [SugarColumn(ColumnDescription = "备注")]
+    public string? InventoryRemake { get; set; }
+
+    /// <summary>
+    /// 出库状态 0 未出库 1 已出库
+    /// </summary>
+    public int? OutboundStatus { get; set; } = 0;
+
 
 }

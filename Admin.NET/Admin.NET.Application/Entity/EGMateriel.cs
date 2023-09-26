@@ -79,7 +79,7 @@ public class EGMateriel : EntityBase
     /// 栈板编号
     /// </summary>
     [SugarColumn(ColumnDescription = "栈板编号", Length = 50)]
-    public string PalletNum { get; set; }
+    public string? PalletNum { get; set; }
 
     /// <summary>
     /// 库存编号

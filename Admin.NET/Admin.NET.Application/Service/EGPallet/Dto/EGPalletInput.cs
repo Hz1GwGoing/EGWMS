@@ -30,7 +30,7 @@ public class EGPalletBaseInput
     public virtual DateTime? ExpirationDate { get; set; }
 
     /// <summary>
-    /// 状态
+    /// 栈板状态（0.正常 1.异常）
     /// </summary>
     public virtual int? PalletStatus { get; set; }
 
@@ -43,6 +43,11 @@ public class EGPalletBaseInput
     /// 备注
     /// </summary>
     public virtual string? PalletRemake { get; set; }
+
+    /// <summary>
+    /// 库位编号
+    /// </summary>
+    public virtual string? StorageNum { get; set; }
 
 }
 
@@ -76,7 +81,7 @@ public class EGPalletInput : BasePageInput
     /// </summary>
     public List<DateTime?> ExpirationDateRange { get; set; }
     /// <summary>
-    /// 状态
+    /// 栈板状态（0.正常 1.异常）
     /// </summary>
     public int? PalletStatus { get; set; }
 
@@ -89,6 +94,13 @@ public class EGPalletInput : BasePageInput
     /// 备注
     /// </summary>
     public string? PalletRemake { get; set; }
+
+    /// <summary>
+    /// 库位编号
+    /// </summary>
+    public string? StorageNum { get; set; }
+
+    public DateTime? CreateTime { get; set; }
 
 }
 

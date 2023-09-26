@@ -1,17 +1,11 @@
-﻿using Admin.NET.Application.Const;
-using Admin.NET.Application.Entity;
-using Admin.NET.Core;
-using Furion.DependencyInjection;
-using Furion.FriendlyException;
-using System.Collections.Generic;
-
-namespace Admin.NET.Application;
+﻿namespace Admin.NET.Application;
 /// <summary>
-/// 栈板信息接口
+/// 栈板管理接口
 /// </summary>
 [ApiDescriptionSettings(ApplicationConst.GroupName, Order = 100)]
 public class EGPalletService : IDynamicApiController, ITransient
 {
+
     private readonly SqlSugarRepository<EGPallet> _rep;
     public EGPalletService(SqlSugarRepository<EGPallet> rep)
     {
@@ -19,7 +13,6 @@ public class EGPalletService : IDynamicApiController, ITransient
     }
 
     #region 分页查询栈板
-
     /// <summary>
     /// 分页查询栈板
     /// </summary>
@@ -32,10 +25,13 @@ public class EGPalletService : IDynamicApiController, ITransient
         var query = _rep.AsQueryable()
                     .WhereIF(!string.IsNullOrWhiteSpace(input.PalletNum), u => u.PalletNum.Contains(input.PalletNum.Trim()))
                     .WhereIF(!string.IsNullOrWhiteSpace(input.PalletName), u => u.PalletName.Contains(input.PalletName.Trim()))
-                    .WhereIF(string.IsNullOrWhiteSpace(input.PalletSpecs), u => u.PalletSpecs.Contains(input.PalletSpecs.Trim()))
+                    .WhereIF(!string.IsNullOrWhiteSpace(input.PalletSpecs), u => u.PalletSpecs.Contains(input.PalletSpecs.Trim()))
                     .WhereIF(input.PalletStatus > 0, u => u.PalletStatus == input.PalletStatus)
                     .WhereIF(!string.IsNullOrWhiteSpace(input.CreateUserName), u => u.CreateUserName.Contains(input.CreateUserName.Trim()))
                     .WhereIF(!string.IsNullOrWhiteSpace(input.PalletRemake), u => u.PalletRemake.Contains(input.PalletRemake.Trim()))
+                    // 获取创建日期
+                    .WhereIF(input.CreateTime > DateTime.MinValue, u => u.CreateTime >= input.CreateTime)
+                    .WhereIF(!string.IsNullOrWhiteSpace(input.StorageNum), u => u.StorageNum.Contains(input.StorageNum.Trim()))
                     .Select<EGPalletOutput>()
 ;
         if (input.ExpirationDateRange != null && input.ExpirationDateRange.Count > 0)
@@ -54,7 +50,6 @@ public class EGPalletService : IDynamicApiController, ITransient
     #endregion
 
     #region 增加栈板
-
     /// <summary>
     /// 增加栈板
     /// </summary>
@@ -70,7 +65,6 @@ public class EGPalletService : IDynamicApiController, ITransient
     #endregion
 
     #region 删除栈板
-
     /// <summary>
     /// 删除栈板
     /// </summary>
@@ -86,7 +80,6 @@ public class EGPalletService : IDynamicApiController, ITransient
     #endregion
 
     #region 更新栈板
-
     /// <summary>
     /// 更新栈板
     /// </summary>
@@ -102,7 +95,6 @@ public class EGPalletService : IDynamicApiController, ITransient
     #endregion
 
     #region 获取栈板
-
     /// <summary>
     /// 获取栈板
     /// </summary>
@@ -114,7 +106,8 @@ public class EGPalletService : IDynamicApiController, ITransient
     {
         //return await _rep.GetFirstAsync(u => u.Id == input.Id);
         // 模糊查询
-        return await _rep.GetFirstAsync(u => u.PalletNum == input.PalletNum || u.PalletName == input.PalletName);
+        return await _rep.GetFirstAsync(u => u.PalletNum.Contains(input.PalletNum) || u.PalletName.Contains(input.PalletName));
+
     }
     #endregion
 
@@ -132,6 +125,7 @@ public class EGPalletService : IDynamicApiController, ITransient
     }
     #endregion
 
+    //-------------------------------------//-------------------------------------//
 
 }
 

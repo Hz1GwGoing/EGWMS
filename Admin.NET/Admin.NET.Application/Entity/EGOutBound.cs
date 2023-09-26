@@ -59,7 +59,6 @@ public class EGOutBound  : EntityBase
     [SugarColumn(ColumnDescription = "料箱编号", Length = 50)]
     public string? WorkBinNum { get; set; }
 
-
     /// <summary>
     /// 物料编号
     /// </summary>

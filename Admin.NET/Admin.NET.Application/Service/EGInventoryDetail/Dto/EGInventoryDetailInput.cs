@@ -78,7 +78,7 @@ public class EGInventoryDetailInput : BasePageInput
     /// <summary>
     /// 库存编号
     /// </summary>
-    public string? InventoryNum { get; set; }
+    //public string? InventoryNum { get; set; }
 
     /// <summary>
     /// 生产批次
@@ -130,6 +130,13 @@ public class EGInventoryDetailInput : BasePageInput
     /// 创建时间
     /// </summary>
     public virtual DateTime? CreateTime { get; set; }
+
+    /// <summary>
+    /// 备注
+    /// </summary>
+    public string? InventoryDetailRemake { get; set; }
+
+
 }
 
 /// <summary>
@@ -163,6 +170,10 @@ public class UpdateEGInventoryDetailInput : EGInventoryDetailBaseInput
     [Required(ErrorMessage = "Id不能为空")]
     public long Id { get; set; }
 
+    /// <summary>
+    /// 备注
+    /// </summary>
+    public string? InventoryDetailRemake { get; set; }
 }
 
 /// <summary>
@@ -174,5 +185,11 @@ public class QueryByIdEGInventoryDetailInput
     /// <summary>
     /// 库存编号
     /// </summary>
-    public virtual string? InventoryNum { get; set; }
+    //public virtual string? InventoryNum { get; set; }
+
+    /// <summary>
+    /// 物料编号
+    /// </summary>
+    public virtual string? MaterielNum { get; set; }
+
 }

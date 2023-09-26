@@ -39,6 +39,12 @@ public class EGWorkBin : EntityBase
     public string? Classes { get; set; }
 
     /// <summary>
+    /// 产品数量
+    /// </summary>
+    [SugarColumn(ColumnDescription = "产品数量")]
+    public int ProductCount { get; set; }
+
+    /// <summary>
     /// 生产批次
     /// </summary>
     [SugarColumn(ColumnDescription = "生产批次", Length = 10)]
@@ -69,9 +75,9 @@ public class EGWorkBin : EntityBase
     public string? Printer { get; set; }
 
     /// <summary>
-    /// 料箱状态
+    /// 料箱状态 0.正常 1.异常
     /// </summary>
-    [SugarColumn(ColumnDescription = "料箱状态")]
+    [SugarColumn(ColumnDescription = "料箱状态（0.正常 1.异常）")]
     public int? WorkBinStatus { get; set; }
 
     /// <summary>

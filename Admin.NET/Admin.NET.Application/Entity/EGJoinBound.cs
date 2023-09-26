@@ -1,4 +1,6 @@
-﻿using Admin.NET.Core;
+﻿using Admin.NET.Application.Service.EGJoinBound.Dto;
+using Admin.NET.Core;
+using System.Collections.Generic;
 
 namespace Admin.NET.Application.Entity;
 
@@ -40,6 +42,13 @@ public class EGJoinBound : EntityBase
     public DateTime? JoinBoundTime { get; set; }
 
     /// <summary>
+    /// 入库状态 0 未入库 1 已入库（保存在库存表中）
+    /// </summary>
+    [SugarColumn(ColumnDescription = "入库状态")]
+    public int? JoinBoundStatus { get; set; }
+
+
+    /// <summary>
     /// 回库更新时间
     /// </summary>
     [SugarColumn(ColumnDescription = "回库更新时间")]
@@ -76,5 +85,6 @@ public class EGJoinBound : EntityBase
     /// </summary>
     [SugarColumn(ColumnDescription = "入库备注", Length = 500)]
     public string? JoinBoundRemake { get; set; }
+
 
 }

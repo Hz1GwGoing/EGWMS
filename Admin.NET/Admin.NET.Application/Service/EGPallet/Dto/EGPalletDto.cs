@@ -26,7 +26,7 @@
         public DateTime? ExpirationDate { get; set; }
         
         /// <summary>
-        /// 状态
+        /// 栈板状态（0.正常 1.异常）
         /// </summary>
         public int? PalletStatus { get; set; }
         
@@ -44,5 +44,10 @@
         /// Id
         /// </summary>
         public long Id { get; set; }
+        
+        /// <summary>
+        /// 库位编号
+        /// </summary>
+        public string? StorageNum { get; set; }
         
     }

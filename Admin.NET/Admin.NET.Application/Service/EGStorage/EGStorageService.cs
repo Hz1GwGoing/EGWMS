@@ -1,18 +1,13 @@
-﻿using Admin.NET.Application.Const;
-using Admin.NET.Application.Entity;
-using Admin.NET.Core;
-using Furion.DependencyInjection;
-using Furion.FriendlyException;
-using System.Collections.Generic;
+﻿namespace Admin.NET.Application;
 
-namespace Admin.NET.Application;
 /// <summary>
-/// 库位管理接口
+/// 库位管理接口（移库的是库位）
 /// </summary>
 [ApiDescriptionSettings(ApplicationConst.GroupName, Order = 100)]
 public class EGStorageService : IDynamicApiController, ITransient
 {
     private readonly SqlSugarRepository<EGStorage> _rep;
+
     public EGStorageService(SqlSugarRepository<EGStorage> rep)
     {
         _rep = rep;
@@ -39,6 +34,8 @@ public class EGStorageService : IDynamicApiController, ITransient
                     .WhereIF(!string.IsNullOrWhiteSpace(input.StorageRemake), u => u.StorageRemake.Contains(input.StorageRemake.Trim()))
                     .WhereIF(!string.IsNullOrWhiteSpace(input.CreateUserName), u => u.CreateUserName.Contains(input.CreateUserName.Trim()))
                     .WhereIF(!string.IsNullOrWhiteSpace(input.UpdateUserName), u => u.UpdateUserName.Contains(input.UpdateUserName.Trim()))
+                    // 库位状态
+                    .WhereIF(input.StorageStatus >= 0, u => u.StorageStatus == input.StorageStatus)
                     .WhereIF(input.RoadwayNum > 0, u => u.RoadwayNum == input.RoadwayNum)
                     .WhereIF(input.ShelfNum > 0, u => u.ShelfNum == input.ShelfNum)
                     .WhereIF(input.FloorNumber > 0, u => u.FloorNumber == input.FloorNumber)
@@ -53,6 +50,8 @@ public class EGStorageService : IDynamicApiController, ITransient
                         StorageName = u.StorageName,
                         StorageAddress = u.StorageAddress,
                         StorageType = u.StorageType,
+                        // 库位状态
+                        StorageStatus = u.StorageStatus,
                         WareHouseName = u.WareHouseName,
                         StorageLong = u.StorageLong,
                         StorageWidth = u.StorageWidth,
@@ -151,24 +150,28 @@ public class EGStorageService : IDynamicApiController, ITransient
     }
     #endregion
 
+
+    //-------------------------------------//-------------------------------------//
+
+
     #region 获取仓库名称
     /// <summary>
     /// 获取仓库名称
     /// </summary>
     /// <param name="input"></param>
     /// <returns></returns>
-    [ApiDescriptionSettings(Name = "EGWareHouseWHNameDropdown"), HttpGet]
-    public async Task<dynamic> EGWareHouseWHNumDropdown()
-    {
-        return await _rep.Context.Queryable<EGWareHouse>()
-                .Select(u => new
-                {
-                    ISWareHouseName = u.WHName,
-                    // 主键
-                    Value = u.Id
-                }
-                ).ToListAsync();
-    }
+    //[ApiDescriptionSettings(Name = "EGWareHouseWHNameDropdown"), HttpGet]
+    //public async Task<dynamic> EGWareHouseWHNumDropdown()
+    //{
+    //    return await _rep.Context.Queryable<EGWareHouse>()
+    //            .Select(u => new
+    //            {
+    //                ISWareHouseName = u.WHName,
+    //                // 主键
+    //                Value = u.Id
+    //            }
+    //            ).ToListAsync();
+    //}
     #endregion
 
     #region 获取区域名称
@@ -177,21 +180,20 @@ public class EGStorageService : IDynamicApiController, ITransient
     /// </summary>
     /// <param name="input"></param>
     /// <returns></returns>
-    [ApiDescriptionSettings(Name = "EGRegionRegionNameDropdown"), HttpGet]
-    public async Task<dynamic> EGRegionRegionNumDropdown()
-    {
-        return await _rep.Context.Queryable<EGRegion>()
-                .Select(u => new
-                {
-                    ISRegionName = u.RegionName,
-                    // 主键
-                    Value = u.Id
-                }
-                ).ToListAsync();
-    }
+    //[ApiDescriptionSettings(Name = "EGRegionRegionNameDropdown"), HttpGet]
+    //public async Task<dynamic> EGRegionRegionNumDropdown()
+    //{
+    //    return await _rep.Context.Queryable<EGRegion>()
+    //            .Select(u => new
+    //            {
+    //                ISRegionName = u.RegionName,
+    //                // 主键
+    //                Value = u.Id
+    //            }
+    //            ).ToListAsync();
+    //}
     #endregion
 
-    
 
 }
 

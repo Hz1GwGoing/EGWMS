@@ -1,11 +1,4 @@
-﻿using Admin.NET.Application.Const;
-using Admin.NET.Application.Entity;
-using Admin.NET.Core;
-using Furion.DependencyInjection;
-using Furion.FriendlyException;
-using System.Collections.Generic;
-
-namespace Admin.NET.Application;
+﻿namespace Admin.NET.Application;
 /// <summary>
 /// 库存明细表接口
 /// </summary>
@@ -18,6 +11,7 @@ public class EGInventoryDetailService : IDynamicApiController, ITransient
         _rep = rep;
     }
 
+    #region 分页查询库存明细
     /// <summary>
     /// 分页查询库存明细
     /// </summary>
@@ -29,13 +23,19 @@ public class EGInventoryDetailService : IDynamicApiController, ITransient
     {
         var query = _rep.AsQueryable()
                     .WhereIF(!string.IsNullOrWhiteSpace(input.MaterielNum), u => u.MaterielNum.Contains(input.MaterielNum.Trim()))
-                    .WhereIF(!string.IsNullOrWhiteSpace(input.InventoryNum), u => u.InventoryNum.Contains(input.InventoryNum.Trim()))
+                    // 库存编号
+                    //.WhereIF(!string.IsNullOrWhiteSpace(input.InventoryNum), u => u.InventoryNum.Contains(input.InventoryNum.Trim()))
                     .WhereIF(!string.IsNullOrWhiteSpace(input.ProductionLot), u => u.ProductionLot.Contains(input.ProductionLot.Trim()))
                     .WhereIF(input.CurrentCount > 0, u => u.CurrentCount == input.CurrentCount)
                     .WhereIF(!string.IsNullOrWhiteSpace(input.StorageNum), u => u.StorageNum.Contains(input.StorageNum.Trim()))
                     .WhereIF(!string.IsNullOrWhiteSpace(input.WHNum), u => u.WHNum.Contains(input.WHNum.Trim()))
                     .WhereIF(!string.IsNullOrWhiteSpace(input.RegionNum), u => u.RegionNum.Contains(input.RegionNum.Trim()))
                     .WhereIF(!string.IsNullOrWhiteSpace(input.ShelfNum), u => u.ShelfNum.Contains(input.ShelfNum.Trim()))
+                    // 物料编号
+                    .WhereIF(!string.IsNullOrWhiteSpace(input.MaterielNum), u => u.MaterielNum.Contains(input.MaterielNum.Trim()))
+                    // 备注
+                    .WhereIF(!string.IsNullOrWhiteSpace(input.InventoryDetailRemake), u =>
+                    u.InventoryDetailRemake.Contains(input.InventoryDetailRemake.Trim()))
                     .WhereIF(input.FrozenState > 0, u => u.FrozenState == input.FrozenState)
                     .WhereIF(!string.IsNullOrWhiteSpace(input.PalletNum), u => u.PalletNum.Contains(input.PalletNum.Trim()))
                     .WhereIF(!string.IsNullOrWhiteSpace(input.WorkBinNum), u => u.WorkBinNum.Contains(input.WorkBinNum.Trim()))
@@ -46,33 +46,9 @@ public class EGInventoryDetailService : IDynamicApiController, ITransient
         query = query.OrderBuilder(input);
         return await query.ToPagedListAsync(input.Page, input.PageSize);
     }
+    #endregion
 
-    /// <summary>
-    /// 增加库存明细
-    /// </summary>
-    /// <param name="input"></param>
-    /// <returns></returns>
-    [HttpPost]
-    [ApiDescriptionSettings(Name = "Add")]
-    public async Task Add(AddEGInventoryDetailInput input)
-    {
-        var entity = input.Adapt<EGInventoryDetail>();
-        await _rep.InsertAsync(entity);
-    }
-
-    /// <summary>
-    /// 删除库存明细
-    /// </summary>
-    /// <param name="input"></param>
-    /// <returns></returns>
-    [HttpPost]
-    [ApiDescriptionSettings(Name = "Delete")]
-    public async Task Delete(DeleteEGInventoryDetailInput input)
-    {
-        var entity = await _rep.GetFirstAsync(u => u.Id == input.Id) ?? throw Oops.Oh(ErrorCodeEnum.D1002);
-        await _rep.FakeDeleteAsync(entity);   //假删除
-    }
-
+    #region 更新库存明细
     /// <summary>
     /// 更新库存明细
     /// </summary>
@@ -85,7 +61,9 @@ public class EGInventoryDetailService : IDynamicApiController, ITransient
         var entity = input.Adapt<EGInventoryDetail>();
         await _rep.AsUpdateable(entity).IgnoreColumns(ignoreAllNullColumns: true).ExecuteCommandAsync();
     }
+    #endregion
 
+    #region 获取库存明细
     /// <summary>
     /// 获取库存明细
     /// </summary>
@@ -97,10 +75,12 @@ public class EGInventoryDetailService : IDynamicApiController, ITransient
     {
         //return await _rep.GetFirstAsync(u => u.Id == input.Id);
 
-        // 模糊查询
-        return await _rep.GetFirstAsync(u => u.InventoryNum.Contains(input.InventoryNum));
+        // 模糊查询（）
+        return await _rep.GetFirstAsync(u => u.MaterielNum.Contains(input.MaterielNum));
     }
+    #endregion
 
+    #region 获取库存明细列表
     /// <summary>
     /// 获取库存明细列表
     /// </summary>
@@ -112,10 +92,42 @@ public class EGInventoryDetailService : IDynamicApiController, ITransient
     {
         return await _rep.AsQueryable().Select<EGInventoryDetailOutput>().ToListAsync();
     }
+    #endregion
 
 
+    //-------------------------------------//-------------------------------------//
 
 
+    #region 增加库存明细
+    /// <summary>
+    /// 增加库存明细
+    /// </summary>
+    /// <param name="input"></param>
+    /// <returns></returns>
+    //[HttpPost]
+    //[ApiDescriptionSettings(Name = "Add")]
+    //public async Task Add(AddEGInventoryDetailInput input)
+    //{
+    //    var entity = input.Adapt<EGInventoryDetail>();
+    //    await _rep.InsertAsync(entity);
+    //}
+    #endregion
+
+    #region 删除库存明细
+    /// <summary>
+    /// 删除库存明细
+    /// </summary>
+    /// <param name="input"></param>
+    /// <returns></returns>
+    //[HttpPost]
+    //[ApiDescriptionSettings(Name = "Delete")]
+    //public async Task Delete(DeleteEGInventoryDetailInput input)
+    //{
+    //    var entity = await _rep.GetFirstAsync(u => u.Id == input.Id) ?? throw Oops.Oh(ErrorCodeEnum.D1002);
+    //    await _rep.FakeDeleteAsync(entity);   //假删除
+    //}
+    #endregion
 
 }
+
 

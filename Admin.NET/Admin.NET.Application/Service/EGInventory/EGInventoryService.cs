@@ -1,11 +1,4 @@
-﻿using Admin.NET.Application.Const;
-using Admin.NET.Application.Entity;
-using Admin.NET.Core;
-using Furion.DependencyInjection;
-using Furion.FriendlyException;
-using System.Collections.Generic;
-
-namespace Admin.NET.Application;
+﻿namespace Admin.NET.Application;
 /// <summary>
 /// 库存主表接口
 /// </summary>
@@ -18,6 +11,7 @@ public class EGInventoryService : IDynamicApiController, ITransient
         _rep = rep;
     }
 
+    #region 分页查询库存主表
     /// <summary>
     /// 分页查询库存主表
     /// </summary>
@@ -28,12 +22,18 @@ public class EGInventoryService : IDynamicApiController, ITransient
     public async Task<SqlSugarPagedList<EGInventoryOutput>> Page(EGInventoryInput input)
     {
         var query = _rep.AsQueryable()
-                    .WhereIF(!string.IsNullOrWhiteSpace(input.InventoryNum), u => u.InventoryNum.Contains(input.InventoryNum.Trim()))
+                    // 库存编号
+                    //.WhereIF(!string.IsNullOrWhiteSpace(input.InventoryNum), u => u.InventoryNum.Contains(input.InventoryNum.Trim()))
                     .WhereIF(input.ICountAll > 0, u => u.ICountAll == input.ICountAll)
                     .WhereIF(input.IUsable > 0, u => u.IUsable == input.IUsable)
                     .WhereIF(input.IFrostCount > 0, u => u.IFrostCount == input.IFrostCount)
                     .WhereIF(input.IWaitingCount > 0, u => u.IWaitingCount == input.IWaitingCount)
-
+                    // 物料编号
+                    .WhereIF(!string.IsNullOrWhiteSpace(input.MaterielNum), u => u.MaterielNum == input.MaterielNum.Trim())
+                    // 备注
+                    .WhereIF(!string.IsNullOrWhiteSpace(input.InventoryRemake), u => u.InventoryRemake == input.InventoryRemake.Trim())
+                    // 出库状态
+                    .WhereIF(input.OutboundStatus > 0, u => u.OutboundStatus == input.OutboundStatus)
                     // 获取创建日期
                     .WhereIF(input.CreateTime > DateTime.MinValue, u => u.CreateTime >= input.CreateTime)
                     .Select<EGInventoryOutput>()
@@ -41,33 +41,9 @@ public class EGInventoryService : IDynamicApiController, ITransient
         query = query.OrderBuilder(input);
         return await query.ToPagedListAsync(input.Page, input.PageSize);
     }
+    #endregion
 
-    /// <summary>
-    /// 增加库存主表
-    /// </summary>
-    /// <param name="input"></param>
-    /// <returns></returns>
-    [HttpPost]
-    [ApiDescriptionSettings(Name = "Add")]
-    public async Task Add(AddEGInventoryInput input)
-    {
-        var entity = input.Adapt<EGInventory>();
-        await _rep.InsertAsync(entity);
-    }
-
-    /// <summary>
-    /// 删除库存主表
-    /// </summary>
-    /// <param name="input"></param>
-    /// <returns></returns>
-    [HttpPost]
-    [ApiDescriptionSettings(Name = "Delete")]
-    public async Task Delete(DeleteEGInventoryInput input)
-    {
-        var entity = await _rep.GetFirstAsync(u => u.Id == input.Id) ?? throw Oops.Oh(ErrorCodeEnum.D1002);
-        await _rep.FakeDeleteAsync(entity);   //假删除
-    }
-
+    #region 更新库存主表
     /// <summary>
     /// 更新库存主表
     /// </summary>
@@ -80,7 +56,9 @@ public class EGInventoryService : IDynamicApiController, ITransient
         var entity = input.Adapt<EGInventory>();
         await _rep.AsUpdateable(entity).IgnoreColumns(ignoreAllNullColumns: true).ExecuteCommandAsync();
     }
+    #endregion
 
+    #region 获取库存主表
     /// <summary>
     /// 获取库存主表
     /// </summary>
@@ -92,11 +70,13 @@ public class EGInventoryService : IDynamicApiController, ITransient
     {
         //return await _rep.GetFirstAsync(u => u.Id == input.Id);
 
-        // 模糊查询
-        return await _rep.GetFirstAsync(u => u.InventoryNum.Contains(input.InventoryNum));
+        // 模糊查询（物料编号）
+        return await _rep.GetFirstAsync(u => u.MaterielNum.Contains(input.MaterielNum));
 
     }
+    #endregion
 
+    #region 获取库存主表列表
     /// <summary>
     /// 获取库存主表
     /// </summary>
@@ -108,9 +88,40 @@ public class EGInventoryService : IDynamicApiController, ITransient
     {
         return await _rep.AsQueryable().Select<EGInventoryOutput>().ToListAsync();
     }
+    #endregion
 
 
+    //-------------------------------------//-------------------------------------//
 
+    #region 增加库存主表
+    /// <summary>
+    /// 增加库存主表
+    /// </summary>
+    /// <param name="input"></param>
+    /// <returns></returns>
+    //[HttpPost]
+    //[ApiDescriptionSettings(Name = "Add")]
+    //public async Task Add(AddEGInventoryInput input)
+    //{
+    //    var entity = input.Adapt<EGInventory>();
+    //    await _rep.InsertAsync(entity);
+    //}
+    #endregion
+
+    #region 删除库存主表
+    /// <summary>
+    /// 删除库存主表
+    /// </summary>
+    /// <param name="input"></param>
+    /// <returns></returns>
+    //[HttpPost]
+    //[ApiDescriptionSettings(Name = "Delete")]
+    //public async Task Delete(DeleteEGInventoryInput input)
+    //{
+    //    var entity = await _rep.GetFirstAsync(u => u.Id == input.Id) ?? throw Oops.Oh(ErrorCodeEnum.D1002);
+    //    await _rep.FakeDeleteAsync(entity);   //假删除
+    //}
+    #endregion
 
 
 }

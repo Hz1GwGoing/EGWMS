@@ -1,23 +1,31 @@
-﻿using Admin.NET.Application.Const;
-using Admin.NET.Application.Entity;
-using Admin.NET.Core;
-using Furion.DependencyInjection;
-using Furion.FriendlyException;
-using System.Collections.Generic;
-
-namespace Admin.NET.Application;
+﻿namespace Admin.NET.Application;
 /// <summary>
 /// 出库信息接口
 /// </summary>
 [ApiDescriptionSettings(ApplicationConst.GroupName, Order = 100)]
 public class EGOutBoundService : IDynamicApiController, ITransient
 {
+    #region 引用实体
+
     private readonly SqlSugarRepository<EGOutBound> _rep;
-    public EGOutBoundService(SqlSugarRepository<EGOutBound> rep)
+    private readonly SqlSugarRepository<EGInventory> _db;
+
+    #endregion
+
+    #region 关系注入
+    public EGOutBoundService
+        (
+         SqlSugarRepository<EGOutBound> rep,
+         SqlSugarRepository<EGInventory> db
+        )
     {
         _rep = rep;
+        _db = db;
     }
 
+    #endregion
+
+    #region 分页查询出库信息
     /// <summary>
     /// 分页查询出库信息
     /// </summary>
@@ -55,33 +63,9 @@ public class EGOutBoundService : IDynamicApiController, ITransient
         query = query.OrderBuilder(input);
         return await query.ToPagedListAsync(input.Page, input.PageSize);
     }
+    #endregion
 
-    /// <summary>
-    /// 增加出库信息
-    /// </summary>
-    /// <param name="input"></param>
-    /// <returns></returns>
-    [HttpPost]
-    [ApiDescriptionSettings(Name = "Add")]
-    public async Task Add(AddEGOutBoundInput input)
-    {
-        var entity = input.Adapt<EGOutBound>();
-        await _rep.InsertAsync(entity);
-    }
-
-    /// <summary>
-    /// 删除出库信息
-    /// </summary>
-    /// <param name="input"></param>
-    /// <returns></returns>
-    [HttpPost]
-    [ApiDescriptionSettings(Name = "Delete")]
-    public async Task Delete(DeleteEGOutBoundInput input)
-    {
-        var entity = await _rep.GetFirstAsync(u => u.Id == input.Id) ?? throw Oops.Oh(ErrorCodeEnum.D1002);
-        await _rep.FakeDeleteAsync(entity);   //假删除
-    }
-
+    #region 更新出库信息
     /// <summary>
     /// 更新出库信息
     /// </summary>
@@ -94,7 +78,9 @@ public class EGOutBoundService : IDynamicApiController, ITransient
         var entity = input.Adapt<EGOutBound>();
         await _rep.AsUpdateable(entity).IgnoreColumns(ignoreAllNullColumns: true).ExecuteCommandAsync();
     }
+    #endregion
 
+    #region 获取出库信息
     /// <summary>
     /// 获取出库信息
     /// </summary>
@@ -110,7 +96,9 @@ public class EGOutBoundService : IDynamicApiController, ITransient
         return await _rep.GetFirstAsync(u => u.OutboundNum.Contains(input.OutboundNum));
 
     }
+    #endregion
 
+    #region 获取出库信息列表
     /// <summary>
     /// 获取出库信息列表
     /// </summary>
@@ -122,10 +110,174 @@ public class EGOutBoundService : IDynamicApiController, ITransient
     {
         return await _rep.AsQueryable().Select<EGOutBoundOutput>().ToListAsync();
     }
+    #endregion
+
+    #region 添加一条出库信息
+    /// <summary>
+    /// 添加一条出库信息
+    /// </summary>
+    /// <param name="input"></param>
+    /// <returns></returns>
+    /// <exception cref="Exception"></exception>
+    [HttpPost]
+    [ApiDescriptionSettings(Name = "InsertOutBoundRecords")]
+    public async Task InsertOutBoundRecords(EGOutBound input)
+    {
+        // 查询是否有编号相同的记录
+        var is_vaild = await _rep.GetFirstAsync(u => u.OutboundNum == input.OutboundNum);
+        if (is_vaild != null)
+        {
+            throw new Exception("已存在此出库记录！");
+        }
+        else
+        {
+            await _rep.InsertAsync(input);
+        }
+    }
+
+
+    #endregion
+
+    #region 出库操作
+    /// <summary>
+    /// 出库操作（改变出库状态）
+    /// </summary>
+    /// <param name="materielnum">物料编号</param>
+    /// <returns></returns>
+    /// <exception cref="Exception"></exception>
+    [HttpPut]
+    [ApiDescriptionSettings(Name = "InventoryAndOutBound")]
+    public async Task InventoryAndOutBound(string materielnum)
+    {
+        // 先查询是否有这条记录
+        var is_vaild = await _rep.GetFirstAsync(u => u.MaterielNum == materielnum);
+        if (is_vaild != null)
+        {
+            throw new Exception("未找到需要出库的数据！");
+        }
+        else
+        {
+            // 将库存表中物料的出库状态改变成为已出库
+            _db.AsUpdateable()
+           .AS("EGInventory")
+           .SetColumns(it => new EGInventory { OutboundStatus = 1 })
+           .Where(u => u.MaterielNum == materielnum)
+           .ExecuteCommand();
+        }
+    }
+
+
+    #endregion
+
+
+    //-------------------------------------//-------------------------------------//
+
+    #region 增加出库信息
+    /// <summary>
+    /// 增加出库信息
+    /// </summary>
+    /// <param name="input"></param>
+    /// <returns></returns>
+    //[HttpPost]
+    //[ApiDescriptionSettings(Name = "Add")]
+    //public async Task Add(AddEGOutBoundInput input)
+    //{
+    //    var entity = input.Adapt<EGOutBound>();
+    //    await _rep.InsertAsync(entity);
+    //}
+
+    /// <summary>
+    /// 删除出库信息
+    /// </summary>
+    /// <param name="input"></param>
+    /// <returns></returns>
+    [HttpPost]
+    [ApiDescriptionSettings(Name = "Delete")]
+    public async Task Delete(DeleteEGOutBoundInput input)
+    {
+        var entity = await _rep.GetFirstAsync(u => u.Id == input.Id) ?? throw Oops.Oh(ErrorCodeEnum.D1002);
+        await _rep.FakeDeleteAsync(entity);   //假删除
+    }
+    #endregion
+
+    #region 获得库存信息（使用物料编号查询）
+
+    /// <summary>
+    /// 获得库存信息（使用物料编号查询）
+    /// </summary>
+    //[HttpGet]
+    //[ApiDescriptionSettings(Name = "GetMaterielData")]
+
+    //public async Task<List<EGInventory>> GetMaterielData(string materielNum)
+    //{
+    //    // 模糊查询  
+    //    List<EGInventory> data = await _db.GetListAsync(u => u.MaterielNum.Contains(materielNum));
+    //    if (data == null)
+    //    {
+    //        throw Oops.Oh(ErrorCodeEnum.D1002);
+    //    }
+    //    // 创建一个新的列表来保存 EGInventory 对象  
+    //    var inventoryList = new List<EGInventory>();
+
+    //    // 遍历查询结果，为每个结果创建一个新的 EGInventory 对象，并添加到列表中  
+    //    foreach (var item in data)
+    //    {
+    //        var Inventory = new EGInventory
+    //        {
+    //            MaterielNum = item.MaterielNum,
+    //            WHNum = item.WHNum,
+    //            ICountAll = item.ICountAll,
+    //            IFrostCount = item.IFrostCount,
+    //            IUsable = item.IUsable,
+    //            IWaitingCount = item.IWaitingCount,
+    //        };
+    //        inventoryList.Add(Inventory);
+    //    }
+
+    //    return inventoryList;
+    //}
+
+
+    #endregion
+
+    #region 根据用户需要出库的数量，对库存进行增减
+    /// <summary>
+    /// 根据用户需要出库的数量，对库存进行增减
+    /// </summary>
+    /// <param name="userInputCount">出库数量</param>
+    /// <param name="materielnum">物料编号</param>
+    /// <returns></returns>
+    /// <exception cref="Exception"></exception>
+    //[HttpPut]
+    //[ApiDescriptionSettings(Name = "UpdateCount")]
+
+    //public async Task UpdateCount(int userInputCount, string materielnum)
+    //{
+    //    // 查询有没有这个物料  
+    //    var inventory = await _db.GetListAsync(u => u.MaterielNum == materielnum);
+
+    //    if (inventory.Count > 0)
+    //    {
+    //        // 如果有这个物料，就更新可用库存  
+    //        var newCount = inventory[0].IUsable - userInputCount; // 新数量 = 原数量 - 用户输入的数量
+    //        if (newCount < 0) // 如果新数量小于0，就不能出库  
+    //        {
+    //            throw new Exception("出库数量超过可用库存");
+    //        }
+    //        else
+    //        {
+    //            // 更新可用库存  
+    //            _db.AsUpdateable().AS("EGInventory").SetColumns("IUsable", newCount).Where(u => u.MaterielNum == materielnum).ExecuteCommand();
+    //        }
+    //    }
+    //    else
+    //    {
+    //        throw new Exception("未找到该物料");
+    //    }
+    //}
 
 
 
-
-
+    #endregion
 }
 

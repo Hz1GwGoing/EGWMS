@@ -27,22 +27,22 @@ public class EGRegion : EntityBase
     public string? WareHouseName { get; set; }
 
     /// <summary>
-    /// 区域状态
+    /// 区域状态 0.正常 1.异常
     /// </summary>
-    [SugarColumn(ColumnDescription = "区域状态")]
+    [SugarColumn(ColumnDescription = "区域状态（0.正常 1.异常）")]
     public int? RegionStatus { get; set; }
 
     /// <summary>
     /// 库位总数
     /// </summary>
     [SugarColumn(ColumnDescription = "库位总数")]
-    public int? StoreroomCount { get; set; }
+    public int? StoreroomCount { get; set; } = 0;
 
     /// <summary>
     /// 可用库位
     /// </summary>
     [SugarColumn(ColumnDescription = "可用库位")]
-    public int? StoreroomUsable { get; set; }
+    public int? StoreroomUsable { get; set; } = 0;
 
     /// <summary>
     /// 创建者姓名

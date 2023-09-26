@@ -1,11 +1,4 @@
-﻿using Admin.NET.Application.Const;
-using Admin.NET.Application.Entity;
-using Admin.NET.Core;
-using Furion.DependencyInjection;
-using Furion.FriendlyException;
-using System.Collections.Generic;
-
-namespace Admin.NET.Application;
+﻿namespace Admin.NET.Application;
 /// <summary>
 /// 区域管理接口
 /// </summary>
@@ -118,7 +111,10 @@ public class EGRegionService : IDynamicApiController, ITransient
     [ApiDescriptionSettings(Name = "Detail")]
     public async Task<EGRegion> Get([FromQuery] QueryByIdEGRegionInput input)
     {
-        return await _rep.GetFirstAsync(u => u.Id == input.Id);
+        //return await _rep.GetFirstAsync(u => u.Id == input.Id);
+        
+        // 模糊查询
+        return await _rep.GetFirstAsync(u => u.RegionName.Contains(input.RegionName) || u.RegionNum.Contains(input.RegionNum));
     }
     #endregion
 
@@ -140,7 +136,6 @@ public class EGRegionService : IDynamicApiController, ITransient
     /// <summary>
     /// 获取仓库名称列表
     /// </summary>
-    /// <param name="input"></param>
     /// <returns></returns>
     [ApiDescriptionSettings(Name = "EGWareHouseWHNameDropdown"), HttpGet]
     public async Task<dynamic> EGWareHouseWHNumDropdown()

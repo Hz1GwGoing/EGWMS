@@ -1,8 +1,4 @@
-﻿using Admin.NET.Core;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-
-namespace Admin.NET.Application;
+﻿namespace Admin.NET.Application;
 
 /// <summary>
 /// EGTakeStock基础输入参数
@@ -17,7 +13,17 @@ public class EGTakeStockBaseInput
     /// <summary>
     /// 盘点状态
     /// </summary>
-    public virtual int? TakeStockStatus { get; set; }
+    public virtual int? TakeStockStatus { get; set; } = 0;
+
+    /// <summary>
+    /// 盘点数量
+    /// </summary>
+    public int? TakeStockCount { get; set; } = null;
+
+    /// <summary>
+    /// 差值数量
+    /// </summary>
+    public int? TakeStockDiffCount { get; set; } = null;
 
     /// <summary>
     /// 盘点时间
@@ -54,7 +60,17 @@ public class EGTakeStockInput : BasePageInput
     /// <summary>
     /// 盘点状态
     /// </summary>
-    public int? TakeStockStatus { get; set; }
+    public int? TakeStockStatus { get; set; } = 0;
+
+    /// <summary>
+    /// 盘点数量
+    /// </summary>
+    public int? TakeStockCount { get; set; } = null;
+
+    /// <summary>
+    /// 差值数量
+    /// </summary>
+    public int? TakeStockDiffCount { get; set; } = null;
 
     /// <summary>
     /// 盘点时间

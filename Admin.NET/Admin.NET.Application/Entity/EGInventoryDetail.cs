@@ -17,8 +17,9 @@ public class EGInventoryDetail : EntityBase
     /// <summary>
     /// 库存编号
     /// </summary>
-    [SugarColumn(ColumnDescription = "库存编号", Length = 50)]
-    public string? InventoryNum { get; set; }
+
+    //[SugarColumn(ColumnDescription = "库存编号", Length = 50)]
+    //public string? InventoryNum { get; set; }
 
     /// <summary>
     /// 生产批次
@@ -57,7 +58,7 @@ public class EGInventoryDetail : EntityBase
     public string? ShelfNum { get; set; }
 
     /// <summary>
-    /// 冻结状态
+    /// 冻结状态 0.未冻结 1.已冻结
     /// </summary>
     [SugarColumn(ColumnDescription = "冻结状态")]
     public int? FrozenState { get; set; }
@@ -74,5 +75,11 @@ public class EGInventoryDetail : EntityBase
     /// </summary>
     [SugarColumn(ColumnDescription = "料箱编号", Length = 50)]
     public string? WorkBinNum { get; set; }
+
+    /// <summary>
+    /// 库存详情表备注
+    /// </summary>
+    [SugarColumn(ColumnDescription = "库存详细备注")]
+    public string? InventoryDetailRemake { get; set; }
 
 }

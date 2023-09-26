@@ -27,6 +27,12 @@ public class EGStorage : EntityBase
     public string? StorageAddress { get; set; }
 
     /// <summary>
+    /// 库位状态 0.正常 1.异常
+    /// </summary>
+    [SugarColumn(ColumnDescription = "库位状态（0.正常 1.异常）")]
+    public int? StorageStatus { get; set; }
+
+    /// <summary>
     /// 库位类别
     /// </summary>
     [SugarColumn(ColumnDescription = "库位类别", Length = 100)]
@@ -57,9 +63,9 @@ public class EGStorage : EntityBase
     public decimal? StorageHigh { get; set; }
 
     /// <summary>
-    /// 是否占用
+    /// 是否占用 0.未占用 1.已占用
     /// </summary>
-    [SugarColumn(ColumnDescription = "是否占用", Length = 5)]
+    [SugarColumn(ColumnDescription = "是否占用（0.未占用 1.已占用）", Length = 5)]
     public string? StorageOccupy { get; set; }
 
     /// <summary>
@@ -98,7 +104,6 @@ public class EGStorage : EntityBase
     [SugarColumn(ColumnDescription = "层号")]
     public int? FloorNumber { get; set; }
 
-    
     /// <summary>
     /// 仓库编号
     /// </summary>

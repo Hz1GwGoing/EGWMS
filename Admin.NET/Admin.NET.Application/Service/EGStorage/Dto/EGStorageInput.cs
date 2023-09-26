@@ -29,6 +29,11 @@ public class EGStorageBaseInput
     public virtual string? StorageType { get; set; }
 
     /// <summary>
+    /// 库位状态
+    /// </summary>
+    public virtual int? StorageStatus { get; set; }
+
+    /// <summary>
     /// 仓库名称
     /// </summary>
     public virtual string? WareHouseName { get; set; }
@@ -115,6 +120,10 @@ public class EGStorageInput : BasePageInput
     /// </summary>
     public string? StorageAddress { get; set; }
 
+    /// <summary>
+    /// 库位状态
+    /// </summary>
+    public int? StorageStatus { get; set; }
     /// <summary>
     /// 库位类别
     /// </summary>

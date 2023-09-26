@@ -34,9 +34,9 @@ public class EGPallet : EntityBase
     public DateTime? ExpirationDate { get; set; }
 
     /// <summary>
-    /// 状态
+    /// 状态 0.未启用 1.启用
     /// </summary>
-    [SugarColumn(ColumnDescription = "状态")]
+    [SugarColumn(ColumnDescription = "栈板状态（0.正常 1.异常）")]
     public int? PalletStatus { get; set; }
 
     /// <summary>

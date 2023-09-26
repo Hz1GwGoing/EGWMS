@@ -1,6 +1,4 @@
-﻿using Admin.NET.Core;
-
-namespace Admin.NET.Application.Entity;
+﻿namespace Admin.NET.Application.Entity;
 
 /// <summary>
 /// 盘点实体
@@ -15,10 +13,22 @@ public class EGTakeStock : EntityBase
     public string? TakeStockNum { get; set; }
 
     /// <summary>
-    /// 盘点状态
+    /// 盘点状态（0.待盘点 1.盘赢 2.盘亏）
     /// </summary>
-    [SugarColumn(ColumnDescription = "盘点状态")]
-    public int? TakeStockStatus { get; set; }
+    [SugarColumn(ColumnDescription = "盘点状态（0.待盘点 1.盘赢 2.盘亏）")]
+    public int? TakeStockStatus { get; set; } = 0;
+
+    /// <summary>
+    /// 盘点数量
+    /// </summary>
+    [SugarColumn(ColumnDescription = "盘点数量")]
+    public int? TakeStockCount { get; set; }
+
+    /// <summary>
+    /// 差值数量
+    /// </summary>
+    [SugarColumn(ColumnDescription = "差值数量")]
+    public int? TakeStockDiffCount { get; set; }
 
     /// <summary>
     /// 盘点时间
