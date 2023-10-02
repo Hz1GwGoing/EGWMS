@@ -1,7 +1,4 @@
-﻿using Admin.NET.Core;
-using System.ComponentModel.DataAnnotations;
-
-namespace Admin.NET.Application;
+﻿namespace Admin.NET.Application;
 
 /// <summary>
 /// EGInventory基础输入参数
@@ -155,6 +152,16 @@ public class QueryByIdEGInventoryInput
     /// <summary>
     /// 物料编号
     /// </summary>
-    public virtual string? MaterielNum { get; set; }
+    public string? MaterielNum { get; set; }
+
+    /// <summary>
+    /// 物料名称
+    /// </summary>
+    public string? MaterielName { get; set; }
+
+    /// <summary>
+    /// 物料规格
+    /// </summary>
+    public string? MaterielSpecs { get; set; }
 
 }

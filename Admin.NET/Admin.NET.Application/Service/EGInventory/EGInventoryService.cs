@@ -1,4 +1,8 @@
-﻿namespace Admin.NET.Application;
+﻿
+using Admin.NET.Application.Service.EGInventory.Dto;
+using static SKIT.FlurlHttpClient.Wechat.Api.Models.CgibinTagsMembersGetBlackListResponse.Types;
+
+namespace Admin.NET.Application;
 /// <summary>
 /// 库存主表接口
 /// </summary>
@@ -6,9 +10,16 @@
 public class EGInventoryService : IDynamicApiController, ITransient
 {
     private readonly SqlSugarRepository<EGInventory> _rep;
-    public EGInventoryService(SqlSugarRepository<EGInventory> rep)
+    private readonly SqlSugarRepository<EGMateriel> _materiel;
+
+    public EGInventoryService
+        (
+        SqlSugarRepository<EGInventory> rep,
+        SqlSugarRepository<EGMateriel> materiel
+        )
     {
         _rep = rep;
+        _materiel = materiel;
     }
 
     #region 分页查询库存主表
@@ -58,22 +69,78 @@ public class EGInventoryService : IDynamicApiController, ITransient
     }
     #endregion
 
-    #region 获取库存主表
+    #region 模糊查询符条件的数据
     /// <summary>
-    /// 获取库存主表
+    /// 模糊查询符条件的数据
     /// </summary>
     /// <param name="input"></param>
     /// <returns></returns>
     [HttpGet]
     [ApiDescriptionSettings(Name = "Detail")]
-    public async Task<EGInventory> Get([FromQuery] QueryByIdEGInventoryInput input)
+    public async Task<List<EGInventoryAndMaterielDto>> Get([FromQuery] QueryByIdEGInventoryInput input)
     {
-        //return await _rep.GetFirstAsync(u => u.Id == input.Id);
+        List<string> materielNums = new List<string>();
+        List<EGInventoryAndMaterielDto> EGInventoryAndMaterielData = new List<EGInventoryAndMaterielDto>();
 
-        // 模糊查询（物料编号）
-        return await _rep.GetFirstAsync(u => u.MaterielNum.Contains(input.MaterielNum));
+        try
+        {
+            List<EGMateriel> materielsData = await _materiel.GetListAsync
+                (
+                    u => u.MaterielNum.Contains(input.MaterielNum) ||
+                    u.MaterielName.Contains(input.MaterielName) ||
+                    u.MaterielSpecs.Contains(input.MaterielSpecs)
+                );
+            if (materielsData != null)
+            {
+                // 得到模糊查询里面的物料编号  
+                foreach (var item in materielsData)
+                {
+                    materielNums.Add(item.MaterielNum);
+                }
 
+                for (int i = 0; i < materielNums.Count; i++)
+                {
+                    string num = materielNums[i];
+
+                    try
+                    {
+                        var materieItem = await _materiel.GetFirstAsync(u => u.MaterielNum == num);
+                        var inventoryItem = await _rep.GetFirstAsync(u => u.MaterielNum == num);
+                        // 物料名称  
+                        var materielnum = materieItem.MaterielNum;
+                        // 物料名称  
+                        var materiename = materieItem.MaterielName;
+                        // 规格  
+                        var materielspecs = materieItem.MaterielSpecs;
+                        // 在库数量  
+                        var icountall = inventoryItem.ICountAll;
+                        // 可用数量  
+                        var iusable = inventoryItem.IUsable;
+
+                        EGInventoryAndMaterielDto inventory = new EGInventoryAndMaterielDto()
+                        {
+                            MaterielNum = materielnum,
+                            MaterielName = materiename,
+                            MaterielSpecs = materielspecs,
+                            ICountAll = (int)icountall,
+                            IUsable = (int)iusable,
+                        };
+                        EGInventoryAndMaterielData.Add(inventory);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex);
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
+        }
+        return EGInventoryAndMaterielData;
     }
+
     #endregion
 
     #region 获取库存主表列表
@@ -123,6 +190,63 @@ public class EGInventoryService : IDynamicApiController, ITransient
     //}
     #endregion
 
+    #region 模糊查询（根据物料编号和物料名称和物料规格查询）
+    //public async Task<List<EGInventoryAndMaterielDto>> Get([FromQuery] QueryByIdEGInventoryInput input)
+    //{
+
+    //    模糊查询（根据物料编号和物料名称和物料规格查询）
+    //    List<string> materielNums = new List<string>();
+    //    List<EGInventoryAndMaterielDto> EGInventoryAndMaterielData = new List<EGInventoryAndMaterielDto>();
+
+    //    List<EGMateriel> materielsData = await _materiel.GetListAsync
+    //        (
+    //            u => u.MaterielNum.Contains(input.MaterielNum) ||
+    //            u.MaterielName.Contains(input.MaterielName) ||
+    //            u.MaterielSpecs.Contains(input.MaterielSpecs)
+    //        );
+    //    if (materielsData != null)
+    //    {
+    //        得到模糊查询里面的物料编号
+    //        foreach (var item in materielsData)
+    //        {
+    //            materielNums.Add(item.MaterielNum);
+    //        }
+
+    //        for (int i = 0; i < materielNums.Count; i++)
+    //        {
+    //            string num = materielNums[i];
+
+    //            var materieItem = await _materiel.GetFirstAsync(u => u.MaterielNum == num);
+    //            var inventoryItem = await _rep.GetFirstAsync(u => u.MaterielNum == num);
+    //            物料名称
+    //           var materielnum = materieItem.MaterielNum;
+    //            物料名称
+    //           var materiename = materieItem.MaterielName;
+    //            规格
+    //           var materielspecs = materieItem.MaterielSpecs;
+    //            在库数量
+    //           var icountall = inventoryItem.ICountAll;
+    //            可用数量
+    //           var iusable = inventoryItem.IUsable;
+
+
+    //            EGInventoryAndMaterielDto inventory = new EGInventoryAndMaterielDto()
+    //            {
+    //                MaterielNum = materielnum,
+    //                MaterielName = materiename,
+    //                MaterielSpecs = materielspecs,
+    //                ICountAll = (int)icountall,
+    //                IUsable = (int)iusable,
+
+    //            };
+    //            EGInventoryAndMaterielData.Add(inventory);
+    //        }
+
+    //    }
+    //    return EGInventoryAndMaterielData;
+
+    //}
+    #endregion
 
 }
 

@@ -1,4 +1,6 @@
-﻿namespace Admin.NET.Application;
+﻿using Nest;
+
+namespace Admin.NET.Application;
 
 /// <summary>
 /// 入库信息接口
@@ -38,14 +40,20 @@ public class EGJoinBoundService : IDynamicApiController, ITransient
     [ApiDescriptionSettings(Name = "JoinBoundAdd")]
     public async Task JoinBoundAdd(InboundInfo input)
     {
+        // 时间戳（秒级）
+        //string timesStamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString();
+        string timesStamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString();
+        // 生成自动编号
+        string joinBoundNum = "EGRK" + timesStamp;
+
         // 获得入库编号相同的数据
         var isExist = await _rep.GetFirstAsync(u => u.JoinBoundNum == input.JoinBoundNum);
         if (isExist != null) throw Oops.Oh(ErrorCodeEnum.D1006);
         ////var data = input.detail;
         List<EGJoinBound> data = input.detail.Select(inventory => new EGJoinBound
         {
-            // 入库编号
-            JoinBoundNum = input.JoinBoundNum,
+            // 入库编号（自动生成）
+            JoinBoundNum = joinBoundNum,
             // 入库类型
             //JoinBoundType = input.JoinBoundType,
             // 入库人

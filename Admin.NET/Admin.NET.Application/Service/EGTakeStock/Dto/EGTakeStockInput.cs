@@ -16,6 +16,11 @@ public class EGTakeStockBaseInput
     public virtual int? TakeStockStatus { get; set; } = 0;
 
     /// <summary>
+    /// 盘点类别（0.根据物料盘点 1.根据库位盘点）
+    /// </summary>
+    public int? TakeStockType { get; set; }
+
+    /// <summary>
     /// 盘点数量
     /// </summary>
     public int? TakeStockCount { get; set; } = null;
@@ -61,6 +66,11 @@ public class EGTakeStockInput : BasePageInput
     /// 盘点状态
     /// </summary>
     public int? TakeStockStatus { get; set; } = 0;
+
+    /// <summary>
+    /// 盘点类别（0.根据物料盘点 1.根据库位盘点）
+    /// </summary>
+    public int? TakeStockType { get; set; }
 
     /// <summary>
     /// 盘点数量

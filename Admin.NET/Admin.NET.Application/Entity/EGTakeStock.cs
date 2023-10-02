@@ -19,6 +19,12 @@ public class EGTakeStock : EntityBase
     public int? TakeStockStatus { get; set; } = 0;
 
     /// <summary>
+    /// 盘点类别（0.根据物料盘点 1.根据库位盘点）
+    /// </summary>
+    [SugarColumn(ColumnDescription = "盘点类别（0.根据物料盘点 1.根据库位盘点）")]
+    public int? TakeStockType { get; set; }
+
+    /// <summary>
     /// 盘点数量
     /// </summary>
     [SugarColumn(ColumnDescription = "盘点数量")]

@@ -17,3 +17,5 @@ global using Microsoft.Extensions.DependencyInjection;
 global using Admin.NET.Application.Service.EGJoinBound.Dto;
 global using Admin.NET.Application.Service.EGWareHouse.Dto;
 global using Admin.NET.Application.Service.EGTakeStock.Dto;
+global using Admin.NET.Application.Service.EGInventory.Dto;
+global using Admin.NET.Application.Service.EGJoinBoundNew.Dto;
