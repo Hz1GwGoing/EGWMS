@@ -35,7 +35,7 @@ public class EGInboundRequest
     /// <summary>
     /// 包含多个物料对象
     /// </summary>
-    public List<EGMateriel> Materials { get; set; }
+    public List<EG_WMS_Materiel> Materials { get; set; }
 
 
 

@@ -1,12 +1,10 @@
-﻿using Admin.NET.Core;
-
-namespace Admin.NET.Application.Entity;
+﻿namespace Admin.NET.Application.Entity;
 
 /// <summary>
 /// 库存主表实体
 /// </summary>
-[SugarTable("EGInventory", "库存主表")]
-public class EGInventory : EntityBase
+[SugarTable("EG_WMS_Inventory", "库存主表")]
+public class EG_WMS_Inventory : EntityBase
 {
     /// <summary>
     /// 物料主键
@@ -19,8 +17,8 @@ public class EGInventory : EntityBase
     /// 库存编号
     /// </summary>
 
-    //[SugarColumn(ColumnDescription = "库存编号", Length = 50)]
-    //public string? InventoryNum { get; set; }
+    [SugarColumn(ColumnDescription = "库存编号", Length = 50)]
+    public string? InventoryNum { get; set; }
 
     /// <summary>
     /// 库存总数
@@ -46,19 +44,11 @@ public class EGInventory : EntityBase
     [SugarColumn(ColumnDescription = "待检数量")]
     public int? IWaitingCount { get; set; }
 
-
     /// <summary>
-    /// 入库编号
+    /// 出入库编号
     /// </summary>
-    [SugarColumn(ColumnDescription = "入库编号", Length = 50)]
-    public string JoinBoundNum { get; set; }
-
-
-    /// <summary>
-    /// 仓库编号
-    /// </summary>
-    [SugarColumn(ColumnDescription = "仓库编号", Length = 50)]
-    public string? WHNum { get; set; }
+    [SugarColumn(ColumnDescription = "出入库编号", Length = 50)]
+    public string? InAndOutBoundNum { get; set; }
 
     /// <summary>
     /// 物料编号
@@ -75,6 +65,7 @@ public class EGInventory : EntityBase
     /// <summary>
     /// 出库状态 0 未出库 1 已出库
     /// </summary>
+    [SugarColumn(ColumnDescription = "出库状态 0 未出库 1 已出库")]
     public int? OutboundStatus { get; set; } = 0;
 
 

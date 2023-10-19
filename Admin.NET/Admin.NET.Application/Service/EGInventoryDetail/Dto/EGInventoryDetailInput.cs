@@ -78,7 +78,7 @@ public class EGInventoryDetailInput : BasePageInput
     /// <summary>
     /// 库存编号
     /// </summary>
-    //public string? InventoryNum { get; set; }
+    public string? InventoryNum { get; set; }
 
     /// <summary>
     /// 生产批次

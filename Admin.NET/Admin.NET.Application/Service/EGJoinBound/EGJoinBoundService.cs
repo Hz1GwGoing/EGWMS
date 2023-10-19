@@ -9,17 +9,17 @@ namespace Admin.NET.Application;
 public class EGJoinBoundService : IDynamicApiController, ITransient
 {
     #region 引用实体
-    private readonly SqlSugarRepository<EGInventory> _db;
+    private readonly SqlSugarRepository<EG_WMS_Inventory> _db;
     private readonly SqlSugarRepository<EGJoinBound> _rep;
-    private readonly SqlSugarRepository<EGInventoryDetail> _InventoryDetail;
+    private readonly SqlSugarRepository<EG_WMS_InventoryDetail> _InventoryDetail;
     #endregion
 
     #region 关系注入
     public EGJoinBoundService
         (
           SqlSugarRepository<EGJoinBound> rep,
-          SqlSugarRepository<EGInventory> db,
-          SqlSugarRepository<EGInventoryDetail> inventoryDetail
+          SqlSugarRepository<EG_WMS_Inventory> db,
+          SqlSugarRepository<EG_WMS_InventoryDetail> inventoryDetail
         )
     {
         _rep = rep;
@@ -121,7 +121,7 @@ public class EGJoinBoundService : IDynamicApiController, ITransient
 
             // 创建一个新的EGInventory对象  
 
-            var inventory = new EGInventory
+            var inventory = new EG_WMS_Inventory
             {
                 JoinBoundNum = joinBoundNum,
                 ICountAll = joinBoundCount,
@@ -131,7 +131,7 @@ public class EGJoinBoundService : IDynamicApiController, ITransient
 
             // 创建一个新的EGInventoryDetail对象
 
-            var inventorydetail = new EGInventoryDetail
+            var inventorydetail = new EG_WMS_InventoryDetail
             {
                 // 物料编号
                 MaterielNum = materielNum,

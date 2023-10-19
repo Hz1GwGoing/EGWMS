@@ -6,8 +6,8 @@
 [ApiDescriptionSettings(ApplicationConst.GroupName, Order = 100)]
 public class EGWorkBinService : IDynamicApiController, ITransient
 {
-    private readonly SqlSugarRepository<EGWorkBin> _rep;
-    public EGWorkBinService(SqlSugarRepository<EGWorkBin> rep)
+    private readonly SqlSugarRepository<EG_WMS_WorkBin> _rep;
+    public EGWorkBinService(SqlSugarRepository<EG_WMS_WorkBin> rep)
     {
         _rep = rep;
     }
@@ -26,7 +26,8 @@ public class EGWorkBinService : IDynamicApiController, ITransient
         var query = _rep.AsQueryable()
                     .WhereIF(!string.IsNullOrWhiteSpace(input.WorkBinNum), u => u.WorkBinNum.Contains(input.WorkBinNum.Trim()))
                     .WhereIF(!string.IsNullOrWhiteSpace(input.WorkBinName), u => u.WorkBinName.Contains(input.WorkBinName.Trim()))
-                    .WhereIF(input.WorkBinSpecs > 0, u => u.WorkBinSpecs == input.WorkBinSpecs)
+                    // 料箱规格
+                    .WhereIF(!string.IsNullOrWhiteSpace(input.WorkBinSpecs), u => u.WorkBinSpecs.Contains(input.WorkBinSpecs.Trim()))
                     .WhereIF(input.MachineNum > 0, u => u.MachineNum == input.MachineNum)
                     .WhereIF(!string.IsNullOrWhiteSpace(input.Classes), u => u.Classes.Contains(input.Classes.Trim()))
                     .WhereIF(!string.IsNullOrWhiteSpace(input.ProductionLot), u => u.ProductionLot.Contains(input.ProductionLot.Trim()))
@@ -78,7 +79,7 @@ public class EGWorkBinService : IDynamicApiController, ITransient
     [ApiDescriptionSettings(Name = "Add")]
     public async Task Add(AddEGWorkBinInput input)
     {
-        var entity = input.Adapt<EGWorkBin>();
+        var entity = input.Adapt<EG_WMS_WorkBin>();
         await _rep.InsertAsync(entity);
     }
     #endregion
@@ -108,7 +109,7 @@ public class EGWorkBinService : IDynamicApiController, ITransient
     [ApiDescriptionSettings(Name = "Update")]
     public async Task Update(UpdateEGWorkBinInput input)
     {
-        var entity = input.Adapt<EGWorkBin>();
+        var entity = input.Adapt<EG_WMS_WorkBin>();
         await _rep.AsUpdateable(entity).IgnoreColumns(ignoreAllNullColumns: true).ExecuteCommandAsync();
     }
     #endregion
@@ -121,7 +122,7 @@ public class EGWorkBinService : IDynamicApiController, ITransient
     /// <returns></returns>
     [HttpGet]
     [ApiDescriptionSettings(Name = "Detail")]
-    public async Task<EGWorkBin> Get([FromQuery] QueryByIdEGWorkBinInput input)
+    public async Task<EG_WMS_WorkBin> Get([FromQuery] QueryByIdEGWorkBinInput input)
     {
         //return await _rep.GetFirstAsync(u => u.Id == input.Id);
 

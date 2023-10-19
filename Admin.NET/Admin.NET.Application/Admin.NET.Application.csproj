@@ -9,6 +9,24 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Service\EGJoinBoundNew\**" />
+    <Compile Remove="Service\EGJoinBound\**" />
+    <Compile Remove="Service\EGOutBound\**" />
+    <EmbeddedResource Remove="Service\EGJoinBoundNew\**" />
+    <EmbeddedResource Remove="Service\EGJoinBound\**" />
+    <EmbeddedResource Remove="Service\EGOutBound\**" />
+    <None Remove="Service\EGJoinBoundNew\**" />
+    <None Remove="Service\EGJoinBound\**" />
+    <None Remove="Service\EGOutBound\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="Entity\EGJoinBound.cs" />
+    <Compile Remove="Entity\EGJoinBoundNewEntity.cs" />
+    <Compile Remove="Entity\EGOutBound.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="Admin.NET.Application.xml" />
     <None Remove="Configuration\Limit.json" />
     <None Remove="Configuration\Logging.json" />
@@ -30,15 +48,15 @@
   </ItemGroup>
 
   <ItemGroup>
-	  <None Update="Configuration\APIJSON.json">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </None>
-	  <None Update="Configuration\App.json">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </None>
-	  <None Update="Configuration\Captcha.json">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </None>
+    <None Update="Configuration\APIJSON.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Configuration\App.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Configuration\Captcha.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Configuration\Cache.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -64,6 +82,10 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Configuration\OSS.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <!-- 修改 -->
+    <None Update="Configuration\RCS.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Configuration\Swagger.json">

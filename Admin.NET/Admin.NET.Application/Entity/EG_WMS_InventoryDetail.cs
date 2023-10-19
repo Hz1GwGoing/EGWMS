@@ -5,12 +5,12 @@ namespace Admin.NET.Application.Entity;
 /// <summary>
 /// 库存明细表实体
 /// </summary>
-[SugarTable("EGInventoryDetail", "库存明细表")]
-public class EGInventoryDetail : EntityBase
+[SugarTable("EG_WMS_InventoryDetail", "库存明细表")]
+public class EG_WMS_InventoryDetail : EntityBase
 {
-    /// <summary>
-    /// 物料编号
-    /// </summary>
+    ///// <summary>
+    ///// 物料编号
+    ///// </summary>
     [SugarColumn(ColumnDescription = "物料编号", Length = 50)]
     public string? MaterielNum { get; set; }
 
@@ -18,8 +18,8 @@ public class EGInventoryDetail : EntityBase
     /// 库存编号
     /// </summary>
 
-    //[SugarColumn(ColumnDescription = "库存编号", Length = 50)]
-    //public string? InventoryNum { get; set; }
+    [SugarColumn(ColumnDescription = "库存编号", Length = 50)]
+    public string? InventoryNum { get; set; }
 
     /// <summary>
     /// 生产批次

@@ -18,7 +18,7 @@
         /// <summary>
         /// 科箱规格
         /// </summary>
-        public int? WorkBinSpecs { get; set; }
+        public string? WorkBinSpecs { get; set; }
         
         /// <summary>
         /// 机台号

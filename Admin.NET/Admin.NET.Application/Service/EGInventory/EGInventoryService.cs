@@ -9,13 +9,13 @@ namespace Admin.NET.Application;
 [ApiDescriptionSettings(ApplicationConst.GroupName, Order = 100)]
 public class EGInventoryService : IDynamicApiController, ITransient
 {
-    private readonly SqlSugarRepository<EGInventory> _rep;
-    private readonly SqlSugarRepository<EGMateriel> _materiel;
+    private readonly SqlSugarRepository<EG_WMS_Inventory> _rep;
+    private readonly SqlSugarRepository<EG_WMS_Materiel> _materiel;
 
     public EGInventoryService
         (
-        SqlSugarRepository<EGInventory> rep,
-        SqlSugarRepository<EGMateriel> materiel
+        SqlSugarRepository<EG_WMS_Inventory> rep,
+        SqlSugarRepository<EG_WMS_Materiel> materiel
         )
     {
         _rep = rep;
@@ -47,6 +47,8 @@ public class EGInventoryService : IDynamicApiController, ITransient
                     .WhereIF(input.OutboundStatus > 0, u => u.OutboundStatus == input.OutboundStatus)
                     // 获取创建日期
                     .WhereIF(input.CreateTime > DateTime.MinValue, u => u.CreateTime >= input.CreateTime)
+                    // 倒序
+                    .OrderBy(it => it.CreateTime, OrderByType.Desc)
                     .Select<EGInventoryOutput>()
 ;
         query = query.OrderBuilder(input);
@@ -64,7 +66,7 @@ public class EGInventoryService : IDynamicApiController, ITransient
     [ApiDescriptionSettings(Name = "Update")]
     public async Task Update(UpdateEGInventoryInput input)
     {
-        var entity = input.Adapt<EGInventory>();
+        var entity = input.Adapt<EG_WMS_Inventory>();
         await _rep.AsUpdateable(entity).IgnoreColumns(ignoreAllNullColumns: true).ExecuteCommandAsync();
     }
     #endregion
@@ -75,16 +77,16 @@ public class EGInventoryService : IDynamicApiController, ITransient
     /// </summary>
     /// <param name="input"></param>
     /// <returns></returns>
-    [HttpGet]
+    [HttpPost]
     [ApiDescriptionSettings(Name = "Detail")]
-    public async Task<List<EGInventoryAndMaterielDto>> Get([FromQuery] QueryByIdEGInventoryInput input)
+    public async Task<List<EGInventoryAndMaterielDto>> Detail([FromBody] QueryByIdEGInventoryInput input)
     {
         List<string> materielNums = new List<string>();
         List<EGInventoryAndMaterielDto> EGInventoryAndMaterielData = new List<EGInventoryAndMaterielDto>();
 
         try
         {
-            List<EGMateriel> materielsData = await _materiel.GetListAsync
+            List<EG_WMS_Materiel> materielsData = await _materiel.GetListAsync
                 (
                     u => u.MaterielNum.Contains(input.MaterielNum) ||
                     u.MaterielName.Contains(input.MaterielName) ||

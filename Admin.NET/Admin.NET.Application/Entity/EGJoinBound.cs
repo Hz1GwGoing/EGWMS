@@ -1,8 +1,4 @@
-﻿using Admin.NET.Application.Service.EGJoinBound.Dto;
-using Admin.NET.Core;
-using System.Collections.Generic;
-
-namespace Admin.NET.Application.Entity;
+﻿namespace Admin.NET.Application.Entity;
 
 /// <summary>
 /// 入库实体
@@ -46,7 +42,6 @@ public class EGJoinBound : EntityBase
     /// </summary>
     [SugarColumn(ColumnDescription = "入库状态")]
     public int? JoinBoundStatus { get; set; }
-
 
     /// <summary>
     /// 回库更新时间

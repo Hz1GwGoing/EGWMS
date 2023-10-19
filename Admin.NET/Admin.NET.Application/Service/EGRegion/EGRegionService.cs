@@ -5,8 +5,8 @@
 [ApiDescriptionSettings(ApplicationConst.GroupName, Order = 100)]
 public class EGRegionService : IDynamicApiController, ITransient
 {
-    private readonly SqlSugarRepository<EGRegion> _rep;
-    public EGRegionService(SqlSugarRepository<EGRegion> rep)
+    private readonly SqlSugarRepository<EG_WMS_Region> _rep;
+    public EGRegionService(SqlSugarRepository<EG_WMS_Region> rep)
     {
         _rep = rep;
     }
@@ -34,7 +34,7 @@ public class EGRegionService : IDynamicApiController, ITransient
                     .WhereIF(!string.IsNullOrWhiteSpace(input.RegionRemake), u => u.RegionRemake.Contains(input.RegionRemake.Trim()))
                     .WhereIF(!string.IsNullOrWhiteSpace(input.WHNum), u => u.WHNum.Contains(input.WHNum.Trim()))
                     //处理外键和TreeSelector相关字段的连接
-                    .LeftJoin<EGWareHouse>((u, whnum) => u.WHNum == whnum.WHNum)
+                    .LeftJoin<EG_WMS_WareHouse>((u, whnum) => u.WHNum == whnum.WHNum)
                     .Select((u, whnum) => new EGRegionOutput
                     {
                         Id = u.Id,
@@ -66,7 +66,7 @@ public class EGRegionService : IDynamicApiController, ITransient
     [ApiDescriptionSettings(Name = "Add")]
     public async Task Add(AddEGRegionInput input)
     {
-        var entity = input.Adapt<EGRegion>();
+        var entity = input.Adapt<EG_WMS_Region>();
         await _rep.InsertAsync(entity);
     }
     #endregion
@@ -96,7 +96,7 @@ public class EGRegionService : IDynamicApiController, ITransient
     [ApiDescriptionSettings(Name = "Update")]
     public async Task Update(UpdateEGRegionInput input)
     {
-        var entity = input.Adapt<EGRegion>();
+        var entity = input.Adapt<EG_WMS_Region>();
         await _rep.AsUpdateable(entity).IgnoreColumns(ignoreAllNullColumns: true).ExecuteCommandAsync();
     }
     #endregion
@@ -109,7 +109,7 @@ public class EGRegionService : IDynamicApiController, ITransient
     /// <returns></returns>
     [HttpGet]
     [ApiDescriptionSettings(Name = "Detail")]
-    public async Task<EGRegion> Get([FromQuery] QueryByIdEGRegionInput input)
+    public async Task<EG_WMS_Region> Get([FromQuery] QueryByIdEGRegionInput input)
     {
         //return await _rep.GetFirstAsync(u => u.Id == input.Id);
         
@@ -140,7 +140,7 @@ public class EGRegionService : IDynamicApiController, ITransient
     [ApiDescriptionSettings(Name = "EGWareHouseWHNameDropdown"), HttpGet]
     public async Task<dynamic> EGWareHouseWHNumDropdown()
     {
-        return await _rep.Context.Queryable<EGWareHouse>()
+        return await _rep.Context.Queryable<EG_WMS_WareHouse>()
                 .Select(u => new
                 {
                     ISWareHouse = u.WHName,

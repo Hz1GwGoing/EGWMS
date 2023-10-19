@@ -5,8 +5,8 @@ namespace Admin.NET.Application.Entity;
 /// <summary>
 /// 区域实体
 /// </summary>
-[SugarTable("EGRegion", "区域信息表")]
-public class EGRegion : EntityBase
+[SugarTable("EG_WMS_Region", "区域信息表")]
+public class EG_WMS_Region : EntityBase
 {
     /// <summary>
     /// 区域编号

@@ -52,7 +52,7 @@ public class EGRelocationBaseInput
     /// <summary>
     /// 移库备注
     /// </summary>
-    public virtual string? Relocation { get; set; }
+    public virtual string? RelocationRemake { get; set; }
 
     /// <summary>
     /// 物料编号
@@ -80,6 +80,17 @@ public class EGRelocationInput : BasePageInput
     /// 移库数量
     /// </summary>
     public int? RelocationCount { get; set; }
+
+    /// <summary>
+    /// 原库位
+    /// </summary>
+    public string OldStorage { get; set; }
+
+    /// <summary>
+    /// 新库位
+    /// </summary>
+    public string NewStorage { get; set; }
+
 
     /// <summary>
     /// 移库人
@@ -113,7 +124,7 @@ public class EGRelocationInput : BasePageInput
     /// <summary>
     /// 移库备注
     /// </summary>
-    public string? Relocation { get; set; }
+    public string? RelocationRemake { get; set; }
 
     /// <summary>
     /// 物料编号

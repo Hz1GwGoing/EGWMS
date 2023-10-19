@@ -78,8 +78,8 @@ public class InboundInfo
     /// 入库备注
     /// </summary>
     public string? JoinBoundRemake { get; set; }
-    public List<InventoryInfo> detail { get; set; }
 
+    public List<InventoryInfo> detail { get; set; }
 
 }
 

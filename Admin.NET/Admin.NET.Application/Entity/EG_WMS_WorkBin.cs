@@ -1,12 +1,10 @@
-﻿using Admin.NET.Core;
-
-namespace Admin.NET.Application.Entity;
+﻿namespace Admin.NET.Application.Entity;
 
 /// <summary>
 /// 料箱实体
 /// </summary>
-[SugarTable("EGWorkBin", "料箱信息表")]
-public class EGWorkBin : EntityBase
+[SugarTable("EG_WMS_WorkBin", "料箱信息表")]
+public class EG_WMS_WorkBin : EntityBase
 {
     /// <summary>
     /// 料箱编号
@@ -24,7 +22,7 @@ public class EGWorkBin : EntityBase
     /// 科箱规格
     /// </summary>
     [SugarColumn(ColumnDescription = "科箱规格")]
-    public int? WorkBinSpecs { get; set; }
+    public string? WorkBinSpecs { get; set; }
 
     /// <summary>
     /// 机台号

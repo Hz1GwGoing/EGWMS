@@ -48,7 +48,7 @@
        /// <summary>
        /// 移库备注
        /// </summary>
-       public string? Relocation { get; set; }
+       public string? RelocationRemake { get; set; }
     
        /// <summary>
        /// Id

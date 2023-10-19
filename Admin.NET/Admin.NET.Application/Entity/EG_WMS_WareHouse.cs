@@ -5,8 +5,8 @@ namespace Admin.NET.Application.Entity;
 /// <summary>
 /// 仓库实体
 /// </summary>
-[SugarTable("EGWareHouse", "仓库信息表")]
-public class EGWareHouse : EntityBase
+[SugarTable("EG_WMS_WareHouse", "仓库信息表")]
+public class EG_WMS_WareHouse : EntityBase
 {
     /// <summary>
     /// 仓库编号

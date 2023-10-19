@@ -6,8 +6,8 @@
 [ApiDescriptionSettings(ApplicationConst.GroupName, Order = 100)]
 public class EGMaterielService : IDynamicApiController, ITransient
 {
-    private readonly SqlSugarRepository<EGMateriel> _rep;
-    public EGMaterielService(SqlSugarRepository<EGMateriel> rep)
+    private readonly SqlSugarRepository<EG_WMS_Materiel> _rep;
+    public EGMaterielService(SqlSugarRepository<EG_WMS_Materiel> rep)
     {
         _rep = rep;
     }
@@ -54,7 +54,7 @@ public class EGMaterielService : IDynamicApiController, ITransient
     [ApiDescriptionSettings(Name = "Add")]
     public async Task Add(AddEGMaterielInput input)
     {
-        var entity = input.Adapt<EGMateriel>();
+        var entity = input.Adapt<EG_WMS_Materiel>();
         await _rep.InsertAsync(entity);
     }
     #endregion
@@ -86,7 +86,7 @@ public class EGMaterielService : IDynamicApiController, ITransient
     [ApiDescriptionSettings(Name = "Update")]
     public async Task Update(UpdateEGMaterielInput input)
     {
-        var entity = input.Adapt<EGMateriel>();
+        var entity = input.Adapt<EG_WMS_Materiel>();
         await _rep.AsUpdateable(entity).IgnoreColumns(ignoreAllNullColumns: true).ExecuteCommandAsync();
     }
     #endregion
@@ -99,7 +99,7 @@ public class EGMaterielService : IDynamicApiController, ITransient
     /// <returns></returns>
     [HttpGet]
     [ApiDescriptionSettings(Name = "Detail")]
-    public async Task<EGMateriel> Get([FromQuery] QueryByIdEGMaterielInput input)
+    public async Task<EG_WMS_Materiel> Get([FromQuery] QueryByIdEGMaterielInput input)
     {
         //return await _rep.GetFirstAsync(u => u.Id == input.Id);
 

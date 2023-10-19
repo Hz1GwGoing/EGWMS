@@ -1,0 +1,641 @@
+﻿using Admin.NET.Application.Service.AGV.Task.DTO;
+using Admin.NET.Application.Util;
+using Admin.NET.Application.AGV.AGVEntity;
+using Microsoft.AspNetCore.Authorization;
+using Admin.NET.Application.Service.AGV.V2.Task.DTO;
+using Newtonsoft.Json;
+
+namespace Admin.NET.Application.Service.AGV.Task
+{
+    [ApiDescriptionSettings("AGV模块接口V2.0", Name = "任务信息", Order = 100)]
+    public class TaskService : IDynamicApiController, ITransient
+    {
+        private static readonly DHRequester _DHRequester = new DHRequester();
+
+        private readonly SqlSugarRepository<TaskEntity> _TaskEntity = App.GetService<SqlSugarRepository<TaskEntity>>();
+        private readonly SqlSugarRepository<TaskDetailEntity> _TaskDetailEntity = App.GetService<SqlSugarRepository<TaskDetailEntity>>();
+        private readonly SqlSugarRepository<TemLogicEntity> _TemLogicEntity = App.GetService<SqlSugarRepository<TemLogicEntity>>();
+        private readonly SqlSugarRepository<InfoEntity> _InfoEntity = App.GetService<SqlSugarRepository<InfoEntity>>();
+        public TaskService()
+        {
+
+        }
+
+
+        #region 任务下达
+
+        public async System.Threading.Tasks.Task<DHMessage> AddAsync(TaskEntity taskEntity)
+        {
+            // 查询是否有传入的模板
+            var temLogItem = _TemLogicEntity.GetFirst(p => p.TemLogicNo == taskEntity.ModelNo);
+            if (temLogItem == null || string.IsNullOrEmpty(temLogItem.TemLogicNo))
+            {
+                throw Oops.Oh($"未找到对应的任务模版！");
+            }
+
+            // 得到任务点位数
+            var positions = taskEntity.TaskPath.Split(',');
+            if (temLogItem.PointNum != positions.Length)
+            {
+                throw Oops.Oh($"传入的点位数量与模版预设的点位数不符！");
+            }
+            #region 本地入库
+            if (taskEntity.Id == 0) taskEntity.Id = SnowFlakeSingle.Instance.NextId();
+            taskEntity.TaskNo = taskEntity.TaskNo ?? taskEntity.Id.ToString();
+            taskEntity.CreateTime = DateTime.Now;
+            taskEntity.UpdateTime = DateTime.Now;
+            taskEntity.Source = taskEntity.Source ?? "手工下发";
+            taskEntity.TaskState = null;
+            if (taskEntity.Priority == 0) taskEntity.Priority = 6;
+            taskEntity.TaskName = taskEntity.TaskName ?? temLogItem.TemLogicName;
+
+            var taskDetailList = positions.Select(t => new TaskDetailEntity
+            {
+                TaskID = taskEntity.Id,
+                TaskPath = t,
+                CreateTime = DateTime.Now,
+                UpdateTime = DateTime.Now
+            }).ToList();
+            //await _TaskDetailEntity.InsertOrUpdateAsync(taskDetailList); //任务详细
+            #endregion
+
+            #region DH请求
+            DHMessage dHMessage = await _DHRequester.AddTaskAsync(taskEntity);
+            if (dHMessage.code == 500)
+            {
+                throw Oops.Oh($"{dHMessage.desc}");
+            }
+            //var nowTaskItemJsonString = JsonConvert.SerializeObject(input);
+            #endregion
+
+            var item = await _TaskEntity.InsertAsync(taskEntity); //任务主表
+
+            await _TaskDetailEntity.InsertOrUpdateAsync(taskDetailList); //任务详细
+            return dHMessage;
+        }
+
+
+        /// <summary>
+        /// 下达任务
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        [HttpPost("/AGV/Task/AddAsync")]
+        public async System.Threading.Tasks.Task AddAsync(AddDTO input)
+        {
+            //var para = JsonConvert.SerializeObject(input);
+            //_ = FileUtil.DebugTxt("V2.0 新增任务记录", MessageTypeEnum.记录, para, "", "新增任务记录");
+            try
+            {
+                #region 请求数据验证
+                if (input.IsAdd == 1 && string.IsNullOrEmpty(input.TaskNo))
+                {
+                    throw Oops.Oh($"isAdd等于1为追加任务，追加任务必须传入被追加的任务编号！");
+                    //throw new Exception("isAdd等于1为追加任务，追加任务必须传入被追加的任务编号！");
+                }
+
+                if (string.IsNullOrEmpty(input.ModelNo))
+                {
+                    throw Oops.Oh($"请传入任务模版编号！");
+                }
+
+                if (string.IsNullOrEmpty(input.TaskDetail[0].Positions))
+                {
+                    throw Oops.Oh($"请传入运行的点位信息！");
+                }
+                #endregion
+
+                TaskEntity taskEntity = input.Adapt<TaskEntity>();
+                taskEntity.TaskPath = input.TaskDetail[0].Positions;
+                taskEntity.AGV = input.TaskDetail[0].AgvNo;
+                await AddAsync(taskEntity);
+            }
+            catch (Exception ex)
+            {
+                //_ = FileUtil.DebugTxt(ex.Message, MessageTypeEnum.记录, para, ex.StackTrace, "新增任务Error");
+                throw Oops.Oh($"{ex.Message}");
+            }
+        }
+        #endregion
+
+        #region 追加点位
+        /// <summary>
+        /// 追加点位信息
+        /// </summary>
+        /// <param name="input"> </param>
+        /// <returns></returns>
+        [HttpPost("/AGV/Task/AppendAsync")]
+        public async System.Threading.Tasks.Task AppendAsync(AppendAsyncDTO input)
+        {
+            //var para = JsonConvert.SerializeObject(dto);
+            //_ = FileUtil.DebugTxt("V2.0 AppendAsync", MessageTypeEnum.记录, para, "", "追加点位信息");
+            try
+            {
+                #region 请求数据验证
+                //var temLogicNo = App.Configuration["RCS:TemLogicNo"];
+                //if (string.IsNullOrEmpty(temLogicNo))
+                //{
+                //    throw new Exception("现场实施未在配置文件内配置对应的模版编号！");
+                //}
+
+                if (string.IsNullOrEmpty(input.taskNo))
+                {
+                    throw Oops.Oh($"任务编号必须传入！");
+                }
+
+                if (string.IsNullOrEmpty(input.positions))
+                {
+                    throw Oops.Oh($"点位信息必须传入！");
+                }
+
+                //if (string.IsNullOrEmpty(input.source))
+                //{
+                //    throw Oops.Oh($"来源必须传入！");
+                //}
+                #endregion
+
+                #region 本地入库
+
+                #endregion
+
+                #region DH请求
+
+                #endregion
+            }
+            catch (Exception ex)
+            {
+                //_ = FileUtil.DebugTxt(ex.Message, MessageTypeEnum.记录, para, ex.StackTrace, "新增任务Error");
+                throw new Exception(ex.Message);
+            }
+        }
+        #endregion
+
+        #region 变更任务点位
+        /// <summary>
+        /// 变更任务点位
+        /// </summary>
+        /// <param name="updateTaskPointDto"></param>
+        /// <returns></returns>
+        [HttpPost("/AGV/Task/UpdateTaskPoint")]
+        public async System.Threading.Tasks.Task UpdateTaskPoint(UpdateTaskPointDto updateTaskPointDto)
+        {
+            //var para = JsonConvert.SerializeObject(updateTaskPointDto);
+            try
+            {
+                if (string.IsNullOrEmpty(updateTaskPointDto.TaskNo))
+                {
+                    throw Oops.Oh($"必须传入需要变更的任务单号！");
+                }
+                if (string.IsNullOrEmpty(updateTaskPointDto.PointPath))
+                {
+                    throw new Exception("必须传入点位信息！");
+                }
+                var taskItem = _TaskEntity.GetFirst(p => p.TaskNo == updateTaskPointDto.TaskNo);
+                if (taskItem == null || string.IsNullOrEmpty(taskItem.TaskNo))
+                {
+                    throw new Exception($"未找到{updateTaskPointDto.TaskNo}的任务单！");
+                }
+                var taskDetalList = _TaskDetailEntity.GetList(p => p.TaskID == taskItem.Id);
+                if (taskDetalList != null && taskDetalList.Any())
+                {
+                    await _TaskDetailEntity.DeleteAsync(taskDetalList);
+                }
+                var paths = updateTaskPointDto.PointPath.Split(',');
+                List<TaskDetailEntity> newTaskDetailList = new List<TaskDetailEntity>();
+                foreach (var item in paths)
+                {
+                    TaskDetailEntity newTaskDetail = new TaskDetailEntity();
+                    newTaskDetail.TaskPath = item;
+                    newTaskDetail.TaskID = taskItem.Id;
+                    newTaskDetailList.Add(newTaskDetail);
+                }
+                #region 调用DH
+                DHMessage dHMessage = await _DHRequester.UpdateTaskAsync(updateTaskPointDto.TaskNo, updateTaskPointDto.PointPath);
+                //_ = FileUtil.DebugTxt("DH返回信息", MessageTypeEnum.记录, JsonConvert.SerializeObject(dHMessage), DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), "V2.0任务变更请求记录");
+                if (dHMessage.code == 500)
+                {
+                    throw new Exception(dHMessage.desc);
+                }
+                #endregion
+
+                await _TaskDetailEntity.InsertOrUpdateAsync(newTaskDetailList);
+                //_ = FileUtil.DebugTxt("请求日志", MessageTypeEnum.记录, para, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), "V2.0任务变更请求记录");
+
+            }
+            catch (Exception ex)
+            {
+                //_ = FileUtil.DebugTxt(ex.Message, MessageTypeEnum.错误, para, ex.StackTrace, "V2.0任务变更错误记录");
+                throw new Exception(ex.Message);
+            }
+        }
+        #endregion
+
+        #region 获取数据
+
+
+        /// <summary>
+        /// 分页查询任务单信息
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        [HttpPost("/AGV/Task/PageAsync")]
+        public async Task<SqlSugarPagedList<TaskEntity>> PageAsync(InDTO input)
+        {
+            try
+            {
+                DateTime? sTime = null;
+                DateTime? eTime = null;
+
+                if (input.CreateTime != null)
+                {
+                    sTime = Convert.ToDateTime(
+                        $"{Convert.ToDateTime(input.CreateTime).ToString("yyyy-MM-dd")} 00:00:00");
+                    eTime = Convert.ToDateTime(
+                        $"{Convert.ToDateTime(input.CreateTime).ToString("yyyy-MM-dd")} 23:59:59");
+                }
+                var taskPageList = await _TaskEntity.AsQueryable()
+                    .WhereIF(!string.IsNullOrWhiteSpace(input.AGVNo), u => u.AGV.Contains(input.AGVNo.Trim()))
+                    .WhereIF(!string.IsNullOrWhiteSpace(input.TaskName), u => u.TaskName.Contains(input.TaskName.Trim()))
+                    .WhereIF(!string.IsNullOrWhiteSpace(input.TaskNo), u => u.TaskNo.Contains(input.TaskNo.Trim()))
+                    .WhereIF(!string.IsNullOrWhiteSpace(input.Source), u => u.Source.Contains(input.Source.Trim()))
+                    .WhereIF(input.CreateTime != null, p => p.CreateTime >= sTime && p.CreateTime <= eTime)
+                    .WhereIF(!string.IsNullOrWhiteSpace(input.Source), u => input.TaskState.Trim().Contains(u.TaskState.ToString()))
+                    .OrderByDescending(p => p.Id)
+                    .ToPagedListAsync(input.Page, input.PageSize);
+                return taskPageList;
+            }
+            catch (Exception ex)
+            {
+                //_ = FileUtil.DebugTxt(ex.Message, MessageTypeEnum.错误, para, ex.StackTrace, "获取任务列表Error");
+                throw new Exception($"{ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 获取任务信息
+        /// </summary>
+        /// <param name="taskNo"></param>
+        /// <returns></returns>
+        [HttpGet("/AGV/Task/GetItemAsync")]
+        public async Task<TaskDTO> GetItemAsync(string taskNo)
+        {
+            //_ = FileUtil.DebugTxt("获取任务详细", MessageTypeEnum.记录, taskNo, "", "获取任务详细记录");
+            //TaskDTO taskDto = new TaskDTO();
+            try
+            {
+                if (string.IsNullOrEmpty(taskNo))
+                {
+                    throw Oops.Oh($"任务ID不可为空！");
+                }
+                TaskEntity taskItem = _TaskEntity.GetFirst(p => p.TaskNo == taskNo);
+                TaskDTO taskDto = taskItem.Adapt<TaskDTO>();
+                if (taskItem != null && !string.IsNullOrEmpty(taskItem.TaskNo))
+                {
+                    var dHMessage = await _DHRequester.GetTaskAsync(taskNo);
+                    if (dHMessage.code == 500)
+                    {
+                        throw Oops.Oh($"{dHMessage.desc}");
+                    }
+                    var daString = JsonConvert.SerializeObject(dHMessage.data);
+                    var da = JsonConvert.DeserializeObject<taskV2>(daString);
+
+                    if (!string.IsNullOrEmpty(taskItem.AGV))
+                    {
+                        var infoItem = await _InfoEntity.GetFirstAsync(p => p.AgvNo == taskItem.AGV);
+                        taskDto.AssetNumber = infoItem?.AssetNumber;
+                    }
+                    if (da.statusObj != null)
+                    {
+                        var detaiItem = JsonConvert.DeserializeObject<AcceptDTO>(da.statusObj.ToString());
+                        //var detaiItem = da.taskOrderDetail[0];
+                        taskDto.SubTaskSeq = detaiItem?.subTaskSeq;
+                        taskDto.SubTaskStatus = detaiItem?.subTaskStatus;
+                        taskDto.TaskState = detaiItem.status;
+                        taskDto.AGV = detaiItem?.deviceNum;
+                    }
+                    taskItem.TaskState = taskDto.TaskState;
+                    taskItem.SubTaskSeq = taskDto.SubTaskSeq;
+                    await _TaskEntity.UpdateAsync(taskItem);
+                }
+                return taskDto;
+            }
+            catch (Exception ex)
+            {
+                //_ = FileUtil.DebugTxt(ex.Message, MessageTypeEnum.错误, taskNo, ex.StackTrace, "获取任务详细Error");
+                throw Oops.Oh($"{ex.Message}");
+            }
+        }
+
+
+        /// <summary>
+        /// 任务单各状态数量汇总
+        /// </summary>
+        /// <param name="dateTime">汇总日期</param>
+        /// <returns></returns>
+        [HttpGet("/AGV/Task/SumTask")]
+        public SumTaskDTO SumTask(DateTime dateTime)
+        {
+            SumTaskDTO sumTaskDto = new SumTaskDTO();
+            //var taskList = _TaskEntity.SqlQueryAsync<TaskEntity>($"select * from agv_task where STR_TO_DATE({nameof(TaskEntity.CreatedTime)}, '%Y-%m-%d')='{dateTime.ToString("yyyy-MM-dd")}'").Result;
+            // null：请求成功；1：未发送；2：正在取消；3：已取消；4：正在发送；5：发送失败；6：执行中；7：执行失败；8：任务完成；9：已下发;
+            var taskList = _TaskEntity.GetList(p =>
+                Convert.ToDateTime(p.CreateTime).ToString("yyyy-MM-dd") == dateTime.ToString("yyyy-MM-dd"));
+            sumTaskDto.CancelQTY = taskList.Where(p => p.TaskState == 2 || p.TaskState == 3)?.Count() ?? 0;
+            sumTaskDto.FailQTY = taskList.Where(p => p.TaskState == 5 || p.TaskState == 7)?.Count() ?? 0;
+            sumTaskDto.FinisQTY = taskList.Where(p => p.TaskState == 8)?.Count() ?? 0;
+            sumTaskDto.NotStartedQTY =
+                taskList.Where(p => p.TaskState == null || p.TaskState == 9 || p.TaskState == 4 || p.TaskState == 1)
+                    ?.Count() ?? 0;
+            sumTaskDto.StartQTY = taskList.Where(p => p.TaskState == 6)?.Count() ?? 0;
+            return sumTaskDto;
+        }
+
+        #endregion
+
+        #region 取消、继续、完成
+        /// <summary>
+        /// 取消任务
+        /// </summary>
+        /// <param name="cancelDTO"></param>
+        /// <returns></returns>
+        [HttpPost("/AGV/Task/CancelAsync")]
+        public async System.Threading.Tasks.Task CancelAsync(CancelDTO cancelDTO)
+        {
+            if (cancelDTO == null || string.IsNullOrEmpty(cancelDTO.TaskNo))
+            {
+                throw Oops.Oh($"取消任务时未传入对应的任务ID！");
+            }
+
+            //var para = JsonConvert.SerializeObject(cancelDTO);
+            //_ = FileUtil.DebugTxt("取消日志记录", MessageTypeEnum.记录, para, "", "V2.0取消日志记录");
+            try
+            {
+                #region 调用DH接口
+                var dHMessage = await _DHRequester.CancelTaskAsync(cancelDTO);
+                if (dHMessage.code == 500)
+                {
+                    throw Oops.Oh($"{dHMessage.desc}");
+                }
+                #endregion
+
+                #region 写本地库
+                var taskList = _TaskEntity.GetList(p => p.TaskNo == cancelDTO.TaskNo);
+                // var taskEntity = await _TaskEntity.FirstOrDefaultAsync(p => p.TaskNo == cancelDTO.TaskNo);
+                foreach (var item in taskList)
+                {
+                    // 1：未发送；2：正在取消；3：已取消；4：正在发送；5：发送失败；6：执行中；7：执行失败；8：任务完成；9：已下发;
+                    item.TaskState = 3;
+                    item.UpdateTime = DateTime.Now;
+                }
+                await _TaskEntity.UpdateRangeAsync(taskList);
+                #endregion
+            }
+            catch (Exception ex)
+            {
+                //_ = FileUtil.DebugTxt(ex.Message, MessageTypeEnum.记录, para, ex.StackTrace, "V2.0取消日志Error");
+                throw Oops.Oh($"{ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// 继续任务
+        /// 如已是最后一个点位，该任务会自动完成
+        /// </summary>
+        /// <param name="goOnAsyncDTO"></param>
+        /// <returns></returns>
+        [HttpPost("/AGV/Task/GoOnAsync")]
+        public async System.Threading.Tasks.Task GoOnAsync(GoOnAsyncDTO goOnAsyncDTO)
+        {
+            //_ = FileUtil.DebugTxt("继续任务接口请求", MessageTypeEnum.记录, goOnAsyncDTO.taskNo, "", "继续任务记录");
+            try
+            {
+                var dHMessage = await _DHRequester.GoOnTaskAsync(goOnAsyncDTO.taskNo);
+                //_ = FileUtil.DebugTxt("DH返回信息", MessageTypeEnum.记录, goOnAsyncDTO.taskNo, JsonConvert.SerializeObject(dHMessage), "继续任务记录");
+                if (dHMessage.code == 500)
+                {
+                    throw new Exception(dHMessage.desc);
+                }
+                var taskList = _TaskEntity.GetList(p => p.TaskNo == goOnAsyncDTO.taskNo);
+                foreach (var item in taskList)
+                {
+                    // 1：未发送；2：正在取消；3：已取消；4：正在发送；5：发送失败；6：执行中；7：执行失败；8：任务完成；9：已下发;
+                    item.TaskState = 8;
+                    item.UpdateTime = DateTime.Now;
+                }
+                await _TaskEntity.UpdateRangeAsync(taskList);
+            }
+            catch (Exception ex)
+            {
+                //_ = FileUtil.DebugTxt(ex.Message, MessageTypeEnum.错误, goOnAsyncDTO.taskNo, ex.StackTrace, "V1继续任务Error");
+                throw Oops.Oh($"{ex.Message}");
+            }
+        }
+
+        #endregion
+
+        #region RCS上报信息
+        /// <summary>
+        ///  接受RCS上报信息
+        /// </summary>
+        /// <param name="acceptDTO"></param>
+        /// <returns></returns>
+        /// <exception cref="Exception"></exception>
+        [HttpPost("/AGV/Task/AcceptAsync")]
+        [AllowAnonymous]
+        public async Task<string> AcceptAsuncNew(AcceptDTO acceptDTO)
+        {
+            try
+            {
+                #region 模型校验
+
+                //if (string.IsNullOrWhiteSpace(acceptDTO.orderId))
+                //{
+                //    throw new Exception("任务编号不能为空");
+                //}
+
+                //if (acceptDTO.status == null) 
+                //{
+
+                //    throw new Exception("任务状态不能为空");
+                //}
+
+                //if(acceptDTO.subTaskStatus == null)
+                //{
+                //    throw new Exception("AGV执行到的动作状态不能为空");
+                //}
+                //if(acceptDTO.subTaskTypeId == null)
+                //{
+                //    throw new Exception("AGV动作类型不能为空");
+                //}
+                //if(acceptDTO.subTaskId == null)
+                //{
+                //    throw new Exception("RCS子任务编号不能为空");
+                //}
+                //if(acceptDTO.subTaskSeq == null)
+                //{
+                //    throw new Exception("第几个动作不能为空");
+                //}
+                //if(acceptDTO.icsTaskOrderDetailId == null)
+                //{
+                //    throw new Exception("ICS此任务id不能为空");
+                //}
+                #endregion
+
+                // 查找是否有相同任务
+                var item = await _TaskEntity.GetFirstAsync(u => u.TaskNo == acceptDTO.orderId);
+
+                if (item == null)
+                {
+                    throw new Exception($"未找到有对应{acceptDTO.orderId}编号的AGV任务");
+                }
+                if (!string.IsNullOrEmpty(acceptDTO.deviceNum))
+                {
+                    item.AGV = acceptDTO.deviceNum;
+
+                    // 已下发
+                    if (acceptDTO.status == 9)
+                    {
+                        // 任务开始时间
+                        item.STime = DateTime.Now;
+                    }
+                    // 任务结束时间
+                    // 3 已取消 5 发送失败 7 执行失败 8 已已完成
+                    if (acceptDTO.status == 3 || acceptDTO.status == 5 || acceptDTO.status == 7 || acceptDTO.status == 8)
+                    {
+                        item.ETime = DateTime.Now;
+                    }
+
+                    // 任务失败的原因
+                    item.Message = acceptDTO.errorDesc;
+
+                    // 任务执行的状态
+                    int AgvStatus = 0;
+                    switch (acceptDTO.status)
+                    {
+                        // 已取消
+                        case 3:
+                            AgvStatus = 3;
+                            break;
+                        // 发送失败
+                        case 5:
+                            AgvStatus = 5;
+                            break;
+                        // 运行中
+                        case 6:
+                            AgvStatus = 6;
+                            break;
+                        // 执行失败
+                        case 7:
+                            AgvStatus = 7;
+                            break;
+                        // 已完成
+                        case 8:
+                            AgvStatus = 8;
+                            break;
+                        // 已下发
+                        case 9:
+                            AgvStatus = 9;
+                            break;
+                        // 等待确认
+                        case 10:
+                            AgvStatus = 10;
+                            break;
+                    }
+                    // 任务状态
+                    item.TaskState = AgvStatus;
+                    // 子任务序列
+                    item.SubTaskSeq = acceptDTO.subTaskSeq;
+                    // 子任务状态
+                    item.SubTaskStatus = acceptDTO.subTaskStatus;
+                    // 将rcs得到的数据保存
+                    await _TaskEntity.InsertOrUpdateAsync(item);
+
+                }
+                return "";
+            }
+            catch (Exception ex)
+            {
+                // 错误信息
+                throw new Exception(ex.Message);
+            }
+        }
+
+        #endregion
+
+        #region 接受RCS的上报信息
+        /// <summary>
+        /// 接受RCS的上报信息
+        /// </summary>
+        /// <param name="acceptDto"></param>
+        /// <returns></returns>
+        //[HttpPost("/AGV/Task/AcceptAsync")]
+        //[AllowAnonymous]
+        //public string AcceptAsync(AcceptDTO acceptDto)
+        //{
+        //    //var para = JsonConvert.SerializeObject(acceptDto);
+        //    //_ = FileUtil.DebugTxt("任务上报参数记录", MessageTypeEnum.记录, para, "", "DH主动上报记录");
+        //    if (acceptDto.status == null)
+        //    {
+        //        throw Oops.Oh($"上报的状态不能为空值！");
+        //        //throw new Exception("DH上报的状态为空值！");
+        //    }
+        //    try
+        //    {
+        //        if (string.IsNullOrEmpty(acceptDto.orderId))
+        //        {
+        //            //throw new Exception("任务ID不可为空！");
+        //            throw Oops.Oh($"任务ID不可为空！");
+        //        }
+        //        var item = _TaskEntity.GetFirst(p => p.TaskNo == acceptDto.orderId.Trim());
+        //        // （3 已取消 5 发送失败 6 运行中 7 执行失败 8 已完成 
+        //        // 9 已下发 10 等待确认 20 取货中 21 取货完成 22 放货中 23 放货完成）
+        //        if (item.TaskState == 8 || item.TaskState == 3)
+        //        {
+        //            //_ = FileUtil.DebugTxt(item.TaskState, MessageTypeEnum.记录, para, "", "DH状态上报顺序Error");
+        //            return "";
+        //        }
+        //        #region 数据入库
+        //        try
+        //        {
+        //            if (!string.IsNullOrEmpty(acceptDto.deviceNum))
+        //            {
+        //                item.AGV = acceptDto.deviceNum;
+        //                //9-已下发
+        //                if (acceptDto.status == 9)
+        //                {
+        //                    item.STime = DateTime.Now;
+        //                }
+        //                //3-已取消，5-发送失败，7-执行失败，8-已完成
+        //                if (acceptDto.status == 3 || acceptDto.status == 5 || acceptDto.status == 7 ||
+        //                    acceptDto.status == 8)
+        //                {
+        //                    item.ETime = DateTime.Now;
+        //                }
+        //            }
+        //            item.Message = acceptDto.errorDesc; //失败原因
+        //            item.TaskState = acceptDto.status;
+        //            item.SubTaskSeq = acceptDto.subTaskSeq;
+        //            item.SubTaskStatus = acceptDto.subTaskStatus;
+        //            _TaskEntity.InsertOrUpdate(item);
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            //_ = FileUtil.DebugTxt($"{ex.Message}", MessageTypeEnum.错误, para, ex.StackTrace, "任务状态数据入库Error");
+        //        }
+        //        #endregion
+
+        //        #region 触发主动上报第三方
+
+        //        #endregion
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        //_ = FileUtil.DebugTxt($"{ex.Message}", MessageTypeEnum.错误, para, ex.StackTrace, "接受RCS的上报信息Error");
+        //        throw Oops.Oh($"{ex.Message}");
+        //        //throw new Exception(ex.Message);
+        //    }
+        //    return "上报成功";
+        //}
+        #endregion
+    }
+}

@@ -1,12 +1,13 @@
 ﻿using Admin.NET.Core;
+using System.ComponentModel.Design;
 
 namespace Admin.NET.Application.Entity;
 
 /// <summary>
 /// 移库实体
 /// </summary>
-[SugarTable("EGRelocation", "移库信息表")]
-public class EGRelocation : EntityBase
+[SugarTable("EG_WMS_Relocation", "移库信息表")]
+public class EG_WMS_Relocation : EntityBase
 {
     /// <summary>
     /// 移库编号
@@ -26,6 +27,24 @@ public class EGRelocation : EntityBase
     /// </summary>
     [SugarColumn(ColumnDescription = "移库数量")]
     public int? RelocationCount { get; set; }
+
+    /// <summary>
+    /// 原库位
+    /// </summary>
+    [SugarColumn(ColumnDescription = "原库位")]
+    public string OldStorageNum { get; set; }
+
+    [Navigate(NavigateType.OneToMany, nameof(EG_WMS_Storage.StorageNum), nameof(OldStorageNum))]
+    public List<EG_WMS_Storage> OldStorage { get; set; }
+
+    /// <summary>
+    /// 新库位
+    /// </summary>
+    [SugarColumn(ColumnDescription = "新库位")]
+    public string NewStorageNum { get; set; }
+
+    [Navigate(NavigateType.OneToMany, nameof(EG_WMS_Storage.StorageNum), nameof(NewStorageNum))]
+    public List<EG_WMS_Storage> NewStorage { get; set; }
 
     /// <summary>
     /// 移库人
@@ -69,6 +88,6 @@ public class EGRelocation : EntityBase
     /// 移库备注
     /// </summary>
     [SugarColumn(ColumnDescription = "移库备注", Length = 500)]
-    public string? Relocation { get; set; }
+    public string? RelocationRemake { get; set; }
 
 }

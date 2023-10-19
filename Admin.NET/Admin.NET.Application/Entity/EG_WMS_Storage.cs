@@ -5,8 +5,8 @@ namespace Admin.NET.Application.Entity;
 /// <summary>
 /// 库位实体
 /// </summary>
-[SugarTable("EGStorage", "库位信息表")]
-public class EGStorage : EntityBase
+[SugarTable("EG_WMS_Storage", "库位信息表")]
+public class EG_WMS_Storage : EntityBase
 {
     /// <summary>
     /// 库位编号
@@ -37,12 +37,6 @@ public class EGStorage : EntityBase
     /// </summary>
     [SugarColumn(ColumnDescription = "库位类别", Length = 100)]
     public string? StorageType { get; set; }
-
-    /// <summary>
-    /// 仓库名称
-    /// </summary>
-    [SugarColumn(ColumnDescription = "仓库名称", Length = 100)]
-    public string? WareHouseName { get; set; }
 
     /// <summary>
     /// 库位长
@@ -117,5 +111,11 @@ public class EGStorage : EntityBase
     /// </summary>
     [SugarColumn(ColumnDescription = "区域编号", Length = 20)]
     public string? RegionNum { get; set; }
+
+    /// <summary>
+    /// 组别
+    /// </summary>
+    [SugarColumn(ColumnDescription = "组别", Length = 20)]
+    public string? StorageGroup { get; set; }
 
 }

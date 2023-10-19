@@ -3,8 +3,8 @@
 /// <summary>
 /// 盘点实体
 /// </summary>
-[SugarTable("EGTakeStock", "盘点信息表")]
-public class EGTakeStock : EntityBase
+[SugarTable("EG_WMS_TakeStock", "盘点信息表")]
+public class EG_WMS_TakeStock : EntityBase
 {
     /// <summary>
     /// 盘点编号
@@ -23,6 +23,12 @@ public class EGTakeStock : EntityBase
     /// </summary>
     [SugarColumn(ColumnDescription = "盘点类别（0.根据物料盘点 1.根据库位盘点）")]
     public int? TakeStockType { get; set; }
+
+    /// <summary>
+    /// 料箱数量
+    /// </summary>
+    [SugarColumn(ColumnDescription = "料箱数量")]
+    public int? SumTakeStockCount { get; set; }
 
     /// <summary>
     /// 盘点数量

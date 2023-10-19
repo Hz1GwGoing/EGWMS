@@ -6,8 +6,8 @@
 public class EGPalletService : IDynamicApiController, ITransient
 {
 
-    private readonly SqlSugarRepository<EGPallet> _rep;
-    public EGPalletService(SqlSugarRepository<EGPallet> rep)
+    private readonly SqlSugarRepository<EG_WMS_Pallet> _rep;
+    public EGPalletService(SqlSugarRepository<EG_WMS_Pallet> rep)
     {
         _rep = rep;
     }
@@ -59,7 +59,7 @@ public class EGPalletService : IDynamicApiController, ITransient
     [ApiDescriptionSettings(Name = "Add")]
     public async Task Add(AddEGPalletInput input)
     {
-        var entity = input.Adapt<EGPallet>();
+        var entity = input.Adapt<EG_WMS_Pallet>();
         await _rep.InsertAsync(entity);
     }
     #endregion
@@ -89,7 +89,7 @@ public class EGPalletService : IDynamicApiController, ITransient
     [ApiDescriptionSettings(Name = "Update")]
     public async Task Update(UpdateEGPalletInput input)
     {
-        var entity = input.Adapt<EGPallet>();
+        var entity = input.Adapt<EG_WMS_Pallet>();
         await _rep.AsUpdateable(entity).IgnoreColumns(ignoreAllNullColumns: true).ExecuteCommandAsync();
     }
     #endregion
@@ -102,7 +102,7 @@ public class EGPalletService : IDynamicApiController, ITransient
     /// <returns></returns>
     [HttpGet]
     [ApiDescriptionSettings(Name = "Detail")]
-    public async Task<EGPallet> Get([FromQuery] QueryByIdEGPalletInput input)
+    public async Task<EG_WMS_Pallet> Get([FromQuery] QueryByIdEGPalletInput input)
     {
         //return await _rep.GetFirstAsync(u => u.Id == input.Id);
         // 模糊查询

@@ -22,7 +22,7 @@ public class EGWorkBinBaseInput
     /// <summary>
     /// 科箱规格
     /// </summary>
-    public virtual int? WorkBinSpecs { get; set; }
+    public virtual string? WorkBinSpecs { get; set; }
 
     /// <summary>
     /// 机台号
@@ -109,7 +109,7 @@ public class EGWorkBinInput : BasePageInput
     /// <summary>
     /// 科箱规格
     /// </summary>
-    public int? WorkBinSpecs { get; set; }
+    public string? WorkBinSpecs { get; set; }
 
     /// <summary>
     /// 机台号

@@ -6,9 +6,9 @@
 [ApiDescriptionSettings(ApplicationConst.GroupName, Order = 100)]
 public class EGStorageService : IDynamicApiController, ITransient
 {
-    private readonly SqlSugarRepository<EGStorage> _rep;
+    private readonly SqlSugarRepository<EG_WMS_Storage> _rep;
 
-    public EGStorageService(SqlSugarRepository<EGStorage> rep)
+    public EGStorageService(SqlSugarRepository<EG_WMS_Storage> rep)
     {
         _rep = rep;
     }
@@ -29,7 +29,6 @@ public class EGStorageService : IDynamicApiController, ITransient
                     .WhereIF(!string.IsNullOrWhiteSpace(input.StorageName), u => u.StorageName.Contains(input.StorageName.Trim()))
                     .WhereIF(!string.IsNullOrWhiteSpace(input.StorageAddress), u => u.StorageAddress.Contains(input.StorageAddress.Trim()))
                     .WhereIF(!string.IsNullOrWhiteSpace(input.StorageType), u => u.StorageType.Contains(input.StorageType.Trim()))
-                    .WhereIF(!string.IsNullOrWhiteSpace(input.WareHouseName), u => u.WareHouseName.Contains(input.WareHouseName.Trim()))
                     .WhereIF(!string.IsNullOrWhiteSpace(input.StorageOccupy), u => u.StorageOccupy.Contains(input.StorageOccupy.Trim()))
                     .WhereIF(!string.IsNullOrWhiteSpace(input.StorageRemake), u => u.StorageRemake.Contains(input.StorageRemake.Trim()))
                     .WhereIF(!string.IsNullOrWhiteSpace(input.CreateUserName), u => u.CreateUserName.Contains(input.CreateUserName.Trim()))
@@ -39,11 +38,13 @@ public class EGStorageService : IDynamicApiController, ITransient
                     .WhereIF(input.RoadwayNum > 0, u => u.RoadwayNum == input.RoadwayNum)
                     .WhereIF(input.ShelfNum > 0, u => u.ShelfNum == input.ShelfNum)
                     .WhereIF(input.FloorNumber > 0, u => u.FloorNumber == input.FloorNumber)
+                    // 组别
+                    .WhereIF(!string.IsNullOrWhiteSpace(input.StorageGroup), u => u.StorageGroup.Contains(input.StorageGroup.Trim()))
                     .WhereIF(!string.IsNullOrWhiteSpace(input.WHNum), u => u.WHNum.Contains(input.WHNum.Trim()))
                     .WhereIF(!string.IsNullOrWhiteSpace(input.RegionNum), u => u.RegionNum.Contains(input.RegionNum.Trim()))
                     //处理外键和TreeSelector相关字段的连接
-                    .LeftJoin<EGWareHouse>((u, whnum) => u.WHNum == whnum.WHNum)
-                    .LeftJoin<EGRegion>((u, whnum, regionnum) => u.RegionNum == regionnum.RegionNum)
+                    .LeftJoin<EG_WMS_WareHouse>((u, whnum) => u.WHNum == whnum.WHNum)
+                    .LeftJoin<EG_WMS_Region>((u, whnum, regionnum) => u.RegionNum == regionnum.RegionNum)
                     .Select((u, whnum, regionnum) => new EGStorageOutput
                     {
                         StorageNum = u.StorageNum,
@@ -52,7 +53,6 @@ public class EGStorageService : IDynamicApiController, ITransient
                         StorageType = u.StorageType,
                         // 库位状态
                         StorageStatus = u.StorageStatus,
-                        WareHouseName = u.WareHouseName,
                         StorageLong = u.StorageLong,
                         StorageWidth = u.StorageWidth,
                         StorageHigh = u.StorageHigh,
@@ -84,7 +84,7 @@ public class EGStorageService : IDynamicApiController, ITransient
     [ApiDescriptionSettings(Name = "Add")]
     public async Task Add(AddEGStorageInput input)
     {
-        var entity = input.Adapt<EGStorage>();
+        var entity = input.Adapt<EG_WMS_Storage>();
         await _rep.InsertAsync(entity);
     }
     #endregion
@@ -115,7 +115,7 @@ public class EGStorageService : IDynamicApiController, ITransient
     [ApiDescriptionSettings(Name = "Update")]
     public async Task Update(UpdateEGStorageInput input)
     {
-        var entity = input.Adapt<EGStorage>();
+        var entity = input.Adapt<EG_WMS_Storage>();
         await _rep.AsUpdateable(entity).IgnoreColumns(ignoreAllNullColumns: true).ExecuteCommandAsync();
     }
 
@@ -129,10 +129,12 @@ public class EGStorageService : IDynamicApiController, ITransient
     /// <returns></returns>
     [HttpGet]
     [ApiDescriptionSettings(Name = "Detail")]
-    public async Task<EGStorage> Get([FromQuery] QueryByIdEGStorageInput input)
+    public async Task<EG_WMS_Storage> Get([FromQuery] QueryByIdEGStorageInput input)
     {
         // 模糊查询
-        return await _rep.GetFirstAsync(u => u.StorageNum.Contains(input.StorageNum) || u.StorageName.Contains(input.StorageName));
+        return await _rep.GetFirstAsync(u => u.StorageNum.Contains(input.StorageNum) ||
+                                        u.StorageName.Contains(input.StorageName) ||
+                                        u.StorageGroup.Contains(input.StorageGroup));
     }
     #endregion
 
@@ -149,6 +151,7 @@ public class EGStorageService : IDynamicApiController, ITransient
         return await _rep.AsQueryable().Select<EGStorageOutput>().ToListAsync();
     }
     #endregion
+
 
 
     //-------------------------------------//-------------------------------------//

@@ -1,17 +1,15 @@
-﻿using Admin.NET.Core;
-
-namespace Admin.NET.Application.Entity;
+﻿namespace Admin.NET.Application.Entity;
 
 /// <summary>
 /// 栈板实体
 /// </summary>
-[SugarTable("EGPallet", "栈板信息表")]
-public class EGPallet : EntityBase
+[SugarTable("EG_WMS_Pallet", "栈板信息表")]
+public class EG_WMS_Pallet : EntityBase
 {
     /// <summary>
     /// 栈板编号
     /// </summary>
-    [Required]
+    [Required(ErrorMessage = "栈板编号不能为空")]
     [SugarColumn(ColumnDescription = "栈板编号", Length = 50)]
     public string PalletNum { get; set; }
 

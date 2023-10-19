@@ -8,7 +8,7 @@ public class EGOutBoundService : IDynamicApiController, ITransient
     #region 引用实体
 
     private readonly SqlSugarRepository<EGOutBound> _rep;
-    private readonly SqlSugarRepository<EGInventory> _db;
+    private readonly SqlSugarRepository<EG_WMS_Inventory> _db;
 
     #endregion
 
@@ -16,7 +16,7 @@ public class EGOutBoundService : IDynamicApiController, ITransient
     public EGOutBoundService
         (
          SqlSugarRepository<EGOutBound> rep,
-         SqlSugarRepository<EGInventory> db
+         SqlSugarRepository<EG_WMS_Inventory> db
         )
     {
         _rep = rep;
@@ -131,6 +131,11 @@ public class EGOutBoundService : IDynamicApiController, ITransient
         }
         else
         {
+            // 获得当前时间时间戳
+            string timesStamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString();
+            // 生成自动编号
+            input.OutboundNum = "EGCK" + timesStamp;
+
             await _rep.InsertAsync(input);
         }
     }
@@ -160,7 +165,7 @@ public class EGOutBoundService : IDynamicApiController, ITransient
             // 将库存表中物料的出库状态改变成为已出库
             _db.AsUpdateable()
            .AS("EGInventory")
-           .SetColumns(it => new EGInventory { OutboundStatus = 1 })
+           .SetColumns(it => new EG_WMS_Inventory { OutboundStatus = 1 })
            .Where(u => u.MaterielNum == materielnum)
            .ExecuteCommand();
         }

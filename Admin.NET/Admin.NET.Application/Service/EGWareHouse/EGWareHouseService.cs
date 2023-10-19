@@ -7,8 +7,8 @@
 [ApiDescriptionSettings(ApplicationConst.GroupName, Order = 100)]
 public class EGWareHouseService : IDynamicApiController, ITransient
 {
-    private readonly SqlSugarRepository<EGWareHouse> _rep;
-    public EGWareHouseService(SqlSugarRepository<EGWareHouse> rep)
+    private readonly SqlSugarRepository<EG_WMS_WareHouse> _rep;
+    public EGWareHouseService(SqlSugarRepository<EG_WMS_WareHouse> rep)
     {
         _rep = rep;
     }
@@ -58,7 +58,7 @@ public class EGWareHouseService : IDynamicApiController, ITransient
     [ApiDescriptionSettings(Name = "Add")]
     public async Task Add(AddEGWareHouseInput input)
     {
-        var entity = input.Adapt<EGWareHouse>();
+        var entity = input.Adapt<EG_WMS_WareHouse>();
         await _rep.InsertAsync(entity);
     }
 
@@ -90,7 +90,7 @@ public class EGWareHouseService : IDynamicApiController, ITransient
     [ApiDescriptionSettings(Name = "Update")]
     public async Task Update(UpdateEGWareHouseInput input)
     {
-        var entity = input.Adapt<EGWareHouse>();
+        var entity = input.Adapt<EG_WMS_WareHouse>();
         await _rep.AsUpdateable(entity).IgnoreColumns(ignoreAllNullColumns: true).ExecuteCommandAsync();
     }
     #endregion
@@ -103,7 +103,7 @@ public class EGWareHouseService : IDynamicApiController, ITransient
     /// <returns></returns>
     [HttpGet]
     [ApiDescriptionSettings(Name = "Detail")]
-    public async Task<EGWareHouse> Get([FromQuery] QueryByIdEGWareHouseInput input)
+    public async Task<EG_WMS_WareHouse> Get([FromQuery] QueryByIdEGWareHouseInput input)
     {
         //return await _rep.GetFirstAsync(u => u.Id == input.Id);
 

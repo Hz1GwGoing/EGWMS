@@ -5,8 +5,8 @@
 [ApiDescriptionSettings(ApplicationConst.GroupName, Order = 100)]
 public class EGInventoryDetailService : IDynamicApiController, ITransient
 {
-    private readonly SqlSugarRepository<EGInventoryDetail> _rep;
-    public EGInventoryDetailService(SqlSugarRepository<EGInventoryDetail> rep)
+    private readonly SqlSugarRepository<EG_WMS_InventoryDetail> _rep;
+    public EGInventoryDetailService(SqlSugarRepository<EG_WMS_InventoryDetail> rep)
     {
         _rep = rep;
     }
@@ -22,7 +22,7 @@ public class EGInventoryDetailService : IDynamicApiController, ITransient
     public async Task<SqlSugarPagedList<EGInventoryDetailOutput>> Page(EGInventoryDetailInput input)
     {
         var query = _rep.AsQueryable()
-                    .WhereIF(!string.IsNullOrWhiteSpace(input.MaterielNum), u => u.MaterielNum.Contains(input.MaterielNum.Trim()))
+                    //.WhereIF(!string.IsNullOrWhiteSpace(input.MaterielNum), u => u.MaterielNum.Contains(input.MaterielNum.Trim()))
                     // 库存编号
                     //.WhereIF(!string.IsNullOrWhiteSpace(input.InventoryNum), u => u.InventoryNum.Contains(input.InventoryNum.Trim()))
                     .WhereIF(!string.IsNullOrWhiteSpace(input.ProductionLot), u => u.ProductionLot.Contains(input.ProductionLot.Trim()))
@@ -39,9 +39,10 @@ public class EGInventoryDetailService : IDynamicApiController, ITransient
                     .WhereIF(input.FrozenState > 0, u => u.FrozenState == input.FrozenState)
                     .WhereIF(!string.IsNullOrWhiteSpace(input.PalletNum), u => u.PalletNum.Contains(input.PalletNum.Trim()))
                     .WhereIF(!string.IsNullOrWhiteSpace(input.WorkBinNum), u => u.WorkBinNum.Contains(input.WorkBinNum.Trim()))
-
                     // 获取创建日期
                     .WhereIF(input.CreateTime > DateTime.MinValue, u => u.CreateTime >= input.CreateTime)
+                    // 倒序
+                    .OrderBy(it => it.CreateTime, OrderByType.Desc)
                     .Select<EGInventoryDetailOutput>();
         query = query.OrderBuilder(input);
         return await query.ToPagedListAsync(input.Page, input.PageSize);
@@ -58,7 +59,7 @@ public class EGInventoryDetailService : IDynamicApiController, ITransient
     [ApiDescriptionSettings(Name = "Update")]
     public async Task Update(UpdateEGInventoryDetailInput input)
     {
-        var entity = input.Adapt<EGInventoryDetail>();
+        var entity = input.Adapt<EG_WMS_InventoryDetail>();
         await _rep.AsUpdateable(entity).IgnoreColumns(ignoreAllNullColumns: true).ExecuteCommandAsync();
     }
     #endregion
@@ -71,7 +72,7 @@ public class EGInventoryDetailService : IDynamicApiController, ITransient
     /// <returns></returns>
     [HttpGet]
     [ApiDescriptionSettings(Name = "Detail")]
-    public async Task<EGInventoryDetail> Get([FromQuery] QueryByIdEGInventoryDetailInput input)
+    public async Task<EG_WMS_InventoryDetail> Get([FromQuery] QueryByIdEGInventoryDetailInput input)
     {
         //return await _rep.GetFirstAsync(u => u.Id == input.Id);
 

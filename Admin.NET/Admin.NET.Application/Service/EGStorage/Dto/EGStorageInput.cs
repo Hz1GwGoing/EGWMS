@@ -98,6 +98,12 @@ public class EGStorageBaseInput
     /// </summary>
     public virtual string? RegionNum { get; set; }
 
+
+    /// <summary>
+    /// 组别
+    /// </summary>
+    public virtual string? StorageGroup { get; set; }
+
 }
 
 /// <summary>
@@ -194,6 +200,11 @@ public class EGStorageInput : BasePageInput
     /// </summary>
     public string? RegionNum { get; set; }
 
+
+    /// <summary>
+    /// 组别
+    /// </summary>
+    public virtual string? StorageGroup { get; set; }
 }
 
 /// <summary>
@@ -239,8 +250,14 @@ public class QueryByIdEGStorageInput
     /// 库位编号
     /// </summary>
     public string? StorageNum { get; set; }
+
     /// <summary>
     /// 库位名称
     /// </summary>
     public string? StorageName { get; set; }
+
+    /// <summary>
+    /// 组别
+    /// </summary>
+    public virtual string? StorageGroup { get; set; }
 }

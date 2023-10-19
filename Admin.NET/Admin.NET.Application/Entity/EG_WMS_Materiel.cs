@@ -5,8 +5,8 @@ namespace Admin.NET.Application.Entity;
 /// <summary>
 /// 物料实体
 /// </summary>
-[SugarTable("EGMateriel", "物料信息表")]
-public class EGMateriel : EntityBase
+[SugarTable("EG_WMS_Materiel", "物料信息表")]
+public class EG_WMS_Materiel : EntityBase
 {
     /// <summary>
     /// 物料编号
