@@ -2,16 +2,11 @@
 
 public class EGOutBoundDto
 {
-
-    /// <summary>
-    /// 料箱编号
-    /// </summary>
-    public string? WorkBinNum { get; set; }
-
     /// <summary>
     /// 库位编号
     /// </summary>
-    public string? StorageNum { get; set;}
+    [Required(ErrorMessage = "库位是必须的")]
+    public string StorageNum { get; set; }
 
     /// <summary>
     /// 备注

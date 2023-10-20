@@ -12,12 +12,18 @@
     <Compile Remove="Service\EGJoinBoundNew\**" />
     <Compile Remove="Service\EGJoinBound\**" />
     <Compile Remove="Service\EGOutBound\**" />
+    <Compile Remove="Service\EG_WMS_InAndOutBoundDetail\**" />
+    <Compile Remove="Service\EG_WMS_JoinBound\**" />
     <EmbeddedResource Remove="Service\EGJoinBoundNew\**" />
     <EmbeddedResource Remove="Service\EGJoinBound\**" />
     <EmbeddedResource Remove="Service\EGOutBound\**" />
+    <EmbeddedResource Remove="Service\EG_WMS_InAndOutBoundDetail\**" />
+    <EmbeddedResource Remove="Service\EG_WMS_JoinBound\**" />
     <None Remove="Service\EGJoinBoundNew\**" />
     <None Remove="Service\EGJoinBound\**" />
     <None Remove="Service\EGOutBound\**" />
+    <None Remove="Service\EG_WMS_InAndOutBoundDetail\**" />
+    <None Remove="Service\EG_WMS_JoinBound\**" />
   </ItemGroup>
 
   <ItemGroup>

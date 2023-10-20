@@ -2,7 +2,7 @@
 
 
 /// <summary>
-/// 库存关联详情实体
+/// 返回库存关联详情Dto
 /// </summary>
 public class GetAllInventoryData
 {

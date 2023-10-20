@@ -205,7 +205,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
 
             DHMessage item = await taskService.AddAsync(taskEntity);
 
-            // 判断agv任务是否成功*
+            // 判断agv任务是否成功（修改）
 
             // 判断agv下达任务是否成功
             if (item.code == 1000)
@@ -384,7 +384,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
     #region agv出库（两点位）（已完成）
 
     /// <summary>
-    /// agv出库
+    /// agv出库（两点位）
     /// </summary>
     /// <param name="input"></param>
     /// <returns></returns>
@@ -731,6 +731,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
 
             // 循环遍历，一共有多少个需要入库的料箱
             string wbnum = "";
+            string wlnum = "";
             int sumcount = 0;
             for (int i = 0; i < item.Count; i++)
             {
@@ -816,17 +817,25 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                     StorageNum = input.EndPoint,
                 };
 
-                await _workbin.InsertOrUpdateAsync(addWorkBin);
                 await _Inventory.InsertAsync(addInventory);
                 await _InventoryDetail.InsertAsync(addInventoryDetail);
+                await _workbin.InsertOrUpdateAsync(addWorkBin);
 
+                // 得到每个料箱编号
                 if (item.Count > 1)
                 {
                     wbnum = workbinnum + "," + wbnum;
+                    // 添加判断，如果物料编号相同则就为一个物料编号，无需重复添加
+                    if (materienum + "," == wlnum)
+                    {
+                        wlnum = materienum;
+                    }
+                    wlnum = materienum + "," + wlnum;
                 }
                 else
                 {
-                    wbnum = workbinnum + wbnum;
+                    wbnum = workbinnum;
+                    wlnum = materienum;
                 }
 
                 // 修改入库详情表里面的料箱编号
@@ -835,6 +844,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                                     .AS("EG_WMS_InAndOutBoundDetail")
                                     .SetColumns(it => new EG_WMS_InAndOutBoundDetail
                                     {
+                                        MaterielNum = wlnum,
                                         WorkBinNum = wbnum,
                                     })
                                     .Where(u => u.InAndOutBoundNum == joinboundnum)

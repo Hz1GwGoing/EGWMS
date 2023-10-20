@@ -1,16 +1,18 @@
-﻿
-using Admin.NET.Application.Service.EGInventory.Dto;
-using static SKIT.FlurlHttpClient.Wechat.Api.Models.CgibinTagsMembersGetBlackListResponse.Types;
-
-namespace Admin.NET.Application;
+﻿namespace Admin.NET.Application;
 /// <summary>
 /// 库存主表接口
 /// </summary>
 [ApiDescriptionSettings(ApplicationConst.GroupName, Order = 100)]
 public class EGInventoryService : IDynamicApiController, ITransient
 {
+    #region 实体引用
+
+
     private readonly SqlSugarRepository<EG_WMS_Inventory> _rep;
     private readonly SqlSugarRepository<EG_WMS_Materiel> _materiel;
+    #endregion
+
+    #region 关系注入
 
     public EGInventoryService
         (
@@ -21,6 +23,7 @@ public class EGInventoryService : IDynamicApiController, ITransient
         _rep = rep;
         _materiel = materiel;
     }
+    #endregion
 
     #region 分页查询库存主表
     /// <summary>
@@ -158,7 +161,6 @@ public class EGInventoryService : IDynamicApiController, ITransient
         return await _rep.AsQueryable().Select<EGInventoryOutput>().ToListAsync();
     }
     #endregion
-
 
     //-------------------------------------//-------------------------------------//
 
