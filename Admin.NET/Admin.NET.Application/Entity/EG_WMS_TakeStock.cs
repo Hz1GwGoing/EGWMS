@@ -10,19 +10,26 @@ public class EG_WMS_TakeStock : EntityBase
     /// 盘点编号
     /// </summary>
     [SugarColumn(ColumnDescription = "盘点编号", Length = 50)]
-    public string? TakeStockNum { get; set; }
+    public string TakeStockNum { get; set; }
 
     /// <summary>
     /// 盘点状态（0.待盘点 1.盘赢 2.盘亏）
     /// </summary>
-    [SugarColumn(ColumnDescription = "盘点状态（0.待盘点 1.盘赢 2.盘亏）")]
-    public int? TakeStockStatus { get; set; } = 0;
+    //[SugarColumn(ColumnDescription = "盘点状态（0.待盘点 1.盘赢 2.盘亏）")]
+    [SugarColumn(ColumnDescription = "盘点状态（0.待盘点 1.已盘点）")]
+    public int TakeStockStatus { get; set; } = 0;
+
+    /// <summary>
+    /// 盘点库位编号
+    /// </summary>
+    [SugarColumn(ColumnDescription = "盘点库位编号")]
+    public string? TakeStockStorageNum { get; set; }
 
     /// <summary>
     /// 盘点类别（0.根据物料盘点 1.根据库位盘点）
     /// </summary>
     [SugarColumn(ColumnDescription = "盘点类别（0.根据物料盘点 1.根据库位盘点）")]
-    public int? TakeStockType { get; set; }
+    public int TakeStockType { get; set; }
 
     /// <summary>
     /// 料箱数量

@@ -23,7 +23,7 @@ public class EG_WMS_InAndOutBound : EntityBase
     /// <summary>
     /// 出入库状态（0-未入库，1-已入库，2-未出库，3-已出库）
     /// </summary>
-    [SugarColumn(ColumnDescription = "出入库状态（0-未入库，1-已入库，2-未出库，3-已出库）")]
+    [SugarColumn(ColumnDescription = "出入库状态（0-未入库，1-已入库，2-未出库，3-已出库，4-入库中，5-出库中）")]
     public int? InAndOutBoundStatus { get; set; }
 
     /// <summary>
@@ -51,9 +51,9 @@ public class EG_WMS_InAndOutBound : EntityBase
     public string? InAndOutBoundRemake { get; set; }
 
     /// <summary>
-    /// Agv编号
+    /// Agv任务编号
     /// </summary>
-    [SugarColumn(ColumnDescription = "Agv编号")]
+    [SugarColumn(ColumnDescription = "Agv任务编号")]
     public string? AgvNum { get; set; }
 
     /// <summary>

@@ -108,6 +108,26 @@ public class EGMaterielService : IDynamicApiController, ITransient
     }
     #endregion
 
+    #region 根据物料编号名称类别筛选物料
+
+    /// <summary>
+    /// 根据物料编号名称类别筛选物料（模糊查询）
+    /// </summary>
+    /// <param name="input">编号、名称、类别</param>
+    /// <returns></returns>
+    [HttpPost]
+    [ApiDescriptionSettings(Name = "GetMaterielsDataAndNumNameSpecs")]
+    public List<EG_WMS_Materiel> GetMaterielsDataAndNumNameSpecs(EGMaterielDto input)
+    {
+        var data = _rep.AsQueryable()
+             .Where(x => x.MaterielNum.Contains(input.MaterielNum) || x.MaterielName.Contains(input.MaterielName) || x.MaterielType.Contains(input.MaterielType))
+             .ToList();
+
+        return data;
+    }
+
+    #endregion
+
     #region 获取物料信息列表
 
     /// <summary>

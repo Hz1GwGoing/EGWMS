@@ -1,30 +1,41 @@
 ﻿using Admin.NET.Application.Service.AGV.Task.DTO;
 using Admin.NET.Application.Util;
-using Admin.NET.Application.AGV.AGVEntity;
 using Microsoft.AspNetCore.Authorization;
 using Admin.NET.Application.Service.AGV.V2.Task.DTO;
 using Newtonsoft.Json;
+using Admin.NET.Application.Service.EG_AGV_Task.DTO;
 
-namespace Admin.NET.Application.Service.AGV.Task
+namespace Admin.NET.Application.Service.EG_AGV_Task
 {
     [ApiDescriptionSettings("AGV模块接口V2.0", Name = "任务信息", Order = 100)]
     public class TaskService : IDynamicApiController, ITransient
     {
         private static readonly DHRequester _DHRequester = new DHRequester();
+        private static readonly EG_WMS_InAndOutBoundService _EG_WMS_InAndOutBoundService = new EG_WMS_InAndOutBoundService();
 
+        #region 关系注入
         private readonly SqlSugarRepository<TaskEntity> _TaskEntity = App.GetService<SqlSugarRepository<TaskEntity>>();
         private readonly SqlSugarRepository<TaskDetailEntity> _TaskDetailEntity = App.GetService<SqlSugarRepository<TaskDetailEntity>>();
         private readonly SqlSugarRepository<TemLogicEntity> _TemLogicEntity = App.GetService<SqlSugarRepository<TemLogicEntity>>();
         private readonly SqlSugarRepository<InfoEntity> _InfoEntity = App.GetService<SqlSugarRepository<InfoEntity>>();
+        private readonly SqlSugarRepository<Entity.EG_WMS_InAndOutBound> _InAndOutBound = App.GetService<SqlSugarRepository<Entity.EG_WMS_InAndOutBound>>();
+        private readonly SqlSugarRepository<EG_WMS_Tem_Inventory> _TemInventory = App.GetService<SqlSugarRepository<EG_WMS_Tem_Inventory>>();
+        private readonly SqlSugarRepository<EG_WMS_Tem_InventoryDetail> _TemInventoryDetail = App.GetService<SqlSugarRepository<EG_WMS_Tem_InventoryDetail>>();
+        private readonly SqlSugarRepository<EG_WMS_Inventory> _Inventory = App.GetService<SqlSugarRepository<EG_WMS_Inventory>>();
+        private readonly SqlSugarRepository<EG_WMS_InventoryDetail> _InventoryDetail = App.GetService<SqlSugarRepository<EG_WMS_InventoryDetail>>();
+
+        #endregion
+
+        #region 构造函数
         public TaskService()
         {
 
         }
-
+        #endregion
 
         #region 任务下达
 
-        public async System.Threading.Tasks.Task<DHMessage> AddAsync(TaskEntity taskEntity)
+        public async Task<DHMessage> AddAsync(TaskEntity taskEntity)
         {
             // 查询是否有传入的模板
             var temLogItem = _TemLogicEntity.GetFirst(p => p.TemLogicNo == taskEntity.ModelNo);
@@ -81,7 +92,7 @@ namespace Admin.NET.Application.Service.AGV.Task
         /// <param name="input"></param>
         /// <returns></returns>
         [HttpPost("/AGV/Task/AddAsync")]
-        public async System.Threading.Tasks.Task AddAsync(AddDTO input)
+        public async Task AddAsync(AddDTO input)
         {
             //var para = JsonConvert.SerializeObject(input);
             //_ = FileUtil.DebugTxt("V2.0 新增任务记录", MessageTypeEnum.记录, para, "", "新增任务记录");
@@ -125,7 +136,7 @@ namespace Admin.NET.Application.Service.AGV.Task
         /// <param name="input"> </param>
         /// <returns></returns>
         [HttpPost("/AGV/Task/AppendAsync")]
-        public async System.Threading.Tasks.Task AppendAsync(AppendAsyncDTO input)
+        public async Task AppendAsync(AppendAsyncDTO input)
         {
             //var para = JsonConvert.SerializeObject(dto);
             //_ = FileUtil.DebugTxt("V2.0 AppendAsync", MessageTypeEnum.记录, para, "", "追加点位信息");
@@ -177,7 +188,7 @@ namespace Admin.NET.Application.Service.AGV.Task
         /// <param name="updateTaskPointDto"></param>
         /// <returns></returns>
         [HttpPost("/AGV/Task/UpdateTaskPoint")]
-        public async System.Threading.Tasks.Task UpdateTaskPoint(UpdateTaskPointDto updateTaskPointDto)
+        public async Task UpdateTaskPoint(UpdateTaskPointDto updateTaskPointDto)
         {
             //var para = JsonConvert.SerializeObject(updateTaskPointDto);
             try
@@ -352,6 +363,95 @@ namespace Admin.NET.Application.Service.AGV.Task
 
         #endregion
 
+        #region 增加任务模板
+
+        /// <summary>
+        /// 增加任务模板
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        [HttpPost("/AGV/Task/AddTemLogicModel")]
+        public async Task AddTemLogicModel(TemlogicModel input)
+        {
+            var model = input.Adapt<TemLogicEntity>();
+            await _TemLogicEntity.InsertAsync(model);
+
+        }
+
+        #endregion
+
+        #region 查询任务模板
+
+        /// <summary>
+        /// 查询任务模板
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet("/AGV/Task/GetTemLogicsAll")]
+        public List<TemLogicEntity> GetTemLogicsAll()
+        {
+            return _TemLogicEntity.AsQueryable()
+                            .Select(x => x)
+                            .ToList();
+
+        }
+
+
+        #endregion
+
+        #region 删除任务模板
+
+        /// <summary>
+        /// 删除任务模板
+        /// </summary>
+        /// <param name="num">任务模板编号</param>
+        /// <param name="id">任务模板id</param>
+        /// <returns></returns>
+        [HttpPost("/AGV/Task/DeleteTemLogic")]
+        public async Task DeleteTemLogic(string? num, long? id)
+        {
+            var entity = await _TemLogicEntity.GetFirstAsync(x => x.TemLogicNo == num || x.Id == id);
+            await _TemLogicEntity.FakeDeleteAsync(entity);
+        }
+
+
+        #endregion
+
+        #region 更新任务模板
+
+        /// <summary>
+        /// 更新任务模板
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost("/AGV/Task/UpdateTemLogic")]
+        public async Task UpdateTemLogic(UpdateTem input)
+        {
+            var entity = input.Adapt<TemLogicEntity>();
+            await _TemLogicEntity.AsUpdateable(entity).IgnoreColumns(ignoreAllNullColumns: true).ExecuteCommandAsync();
+
+        }
+
+        #endregion
+
+        #region 按条件模糊查询符合条件的任务模板
+
+        /// <summary>
+        /// 按条件模糊查询符合条件的任务模板
+        /// </summary>
+        /// <param name="num">任务模板编号</param>
+        /// <param name="name">任务模板名称</param>
+        /// <returns></returns>
+        [HttpPost("/AGV/Task/GetTemLogicsContains")]
+        public List<TemLogicEntity> GetTemLogicsContains(string? num, string? name)
+        {
+
+            return _TemLogicEntity.AsQueryable()
+                            .Where(x => x.TemLogicNo.Contains(num) || x.TemLogicName.Contains(name))
+                            .ToList();
+
+        }
+
+        #endregion
+
         #region 取消、继续、完成
         /// <summary>
         /// 取消任务
@@ -359,7 +459,7 @@ namespace Admin.NET.Application.Service.AGV.Task
         /// <param name="cancelDTO"></param>
         /// <returns></returns>
         [HttpPost("/AGV/Task/CancelAsync")]
-        public async System.Threading.Tasks.Task CancelAsync(CancelDTO cancelDTO)
+        public async Task CancelAsync(CancelDTO cancelDTO)
         {
             if (cancelDTO == null || string.IsNullOrEmpty(cancelDTO.TaskNo))
             {
@@ -404,7 +504,7 @@ namespace Admin.NET.Application.Service.AGV.Task
         /// <param name="goOnAsyncDTO"></param>
         /// <returns></returns>
         [HttpPost("/AGV/Task/GoOnAsync")]
-        public async System.Threading.Tasks.Task GoOnAsync(GoOnAsyncDTO goOnAsyncDTO)
+        public async Task GoOnAsync(GoOnAsyncDTO goOnAsyncDTO)
         {
             //_ = FileUtil.DebugTxt("继续任务接口请求", MessageTypeEnum.记录, goOnAsyncDTO.taskNo, "", "继续任务记录");
             try
@@ -442,7 +542,7 @@ namespace Admin.NET.Application.Service.AGV.Task
         /// <exception cref="Exception"></exception>
         [HttpPost("/AGV/Task/AcceptAsync")]
         [AllowAnonymous]
-        public async Task<string> AcceptAsuncNew(AcceptDTO acceptDTO)
+        public async Task<int> AcceptAsuncNew(AcceptDTO acceptDTO)
         {
             try
             {
@@ -488,6 +588,8 @@ namespace Admin.NET.Application.Service.AGV.Task
                 {
                     throw new Exception($"未找到有对应{acceptDTO.orderId}编号的AGV任务");
                 }
+                // 任务执行的状态
+                int AgvStatus = 0;
                 if (!string.IsNullOrEmpty(acceptDTO.deviceNum))
                 {
                     item.AGV = acceptDTO.deviceNum;
@@ -507,9 +609,6 @@ namespace Admin.NET.Application.Service.AGV.Task
 
                     // 任务失败的原因
                     item.Message = acceptDTO.errorDesc;
-
-                    // 任务执行的状态
-                    int AgvStatus = 0;
                     switch (acceptDTO.status)
                     {
                         // 已取消
@@ -550,8 +649,112 @@ namespace Admin.NET.Application.Service.AGV.Task
                     // 将rcs得到的数据保存
                     await _TaskEntity.InsertOrUpdateAsync(item);
 
+                    // 寻找到当前正在进行任务的任务编号
+                    var listTaskData = _TaskEntity.AsQueryable()
+                                 .Where(x => x.TaskNo == acceptDTO.orderId)
+                                 .Select(x => x)
+                                 .ToList();
+
+                    // 通过出入库编号将需要出入库的数据相关联（出入库详情表，得到出入库编号）
+                    var listInBoundData = _InAndOutBound.AsQueryable()
+                                    .Where(x => x.InAndOutBoundNum == listTaskData[0].InAndOutBoundNum)
+                                    .Select(x => x)
+                                    .ToList();
+
+                    #region 判断为入库成功的场景
+
+                    // 判断为入库成功的场景
+                    if (acceptDTO.status == 8 && listInBoundData[0].InAndOutBoundType == 0)
+                    {
+                        // 根据这个出入库编号去库存临时表中将符合条件的库存保存到正式的库存表中
+                        try
+                        {
+                            // 查询得到临时库存主表里面所有的数据
+                            var listTemInvData = _TemInventory.AsQueryable()
+                                           .Where(x => x.InAndOutBoundNum == listInBoundData[0].InAndOutBoundNum)
+                                           .Select(x => x)
+                                           .ToList();
+
+                            for (int i = 0; i < listTemInvData.Count; i++)
+                            {
+                                // 得到临时库存主表和临时库存详细表的关系
+                                var listTemInvDetailData = _TemInventoryDetail.AsQueryable()
+                                                    .Where(x => x.InventoryNum == listTemInvData[i].InventoryNum)
+                                                    .Select(x => x)
+                                                    .ToList();
+
+                                // 关系转换注入
+                                EG_WMS_Inventory invData = listTemInvData[i].Adapt<EG_WMS_Inventory>();
+                                EG_WMS_InventoryDetail invdData = listTemInvDetailData[i].Adapt<EG_WMS_InventoryDetail>();
+
+                                await _Inventory.InsertAsync(invData);
+                                await _InventoryDetail.InsertAsync(invdData);
+
+                            }
+
+                            // 修改入库状态
+                            await _InAndOutBound.AsUpdateable()
+                                          .AS("EG_WMS_InAndOutBound")
+                                          .SetColumns(it => new Entity.EG_WMS_InAndOutBound
+                                          {
+                                              InAndOutBoundStatus = 1,
+                                              SuccessOrNot = 0,
+                                          })
+                                          .ExecuteCommandAsync();
+                        }
+                        catch (Exception ex)
+                        {
+
+                            throw new Exception(ex.Message);
+                        }
+
+                    }
+                    #endregion
+
+                    #region 判断为出库成功的场景
+
+                    // 判断为出库成功的场景
+                    else if (acceptDTO.status == 8 && listInBoundData[0].InAndOutBoundType == 1)
+                    {
+                        try
+                        {
+                            // 查询得到临时库存主表中修改的数据
+                            var dataTemInvtory = _TemInventory.AsQueryable()
+                                          .Where(x => x.InAndOutBoundNum == listInBoundData[0].InAndOutBoundNum)
+                                          .Select(x => x)
+                                          .ToList();
+
+                            for (int i = 0; i < dataTemInvtory.Count; i++)
+                            {
+                                EG_WMS_Inventory invData = dataTemInvtory[i].Adapt<EG_WMS_Inventory>();
+
+                                await _Inventory.UpdateAsync(invData);
+
+                            }
+
+                            // 修改出库状态
+                            await _InAndOutBound.AsUpdateable()
+                                          .AS("EG_WMS_InAndOutBound")
+                                          .SetColumns(it => new Entity.EG_WMS_InAndOutBound
+                                          {
+                                              InAndOutBoundStatus = 3,
+                                              SuccessOrNot = 0,
+                                          })
+                                          .ExecuteCommandAsync();
+
+                        }
+                        catch (Exception ex)
+                        {
+
+                            throw new Exception(ex.Message);
+                        }
+
+                    }
+
+                    #endregion
                 }
-                return "";
+
+                return AgvStatus;
             }
             catch (Exception ex)
             {

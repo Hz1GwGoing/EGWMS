@@ -95,4 +95,11 @@ public class TaskEntity : EntityBase
     /// 是否追加任务
     /// </summary>
     public int IsAdd { get; set; }
+
+    /// <summary>
+    /// 出入库编号
+    /// </summary>
+    [SugarColumn(ColumnDescription = "出入库编号")]
+    public string InAndOutBoundNum { get; set; }
+
 }

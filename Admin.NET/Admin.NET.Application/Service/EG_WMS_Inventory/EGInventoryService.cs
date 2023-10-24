@@ -74,9 +74,9 @@ public class EGInventoryService : IDynamicApiController, ITransient
     }
     #endregion
 
-    #region 模糊查询符条件的数据
+    #region 模糊查询符条件的数据（根据物料名称、编号、类别）
     /// <summary>
-    /// 模糊查询符条件的数据
+    /// 模糊查询符条件的数据（根据物料名称）
     /// </summary>
     /// <param name="input"></param>
     /// <returns></returns>
@@ -89,13 +89,14 @@ public class EGInventoryService : IDynamicApiController, ITransient
 
         try
         {
-            List<EG_WMS_Materiel> materielsData = await _materiel.GetListAsync
-                (
-                    u => u.MaterielNum.Contains(input.MaterielNum) ||
-                    u.MaterielName.Contains(input.MaterielName) ||
-                    u.MaterielSpecs.Contains(input.MaterielSpecs)
-                );
-            if (materielsData != null)
+            var materielsData = _materiel.AsQueryable()
+                                         .Where(u => u.MaterielName.Contains(input.MaterielName))
+                                         .Where(u => u.MaterielNum.Contains(input.MaterielNum))
+                                         .Where(u => u.MaterielType.Contains(input.MaterielType))
+                                         .ToList();
+
+
+            if (materielsData.Count != 0)
             {
                 // 得到模糊查询里面的物料编号  
                 foreach (var item in materielsData)
@@ -138,10 +139,15 @@ public class EGInventoryService : IDynamicApiController, ITransient
                     }
                 }
             }
+            else
+            {
+                throw new Exception("查询不到记录");
+            }
         }
         catch (Exception ex)
         {
             Console.WriteLine(ex);
+            throw new Exception(ex.Message);
         }
         return EGInventoryAndMaterielData;
     }

@@ -145,11 +145,6 @@ public class QueryByIdEGInventoryInput
 {
 
     /// <summary>
-    /// 库存编号
-    /// </summary>
-    //public virtual string? InventoryNum { get; set; }
-
-    /// <summary>
     /// 物料编号
     /// </summary>
     public string? MaterielNum { get; set; }
@@ -160,8 +155,7 @@ public class QueryByIdEGInventoryInput
     public string? MaterielName { get; set; }
 
     /// <summary>
-    /// 物料规格
+    /// 物料类别
     /// </summary>
-    public string? MaterielSpecs { get; set; }
-
+    public string? MaterielType { get; set; }
 }

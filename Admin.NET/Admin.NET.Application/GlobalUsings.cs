@@ -16,6 +16,7 @@ global using Admin.NET.Application.AGV.AGVEntity;
 global using System.ComponentModel.DataAnnotations;
 global using Admin.NET.Application.Service.AGV.Task;
 global using Microsoft.Extensions.DependencyInjection;
+global using Admin.NET.Application.Service.EG_AGV_Task;
 global using Admin.NET.Application.Service.EGWareHouse.Dto;
 global using Admin.NET.Application.Service.EGInventory.Dto;
 global using Admin.NET.Application.Service.EGRelocation.Dto;
