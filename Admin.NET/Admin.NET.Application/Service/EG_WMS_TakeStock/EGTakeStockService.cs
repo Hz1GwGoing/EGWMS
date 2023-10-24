@@ -78,10 +78,13 @@ public class EGTakeStockService : IDynamicApiController, ITransient
 
     #endregion
 
+    // 新案
+
     #region 查找料箱（记录下来）
 
-
     #endregion
+
+    // 弃案
 
     #region 根据库位盘点（修改，待完善）
 

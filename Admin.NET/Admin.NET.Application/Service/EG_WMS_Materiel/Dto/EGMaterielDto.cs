@@ -20,4 +20,14 @@ public class EGMaterielDto
     /// </summary>
     public string? MaterielType { get; set; }
 
+    /// <summary>
+    /// 页数
+    /// </summary>
+    public int page { get; set; }
+
+    /// <summary>
+    /// 每页容量
+    /// </summary>
+    public int pageSize { get; set; }
+
 }
