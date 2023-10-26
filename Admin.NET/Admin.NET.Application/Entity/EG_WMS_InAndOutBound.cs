@@ -21,9 +21,9 @@ public class EG_WMS_InAndOutBound : EntityBase
     public int? InAndOutBoundType { get; set; }
 
     /// <summary>
-    /// 出入库状态（0-未入库，1-已入库，2-未出库，3-已出库）
+    /// 出入库状态（出入库状态（0-未入库，1-已入库，2-未出库，3-已出库，4-入库中，5-出库中）
     /// </summary>
-    [SugarColumn(ColumnDescription = "出入库状态（0-未入库，1-已入库，2-未出库，3-已出库，4-入库中，5-出库中）")]
+    [SugarColumn(ColumnDescription = "（出入库状态（0-未入库，1-已入库，2-未出库，3-已出库，4-入库中，5-出库中）")]
     public int? InAndOutBoundStatus { get; set; }
 
     /// <summary>

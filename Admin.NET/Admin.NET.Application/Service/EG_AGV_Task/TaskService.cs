@@ -590,169 +590,183 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
                 }
                 // 任务执行的状态
                 int AgvStatus = 0;
-                if (!string.IsNullOrEmpty(acceptDTO.deviceNum))
+                //if (!string.IsNullOrEmpty(acceptDTO.deviceNum))
+                //{
+                item.AGV = acceptDTO.deviceNum;
+
+                // 已下发
+                if (acceptDTO.status == 9)
                 {
-                    item.AGV = acceptDTO.deviceNum;
+                    // 任务开始时间
+                    item.STime = DateTime.Now;
+                }
+                // 任务结束时间
+                // 3 已取消 5 发送失败 7 执行失败 8 已已完成
+                if (acceptDTO.status == 3 || acceptDTO.status == 5 || acceptDTO.status == 7 || acceptDTO.status == 8)
+                {
+                    item.ETime = DateTime.Now;
+                }
 
+                // 任务失败的原因
+                item.Message = acceptDTO.errorDesc;
+                switch (acceptDTO.status)
+                {
+                    // 已取消
+                    case 3:
+                        AgvStatus = 3;
+                        break;
+                    // 发送失败
+                    case 5:
+                        AgvStatus = 5;
+                        break;
+                    // 运行中
+                    case 6:
+                        AgvStatus = 6;
+                        break;
+                    // 执行失败
+                    case 7:
+                        AgvStatus = 7;
+                        break;
+                    // 已完成
+                    case 8:
+                        AgvStatus = 8;
+                        break;
                     // 已下发
-                    if (acceptDTO.status == 9)
+                    case 9:
+                        AgvStatus = 9;
+                        break;
+                    // 等待确认
+                    case 10:
+                        AgvStatus = 10;
+                        break;
+                }
+                // 任务状态
+                item.TaskState = AgvStatus;
+                // 子任务序列
+                item.SubTaskSeq = acceptDTO.subTaskSeq;
+                // 子任务状态
+                item.SubTaskStatus = acceptDTO.subTaskStatus;
+
+                // 寻找到当前正在进行任务的任务编号
+                var listTaskData = _TaskEntity.AsQueryable()
+                             .Where(x => x.TaskNo == acceptDTO.orderId)
+                             .Select(x => x)
+                             .ToList();
+
+                // 通过出入库编号将需要出入库的数据相关联（出入库详情表，得到出入库编号）
+                var listInBoundData = _InAndOutBound.AsQueryable()
+                                .Where(x => x.InAndOutBoundNum == listTaskData[0].InAndOutBoundNum)
+                                .Select(x => x)
+                                .ToList();
+
+                #region 判断为入库成功的场景
+
+                // 判断为入库成功的场景
+                if (acceptDTO.status == 8 && listInBoundData[0].InAndOutBoundType == 0)
+                {
+                    // 根据这个出入库编号去库存临时表中将符合条件的库存保存到正式的库存表中
+
+                    try
                     {
-                        // 任务开始时间
-                        item.STime = DateTime.Now;
-                    }
-                    // 任务结束时间
-                    // 3 已取消 5 发送失败 7 执行失败 8 已已完成
-                    if (acceptDTO.status == 3 || acceptDTO.status == 5 || acceptDTO.status == 7 || acceptDTO.status == 8)
-                    {
-                        item.ETime = DateTime.Now;
-                    }
+                        // 查询得到临时库存主表里面所有的数据
+                        var listTemInvData = _TemInventory.AsQueryable()
+                                       .Where(x => x.InAndOutBoundNum == listInBoundData[0].InAndOutBoundNum)
+                                       .Select(x => x)
+                                       .ToList();
 
-                    // 任务失败的原因
-                    item.Message = acceptDTO.errorDesc;
-                    switch (acceptDTO.status)
-                    {
-                        // 已取消
-                        case 3:
-                            AgvStatus = 3;
-                            break;
-                        // 发送失败
-                        case 5:
-                            AgvStatus = 5;
-                            break;
-                        // 运行中
-                        case 6:
-                            AgvStatus = 6;
-                            break;
-                        // 执行失败
-                        case 7:
-                            AgvStatus = 7;
-                            break;
-                        // 已完成
-                        case 8:
-                            AgvStatus = 8;
-                            break;
-                        // 已下发
-                        case 9:
-                            AgvStatus = 9;
-                            break;
-                        // 等待确认
-                        case 10:
-                            AgvStatus = 10;
-                            break;
-                    }
-                    // 任务状态
-                    item.TaskState = AgvStatus;
-                    // 子任务序列
-                    item.SubTaskSeq = acceptDTO.subTaskSeq;
-                    // 子任务状态
-                    item.SubTaskStatus = acceptDTO.subTaskStatus;
-                    // 将rcs得到的数据保存
-                    await _TaskEntity.InsertOrUpdateAsync(item);
-
-                    // 寻找到当前正在进行任务的任务编号
-                    var listTaskData = _TaskEntity.AsQueryable()
-                                 .Where(x => x.TaskNo == acceptDTO.orderId)
-                                 .Select(x => x)
-                                 .ToList();
-
-                    // 通过出入库编号将需要出入库的数据相关联（出入库详情表，得到出入库编号）
-                    var listInBoundData = _InAndOutBound.AsQueryable()
-                                    .Where(x => x.InAndOutBoundNum == listTaskData[0].InAndOutBoundNum)
-                                    .Select(x => x)
-                                    .ToList();
-
-                    #region 判断为入库成功的场景
-
-                    // 判断为入库成功的场景
-                    if (acceptDTO.status == 8 && listInBoundData[0].InAndOutBoundType == 0)
-                    {
-                        // 根据这个出入库编号去库存临时表中将符合条件的库存保存到正式的库存表中
-                        try
-                        {
-                            // 查询得到临时库存主表里面所有的数据
-                            var listTemInvData = _TemInventory.AsQueryable()
-                                           .Where(x => x.InAndOutBoundNum == listInBoundData[0].InAndOutBoundNum)
-                                           .Select(x => x)
-                                           .ToList();
-
-                            for (int i = 0; i < listTemInvData.Count; i++)
-                            {
-                                // 得到临时库存主表和临时库存详细表的关系
-                                var listTemInvDetailData = _TemInventoryDetail.AsQueryable()
-                                                    .Where(x => x.InventoryNum == listTemInvData[i].InventoryNum)
-                                                    .Select(x => x)
-                                                    .ToList();
-
-                                // 关系转换注入
-                                EG_WMS_Inventory invData = listTemInvData[i].Adapt<EG_WMS_Inventory>();
-                                EG_WMS_InventoryDetail invdData = listTemInvDetailData[i].Adapt<EG_WMS_InventoryDetail>();
-
-                                await _Inventory.InsertAsync(invData);
-                                await _InventoryDetail.InsertAsync(invdData);
-
-                            }
-
-                            // 修改入库状态
-                            await _InAndOutBound.AsUpdateable()
-                                          .AS("EG_WMS_InAndOutBound")
-                                          .SetColumns(it => new Entity.EG_WMS_InAndOutBound
-                                          {
-                                              InAndOutBoundStatus = 1,
-                                              SuccessOrNot = 0,
-                                          })
-                                          .ExecuteCommandAsync();
-                        }
-                        catch (Exception ex)
-                        {
-
-                            throw new Exception(ex.Message);
-                        }
-
-                    }
-                    #endregion
-
-                    #region 判断为出库成功的场景
-
-                    // 判断为出库成功的场景
-                    else if (acceptDTO.status == 8 && listInBoundData[0].InAndOutBoundType == 1)
-                    {
-                        try
-                        {
-                            // 查询得到临时库存主表中修改的数据
-                            var dataTemInvtory = _TemInventory.AsQueryable()
-                                          .Where(x => x.InAndOutBoundNum == listInBoundData[0].InAndOutBoundNum)
-                                          .Select(x => x)
+                        var listTemInvDetailData = _TemInventoryDetail.AsQueryable()
+                                          .InnerJoin<EG_WMS_Tem_Inventory>((a, b) => a.InventoryNum == b.InventoryNum)
+                                          .Where((a, b) => b.InAndOutBoundNum == listInBoundData[0].InAndOutBoundNum)
                                           .ToList();
 
-                            for (int i = 0; i < dataTemInvtory.Count; i++)
-                            {
-                                EG_WMS_Inventory invData = dataTemInvtory[i].Adapt<EG_WMS_Inventory>();
+                        List<EG_WMS_Inventory> invDataList = listTemInvData.Adapt<List<EG_WMS_Inventory>>();
+                        List<EG_WMS_InventoryDetail> invdDataList = listTemInvDetailData.Adapt<List<EG_WMS_InventoryDetail>>();
 
-                                await _Inventory.UpdateAsync(invData);
+                        _Inventory.InsertOrUpdate(invDataList);
+                        _InventoryDetail.InsertOrUpdate(invdDataList);
 
-                            }
+                        #region 归档
+                        //for (int i = 0; i < listTemInvData.Count; i++)
+                        //{
+                        //    // 得到临时库存主表和临时库存详细表的关系
+                        //    var listTemInvDetailData = _TemInventoryDetail.AsQueryable()
+                        //                        .Where(x => x.InventoryNum == listTemInvData[i].InventoryNum)
+                        //                        .Select(x => x)
+                        //                        .ToList();
 
-                            // 修改出库状态
-                            await _InAndOutBound.AsUpdateable()
-                                          .AS("EG_WMS_InAndOutBound")
-                                          .SetColumns(it => new Entity.EG_WMS_InAndOutBound
-                                          {
-                                              InAndOutBoundStatus = 3,
-                                              SuccessOrNot = 0,
-                                          })
-                                          .ExecuteCommandAsync();
+                        //    // 关系转换注入
+                        //    EG_WMS_Inventory invData = listTemInvData[i].Adapt<EG_WMS_Inventory>();
+                        //    EG_WMS_InventoryDetail invdData = listTemInvDetailData[i].Adapt<EG_WMS_InventoryDetail>();
 
-                        }
-                        catch (Exception ex)
-                        {
+                        //    await _Inventory.InsertAsync(invData);
+                        //    await _InventoryDetail.InsertAsync(invdData);
 
-                            throw new Exception(ex.Message);
-                        }
+                        //}
+                        #endregion
 
                     }
+                    catch (Exception ex)
+                    {
 
-                    #endregion
+                        throw new Exception(ex.Message);
+                    }
+
+                    // 修改入库状态
+                    await _InAndOutBound.AsUpdateable()
+                                  .AS("EG_WMS_InAndOutBound")
+                                  .SetColumns(it => new Entity.EG_WMS_InAndOutBound
+                                  {
+                                      InAndOutBoundStatus = 1,
+                                      SuccessOrNot = 0,
+                                  })
+                                  .Where(x => x.InAndOutBoundNum == listInBoundData[0].InAndOutBoundNum)
+                                  .ExecuteCommandAsync();
+
                 }
+                #endregion
+
+                #region 判断为出库成功的场景
+
+                // 判断为出库成功的场景
+                else if (acceptDTO.status == 8 && listInBoundData[0].InAndOutBoundType == 1)
+                {
+                    try
+                    {
+                        // 查询得到临时库存主表中修改的数据
+                        var dataTemInvtory = _TemInventory.AsQueryable()
+                                      .Where(x => x.InAndOutBoundNum == listInBoundData[0].InAndOutBoundNum)
+                                      .Select(x => x)
+                                      .ToList();
+
+                        List<EG_WMS_Inventory> invData = dataTemInvtory.Adapt<List<EG_WMS_Inventory>>();
+
+                        _Inventory.InsertOrUpdate(invData);
+
+                    }
+                    catch (Exception ex)
+                    {
+
+                        throw new Exception(ex.Message);
+                    }
+
+                    // 修改出库状态
+                    await _InAndOutBound.AsUpdateable()
+                                  .AS("EG_WMS_InAndOutBound")
+                                  .SetColumns(it => new Entity.EG_WMS_InAndOutBound
+                                  {
+                                      InAndOutBoundStatus = 3,
+                                      SuccessOrNot = 0,
+                                  })
+                                  .Where(x => x.InAndOutBoundNum == listInBoundData[0].InAndOutBoundNum)
+                                  .ExecuteCommandAsync();
+
+                }
+
+                #endregion
+
+                // 将rcs得到的数据保存
+                await _TaskEntity.InsertOrUpdateAsync(item);
+                //}
 
                 return AgvStatus;
             }

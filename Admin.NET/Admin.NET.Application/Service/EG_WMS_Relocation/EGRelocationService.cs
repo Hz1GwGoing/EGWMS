@@ -164,9 +164,6 @@ public class EGRelocationService : IDynamicApiController, ITransient
                     .Take(pageSize)
                     .ToList();
         
-
-
-
         return data;
     }
 

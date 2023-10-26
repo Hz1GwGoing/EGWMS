@@ -13,7 +13,7 @@ public class EG_WMS_TakeStock : EntityBase
     public string TakeStockNum { get; set; }
 
     /// <summary>
-    /// 盘点状态（0.待盘点 1.盘赢 2.盘亏）
+    /// 盘点状态（0.待盘点 1.已盘点）
     /// </summary>
     //[SugarColumn(ColumnDescription = "盘点状态（0.待盘点 1.盘赢 2.盘亏）")]
     [SugarColumn(ColumnDescription = "盘点状态（0.待盘点 1.已盘点）")]

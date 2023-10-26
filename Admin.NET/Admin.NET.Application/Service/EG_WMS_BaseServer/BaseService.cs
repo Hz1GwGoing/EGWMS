@@ -1,4 +1,6 @@
-﻿namespace Admin.NET.Application.Service.EG_WMS_BaseServer;
+﻿using OfficeOpenXml.FormulaParsing.Excel.Functions.Math;
+
+namespace Admin.NET.Application.Service.EG_WMS_BaseServer;
 
 /// <summary>
 /// 基础接口，获得所有数据
@@ -75,13 +77,15 @@ public class BaseService : IDynamicApiController, ITransient
     #region 得到所有的库存信息以及关联关系
 
     /// <summary>
-    /// 得到所有的库存信息以及关联关系
+    /// 得到所有的库存信息以及关联关系（分页查询）
     /// </summary>
+    /// <param name="page">分页页数</param>
+    /// <param name="pageSize">每页容量</param>
     /// <returns></returns>
 
     [HttpGet]
     [ApiDescriptionSettings(Name = "GetAllInventoryMessage")]
-    public List<GetAllInventoryData> GetAllInventoryMessage()
+    public List<GetAllInventoryData> GetAllInventoryMessage(int page, int pageSize)
     {
         List<GetAllInventoryData> datas = _Inventory.AsQueryable()
                     .InnerJoin<EG_WMS_InventoryDetail>((o, cus) => o.InventoryNum == cus.InventoryNum)
@@ -107,6 +111,8 @@ public class BaseService : IDynamicApiController, ITransient
                         RegionName = ion.RegionName,
                         OutboundStatus = o.OutboundStatus
                     })
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
                     .ToList();
 
 
@@ -119,38 +125,42 @@ public class BaseService : IDynamicApiController, ITransient
     #region 查询得到出入库详情表
 
     /// <summary>
-    /// 查询得到出入库详情表
+    /// 查询得到出入库详情表（分页查询）
     /// </summary>
+    /// <param name="inandoutbound">出入库编号</param>
     /// <param name="type">出入库（0 - 入库（默认） 1 - 出库 ）</param>
     /// <returns></returns>
     [HttpPost]
     [ApiDescriptionSettings(Name = "GetAllInAndBoundDetailMessage")]
-    public List<GetAllInAndBoundDetailData> GetAllInAndBoundDetailMessage(int type = 0)
+    public List<GetAllInAndBoundDetailData> GetAllInAndBoundDetailMessage(string inandoutbound, int type = 0)
     {
-        
-        return _InAndOutBound.AsQueryable()
-                       .InnerJoin<EG_WMS_InAndOutBoundDetail>((a, b) => a.InAndOutBoundNum == b.InAndOutBoundNum)
-                       .InnerJoin<EG_WMS_Inventory>((a, b, c) => c.InAndOutBoundNum == b.InAndOutBoundNum)
-                       .InnerJoin<EG_WMS_Materiel>((a, b, c, d) => d.MaterielNum == c.MaterielNum)
-                       .InnerJoin<EG_WMS_InventoryDetail>((a, b, c, d, e) => e.InventoryNum == c.InventoryNum)
-                       .InnerJoin<EG_WMS_WorkBin>((a, b, c, d, e, f) => e.WorkBinNum == f.WorkBinNum)
-                       .InnerJoin<EG_WMS_Region>((a, b, c, d, e, f, g) => g.RegionNum == e.RegionNum)
-                       .InnerJoin<EG_WMS_WareHouse>((a, b, c, d, e, f, g, h) => h.WHNum == e.WHNum)
-                       .InnerJoin<EG_WMS_Storage>((a, b, c, d, e, f, g, h, i) => i.StorageNum == e.StorageNum)
-                       .Where(a => a.InAndOutBoundType == type)
-                       .Select((a, b, c, d, e, f, g, h, i) => new GetAllInAndBoundDetailData
-                       {
-                           MaterielNum = d.MaterielNum,
-                           MaterielName = d.MaterielName,
-                           MaterieSpecs = d.MaterielSpecs,
-                           ICountAll = (int)c.ICountAll,
-                           WorkBinNum = f.WorkBinNum,
-                           WorkBinName = f.WorkBinName,
-                           WHName = h.WHName,
-                           RegionName = g.RegionName,
-                           StorageName = i.StorageName,
-                       })
-                       .ToList();
+
+        var a = _InAndOutBound.AsQueryable()
+                      .InnerJoin<EG_WMS_InAndOutBoundDetail>((a, b) => a.InAndOutBoundNum == b.InAndOutBoundNum)
+                      .InnerJoin<EG_WMS_Inventory>((a, b, c) => c.InAndOutBoundNum == b.InAndOutBoundNum)
+                      .InnerJoin<EG_WMS_Materiel>((a, b, c, d) => d.MaterielNum == c.MaterielNum)
+                      .InnerJoin<EG_WMS_InventoryDetail>((a, b, c, d, e) => e.InventoryNum == c.InventoryNum)
+                      .InnerJoin<EG_WMS_WorkBin>((a, b, c, d, e, f) => e.WorkBinNum == f.WorkBinNum)
+                      .InnerJoin<EG_WMS_Region>((a, b, c, d, e, f, g) => g.RegionNum == e.RegionNum)
+                      .InnerJoin<EG_WMS_WareHouse>((a, b, c, d, e, f, g, h) => h.WHNum == e.WHNum)
+                      .InnerJoin<EG_WMS_Storage>((a, b, c, d, e, f, g, h, i) => i.StorageNum == e.StorageNum)
+                      .Where((a, b, c, d, e, f, g, h, i) => a.InAndOutBoundType == type && a.InAndOutBoundNum == inandoutbound)
+                      .Select((a, b, c, d, e, f, g, h, i) => new GetAllInAndBoundDetailData
+                      {
+                          MaterielNum = d.MaterielNum,
+                          MaterielName = d.MaterielName,
+                          MaterieSpecs = d.MaterielSpecs,
+                          ICountAll = (int)c.ICountAll,
+                          WorkBinNum = f.WorkBinNum,
+                          WorkBinName = f.WorkBinName,
+                          WHName = h.WHName,
+                          RegionName = g.RegionName,
+                          StorageName = i.StorageName,
+                      })
+                      .ToList();
+
+
+        return a;
 
     }
 
