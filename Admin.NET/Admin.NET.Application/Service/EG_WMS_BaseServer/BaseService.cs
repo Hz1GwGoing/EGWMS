@@ -1,6 +1,4 @@
-﻿using OfficeOpenXml.FormulaParsing.Excel.Functions.Math;
-
-namespace Admin.NET.Application.Service.EG_WMS_BaseServer;
+﻿namespace Admin.NET.Application.Service.EG_WMS_BaseServer;
 
 /// <summary>
 /// 基础接口，获得所有数据
@@ -83,7 +81,7 @@ public class BaseService : IDynamicApiController, ITransient
     /// <param name="pageSize">每页容量</param>
     /// <returns></returns>
 
-    [HttpGet]
+    [HttpPost]
     [ApiDescriptionSettings(Name = "GetAllInventoryMessage")]
     public List<GetAllInventoryData> GetAllInventoryMessage(int page, int pageSize)
     {
@@ -94,6 +92,7 @@ public class BaseService : IDynamicApiController, ITransient
                     .InnerJoin<EG_WMS_Region>((o, cus, ml, age, ion) => age.RegionNum == ion.RegionNum)
                     .InnerJoin<EG_WMS_WareHouse>((o, cus, ml, age, ion, wh) => ion.WHNum == wh.WHNum)
                     .InnerJoin<EG_WMS_WorkBin>((o, cus, ml, age, ion, wh, wb) => cus.WorkBinNum == wb.WorkBinNum)
+                    .OrderBy(o => o.Id)
                     .Select((o, cus, ml, age, ion, wh, wb) => new GetAllInventoryData
                     {
                         InventoryNum = o.InventoryNum,
@@ -116,7 +115,6 @@ public class BaseService : IDynamicApiController, ITransient
                     .ToList();
 
 
-
         return datas;
     }
 
@@ -135,7 +133,7 @@ public class BaseService : IDynamicApiController, ITransient
     public List<GetAllInAndBoundDetailData> GetAllInAndBoundDetailMessage(string inandoutbound, int type = 0)
     {
 
-        var a = _InAndOutBound.AsQueryable()
+        List<GetAllInAndBoundDetailData> data = _InAndOutBound.AsQueryable()
                       .InnerJoin<EG_WMS_InAndOutBoundDetail>((a, b) => a.InAndOutBoundNum == b.InAndOutBoundNum)
                       .InnerJoin<EG_WMS_Inventory>((a, b, c) => c.InAndOutBoundNum == b.InAndOutBoundNum)
                       .InnerJoin<EG_WMS_Materiel>((a, b, c, d) => d.MaterielNum == c.MaterielNum)
@@ -145,6 +143,7 @@ public class BaseService : IDynamicApiController, ITransient
                       .InnerJoin<EG_WMS_WareHouse>((a, b, c, d, e, f, g, h) => h.WHNum == e.WHNum)
                       .InnerJoin<EG_WMS_Storage>((a, b, c, d, e, f, g, h, i) => i.StorageNum == e.StorageNum)
                       .Where((a, b, c, d, e, f, g, h, i) => a.InAndOutBoundType == type && a.InAndOutBoundNum == inandoutbound)
+                      .OrderBy(a => a.Id)
                       .Select((a, b, c, d, e, f, g, h, i) => new GetAllInAndBoundDetailData
                       {
                           MaterielNum = d.MaterielNum,
@@ -160,9 +159,63 @@ public class BaseService : IDynamicApiController, ITransient
                       .ToList();
 
 
-        return a;
+        return data;
 
     }
+
+    #endregion
+
+    #region 根据物料编号查询物料的总数
+
+    /// <summary>
+    /// 根据物料编号查询物料的总数
+    /// </summary>
+    /// <returns></returns>
+    public List<MaterielDataSumDto> MaterialAccorDingSumCount()
+    {
+        List<MaterielDataSumDto> data = _Inventory.AsQueryable()
+                   .InnerJoin<EG_WMS_Materiel>((inv, mat) => inv.MaterielNum == mat.MaterielNum)
+                   .Where((inv, mat) => inv.OutboundStatus == 0)
+                   .GroupBy((inv, mat) => inv.MaterielNum)
+                   .Select((inv, mat) => new MaterielDataSumDto
+                   {
+                       MaterielNum = inv.MaterielNum,
+                       MaterielName = mat.MaterielName,
+                       MaterielType = mat.MaterielType,
+                       MaterielSpecs = mat.MaterielSpecs,
+                       MaterielMainUnit = mat.MaterielMainUnit,
+                       MaterielAssistUnit = mat.MaterielAssistUnit,
+                       SumCount = (int)SqlFunc.AggregateSum(inv.ICountAll)
+                   })
+                   .ToList();
+
+        return data;
+
+    }
+
+
+    #endregion
+
+    #region 根据物料编号得到这条物料编号所有的库存记录
+
+    /// <summary>
+    /// 根据物料编号得到这条物料编号所有的库存记录
+    /// </summary>
+    /// <param name="MaterielNum"></param>
+    /// <returns></returns>
+    public List<GetMaterielNumDataList> GetMaterileNumAllInventoryRecords(string MaterielNum)
+    {
+        var data = _Inventory.AsQueryable()
+                   .InnerJoin<EG_WMS_InventoryDetail>((inv, invd) => inv.InventoryNum == invd.InventoryNum)
+                   .Where((inv, invd) => inv.MaterielNum == MaterielNum)
+                   .Select<GetMaterielNumDataList>()
+                   .ToList();
+
+        return data;
+
+    }
+
+
 
     #endregion
 

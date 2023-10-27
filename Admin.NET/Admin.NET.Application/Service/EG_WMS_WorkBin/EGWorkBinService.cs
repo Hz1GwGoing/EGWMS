@@ -42,6 +42,7 @@ public class EGWorkBinService : IDynamicApiController, ITransient
 
                     // 获取创建日期
                     .WhereIF(input.CreateTime > DateTime.MinValue, u => u.CreateTime >= input.CreateTime)
+                    
                     .Select<EGWorkBinOutput>()
 ;
         if (input.ProductionDateRange != null && input.ProductionDateRange.Count > 0)

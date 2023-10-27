@@ -1,7 +1,7 @@
 ﻿namespace Admin.NET.Application;
 
 /// <summary>
-/// EGMateriel输出参数
+/// 物料查询参数
 /// </summary>
 public class EGMaterielDto
 {

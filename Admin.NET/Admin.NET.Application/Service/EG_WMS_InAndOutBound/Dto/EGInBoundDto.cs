@@ -34,7 +34,6 @@ public class EGInBoundDto
 /// </summary>
 public class MaterielWorkBin
 {
-    
     /// <summary>
     /// 料箱编号
     /// </summary>

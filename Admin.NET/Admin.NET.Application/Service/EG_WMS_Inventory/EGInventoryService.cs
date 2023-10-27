@@ -76,13 +76,13 @@ public class EGInventoryService : IDynamicApiController, ITransient
 
     #region 模糊查询符条件的数据（根据物料名称、编号、类别）
     /// <summary>
-    /// 模糊查询符条件的数据（根据物料名称）
+    /// 模糊查询符条件的数据（根据物料名称、编号、类别）
     /// </summary>
     /// <param name="input"></param>
     /// <returns></returns>
     [HttpPost]
     [ApiDescriptionSettings(Name = "Detail")]
-    public async Task<List<EGInventoryAndMaterielDto>> Detail([FromBody] QueryByIdEGInventoryInput input)
+    public async Task<List<EGInventoryAndMaterielDto>> Detail(QueryByIdEGInventoryInput input)
     {
         List<string> materielNums = new List<string>();
         List<EGInventoryAndMaterielDto> EGInventoryAndMaterielData = new List<EGInventoryAndMaterielDto>();
@@ -90,9 +90,7 @@ public class EGInventoryService : IDynamicApiController, ITransient
         try
         {
             var materielsData = _materiel.AsQueryable()
-                                         .Where(u => u.MaterielName.Contains(input.MaterielName))
-                                         .Where(u => u.MaterielNum.Contains(input.MaterielNum))
-                                         .Where(u => u.MaterielType.Contains(input.MaterielType))
+                                         .Where(u => u.MaterielName.Contains(input.MaterielName) || u.MaterielNum.Contains(input.MaterielNum) || u.MaterielType.Contains(input.MaterielType))
                                          .ToList();
 
 
@@ -113,29 +111,29 @@ public class EGInventoryService : IDynamicApiController, ITransient
                         var materieItem = await _materiel.GetFirstAsync(u => u.MaterielNum == num);
                         var inventoryItem = await _rep.GetFirstAsync(u => u.MaterielNum == num);
                         // 物料名称  
-                        var materielnum = materieItem.MaterielNum;
+                        string materielnum = materieItem.MaterielNum;
                         // 物料名称  
-                        var materiename = materieItem.MaterielName;
+                        string materiename = materieItem.MaterielName;
                         // 规格  
-                        var materielspecs = materieItem.MaterielSpecs;
+                        string? materielspecs = materieItem.MaterielSpecs;
                         // 在库数量  
-                        var icountall = inventoryItem.ICountAll;
+                        int? icountall = inventoryItem.ICountAll;
                         // 可用数量  
-                        var iusable = inventoryItem.IUsable;
+                        int? iusable = inventoryItem.IUsable;
 
                         EGInventoryAndMaterielDto inventory = new EGInventoryAndMaterielDto()
                         {
                             MaterielNum = materielnum,
                             MaterielName = materiename,
                             MaterielSpecs = materielspecs,
-                            ICountAll = (int)icountall,
-                            IUsable = (int)iusable,
+                            ICountAll = icountall,
+                            IUsable = iusable,
                         };
                         EGInventoryAndMaterielData.Add(inventory);
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine(ex);
+                        throw Oops.Oh(ex.Message, ex);
                     }
                 }
             }
@@ -146,7 +144,6 @@ public class EGInventoryService : IDynamicApiController, ITransient
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex);
             throw new Exception(ex.Message);
         }
         return EGInventoryAndMaterielData;
@@ -166,6 +163,7 @@ public class EGInventoryService : IDynamicApiController, ITransient
     {
         return await _rep.AsQueryable().Select<EGInventoryOutput>().ToListAsync();
     }
+
     #endregion
 
     //-------------------------------------//-------------------------------------//

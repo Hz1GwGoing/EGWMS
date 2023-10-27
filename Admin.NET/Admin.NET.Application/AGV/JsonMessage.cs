@@ -1,5 +1,4 @@
-﻿using System;
-namespace Admin.NET.Application
+﻿namespace Admin.NET.Application
 {
     #region 壹格参数
     public class JsonMessage

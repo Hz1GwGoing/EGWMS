@@ -1,6 +1,4 @@
-﻿using Admin.NET.Core;
-
-namespace Admin.NET.Application.Entity;
+﻿namespace Admin.NET.Application.Entity;
 
 /// <summary>
 /// 仓库实体

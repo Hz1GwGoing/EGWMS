@@ -5,6 +5,7 @@
 /// </summary>
 public class GetAllInAndBoundDetailData
 {
+
     /// <summary>
     /// 物料编号
     /// </summary>

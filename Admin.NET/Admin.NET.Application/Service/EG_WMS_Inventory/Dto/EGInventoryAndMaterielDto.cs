@@ -4,7 +4,7 @@ public class EGInventoryAndMaterielDto
     /// <summary>
     /// 物料编号
     /// </summary>
-    public string? MaterielNum { get; set; }
+    public string MaterielNum { get; set; }
 
     /// <summary>
     /// 物料名称
@@ -14,16 +14,16 @@ public class EGInventoryAndMaterielDto
     /// <summary>
     /// 物料规格
     /// </summary>
-    public string MaterielSpecs { get; set; }
+    public string? MaterielSpecs { get; set; }
 
     /// <summary>
     /// 库存总数
     /// </summary>
-    public int ICountAll { get; set; }
+    public int? ICountAll { get; set; }
 
     /// <summary>
     /// 可用库存
     /// </summary>
-    public int IUsable { get; set; }
+    public int? IUsable { get; set; }
 
 }

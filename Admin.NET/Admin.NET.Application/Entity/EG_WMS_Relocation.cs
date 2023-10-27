@@ -1,7 +1,4 @@
-﻿using Admin.NET.Core;
-using System.ComponentModel.Design;
-
-namespace Admin.NET.Application.Entity;
+﻿namespace Admin.NET.Application.Entity;
 
 /// <summary>
 /// 移库实体

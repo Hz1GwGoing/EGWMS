@@ -66,7 +66,9 @@ public class EGRegionService : IDynamicApiController, ITransient
     [ApiDescriptionSettings(Name = "Add")]
     public async Task Add(AddEGRegionInput input)
     {
+
         var entity = input.Adapt<EG_WMS_Region>();
+
         await _rep.InsertAsync(entity);
     }
     #endregion
@@ -112,7 +114,7 @@ public class EGRegionService : IDynamicApiController, ITransient
     public async Task<EG_WMS_Region> Get([FromQuery] QueryByIdEGRegionInput input)
     {
         //return await _rep.GetFirstAsync(u => u.Id == input.Id);
-        
+
         // 模糊查询
         return await _rep.GetFirstAsync(u => u.RegionName.Contains(input.RegionName) || u.RegionNum.Contains(input.RegionNum));
     }

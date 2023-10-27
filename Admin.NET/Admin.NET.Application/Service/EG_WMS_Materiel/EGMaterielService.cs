@@ -37,6 +37,7 @@ public class EGMaterielService : IDynamicApiController, ITransient
 
                     // 获取创建日期
                     .WhereIF(input.CreateTime > DateTime.MinValue, u => u.CreateTime >= input.CreateTime)
+                    .OrderBy(u => u.Id)
                     .Select<EGMaterielOutput>()
 ;
         query = query.OrderBuilder(input);
@@ -111,7 +112,8 @@ public class EGMaterielService : IDynamicApiController, ITransient
     #region 根据物料编号名称类别筛选物料
 
     /// <summary>
-    /// 根据物料编号名称类别筛选物料（模糊查询）
+    /// 根据物料编号名称类别筛选物料（模糊查询）（分页查询）
+    /// 没有传递条件时返回所有物料信息
     /// </summary>
     /// <param name="input">编号、名称、类别</param>
     /// <returns></returns>
@@ -119,13 +121,23 @@ public class EGMaterielService : IDynamicApiController, ITransient
     [ApiDescriptionSettings(Name = "GetMaterielsDataAndNumNameSpecs")]
     public List<EG_WMS_Materiel> GetMaterielsDataAndNumNameSpecs(EGMaterielDto input)
     {
-        var data = _rep.AsQueryable()
-             .Where(x => x.MaterielNum.Contains(input.MaterielNum) || x.MaterielName.Contains(input.MaterielName) || x.MaterielType.Contains(input.MaterielType))
+        if (input.MaterielNum == null && input.MaterielName == null && input.MaterielType == null)
+        {
+            List<EG_WMS_Materiel> dataone = _rep.AsQueryable()
              .Skip((input.page - 1) * input.pageSize)
              .Take(input.pageSize)
              .ToList();
 
-        return data;
+            return dataone;
+        }
+
+        List<EG_WMS_Materiel> datatwo = _rep.AsQueryable()
+         .Where(x => x.MaterielNum.Contains(input.MaterielNum) || x.MaterielName.Contains(input.MaterielName) || x.MaterielType.Contains(input.MaterielType))
+         .Skip((input.page - 1) * input.pageSize)
+         .Take(input.pageSize)
+         .ToList();
+
+        return datatwo;
     }
 
     #endregion
@@ -135,16 +147,16 @@ public class EGMaterielService : IDynamicApiController, ITransient
     /// <summary>
     /// 获取物料信息列表
     /// </summary>
-    /// <param name="input"></param>
+    /// <param name="materielname"></param>
     /// <returns></returns>
     [HttpGet]
     [ApiDescriptionSettings(Name = "List")]
-    public async Task<List<EGMaterielOutput>> List([FromQuery] EGMaterielInput input)
+    public async Task<List<EGMaterielOutput>> List(string materielname)
     {
         //return await _rep.AsQueryable().Select<EGMaterielOutput>().ToListAsync();
         // 模糊查询
         return await _rep.AsQueryable()
-               .Where(x => x.MaterielName.Contains(input.MaterielName))
+               .Where(x => x.MaterielName.Contains(materielname))
                .Select<EGMaterielOutput>()
                .ToListAsync();
     }

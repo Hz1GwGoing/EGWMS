@@ -58,7 +58,9 @@ public class EGWareHouseService : IDynamicApiController, ITransient
     [ApiDescriptionSettings(Name = "Add")]
     public async Task Add(AddEGWareHouseInput input)
     {
+
         var entity = input.Adapt<EG_WMS_WareHouse>();
+        
         await _rep.InsertAsync(entity);
     }
 

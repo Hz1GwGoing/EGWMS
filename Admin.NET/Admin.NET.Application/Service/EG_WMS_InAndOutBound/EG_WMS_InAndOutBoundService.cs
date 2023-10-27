@@ -1,6 +1,4 @@
-﻿using System.Transactions;
-
-namespace Admin.NET.Application;
+﻿namespace Admin.NET.Application;
 
 /// <summary>
 /// 出入库接口服务（agv、人工）
@@ -1008,6 +1006,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                         .WhereIF(input.InAndOutBoundStatus > 0, (a, b) => a.InAndOutBoundStatus == input.InAndOutBoundStatus)
                         .WhereIF(!string.IsNullOrWhiteSpace(input.InAndOutBoundUser), (a, b) => a.InAndOutBoundUser.Contains(input.InAndOutBoundUser.Trim()))
                     // 倒序
+                    .Where(a => a.InAndOutBoundType == input.InAndOutBoundType)
                     .OrderBy(a => a.CreateTime, OrderByType.Desc)
                     .Select<EG_WMS_InAndOutBoundOutput>();
 
@@ -1015,11 +1014,11 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
         if (input.InAndOutBoundTimeRange != null && input.InAndOutBoundTimeRange.Count > 0)
         {
             DateTime? start = input.InAndOutBoundTimeRange[0];
-            query = query.WhereIF(start.HasValue, u => u.InAndOutBoundTime > start);
+            query = query.WhereIF(start.HasValue, a => a.InAndOutBoundTime > start);
             if (input.InAndOutBoundTimeRange.Count > 1 && input.InAndOutBoundTimeRange[1].HasValue)
             {
                 var end = input.InAndOutBoundTimeRange[1].Value.AddDays(1);
-                query = query.Where(u => u.InAndOutBoundTime < end);
+                query = query.Where(a => a.InAndOutBoundTime < end);
             }
         }
         query = query.OrderBuilder(input);
