@@ -1,4 +1,7 @@
-﻿namespace Admin.NET.Application;
+﻿using Nest;
+using SqlSugar;
+
+namespace Admin.NET.Application;
 
 /// <summary>
 /// 移库信息接口
@@ -6,8 +9,6 @@
 [ApiDescriptionSettings(ApplicationConst.GroupName, Order = 100)]
 public class EGRelocationService : IDynamicApiController, ITransient
 {
-    // agv接口
-    TaskService taskService = new TaskService();
 
     #region 引用实体
     private readonly SqlSugarRepository<EG_WMS_Relocation> _Relocation;
@@ -15,6 +16,7 @@ public class EGRelocationService : IDynamicApiController, ITransient
     private readonly SqlSugarRepository<EG_WMS_WorkBin> _WorkBin;
     private readonly SqlSugarRepository<EG_WMS_Tem_Inventory> _InventoryTem;
     private readonly SqlSugarRepository<EG_WMS_Tem_InventoryDetail> _InventoryDetailTem;
+    private readonly SqlSugarRepository<EG_WMS_Storage> _Storage;
 
     #endregion
 
@@ -25,7 +27,8 @@ public class EGRelocationService : IDynamicApiController, ITransient
          SqlSugarRepository<EG_WMS_InventoryDetail> InventoryDetail,
          SqlSugarRepository<EG_WMS_WorkBin> WorkBin,
          SqlSugarRepository<EG_WMS_Tem_Inventory> InventoryTem,
-         SqlSugarRepository<EG_WMS_Tem_InventoryDetail> InventoryDetailTem
+         SqlSugarRepository<EG_WMS_Tem_InventoryDetail> InventoryDetailTem,
+         SqlSugarRepository<EG_WMS_Storage> Storage
         )
     {
         _Relocation = Relocation;
@@ -33,6 +36,7 @@ public class EGRelocationService : IDynamicApiController, ITransient
         _WorkBin = WorkBin;
         _InventoryTem = InventoryTem;
         _InventoryDetailTem = InventoryDetailTem;
+        _Storage = Storage;
     }
     #endregion
 
@@ -154,70 +158,7 @@ public class EGRelocationService : IDynamicApiController, ITransient
     }
     #endregion
 
-    #region agv移库
-
-    //public async Task a(AgvJoinDto input)
-    //{
-    //    // 生成当前时间时间戳
-    //    string timesstamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString();
-    //    string relocationdnum = "EGYK" + timesstamp;
-
-    //    // 起始点
-    //    string startpoint = input.StartPoint;
-    //    if (startpoint == null)
-    //    {
-    //        throw Oops.Oh("起始点不可为空");
-    //    }
-
-    //    // 目标点
-    //    if (input.EndPoint == null)
-    //    {
-    //        // 根据策略推荐（修改）
-    //    }
-
-    //    string endpoint = input.EndPoint;
-
-    //    // 任务点集
-    //    var positions = startpoint + "," + endpoint;
-
-    //    TaskEntity taskEntity = input.Adapt<TaskEntity>();
-    //    taskEntity.TaskPath = positions;
-    //    taskEntity.InAndOutBoundNum = relocationdnum;
-
-    //    // 下达agv任务
-
-    //    DHMessage item = await taskService.AddAsync(taskEntity);
-
-    //    // 下达任务成功
-    //    if (item.code == 1000)
-    //    {
-    //        // 得到移库的料箱
-    //        List<MaterielWorkBin> dataList = input.materielWorkBins;
-
-    //        // 遍历一共有多少个需要移库的料箱
-    //        for (int i = 0; i < dataList.Count; i++)
-    //        {
-    //            string workbin = dataList[i].WorkBinNum;
-    //            string materielnum = dataList[i].MaterielNum;
-    //            string productionlot = dataList[i].ProductionLot;
-
-    //            // 根据条件去修改临时库存主表里面的库位信息
-
-
-
-    //        }
-
-
-
-    //    }
-
-
-    //}
-
-
-    #endregion
-
-    #region 得到移库表关联库位关系
+    #region 得到移库表关联库位关系（分页查询）
 
     /// <summary>
     /// 得到移库表关联库位关系（分页查询）
@@ -225,21 +166,29 @@ public class EGRelocationService : IDynamicApiController, ITransient
     /// <param name="page">页数</param>
     /// <param name="pageSize">每页记录数</param>
     /// <returns></returns>
-    [HttpGet]
+
+    [HttpPost]
     [ApiDescriptionSettings(Name = "GetAllRelocationsAndStorage")]
-    public List<EG_WMS_Relocation> GetAllRelocationsAndStorage(int page, int pageSize)
+    public List<class1> GetAllRelocationsAndStorage(int page, int pageSize)
     {
-        var data = _Relocation.AsQueryable()
-                    .Includes(x => x.NewStorage)
-                    .Includes(x => x.OldStorage)
-                    .OrderBy(x => x.Id)
-                    .Skip((page - 1) * pageSize)
-                    .Take(pageSize)
-                    .ToList();
 
-        return data;
+        return _Relocation.AsQueryable()
+                     .InnerJoin<EG_WMS_Materiel>((a, b) => a.MaterielNum == b.MaterielNum)
+                     .Select((a, b) => new class1
+                     {
+                         RelocatioNum = a.RelocatioNum,
+                         RelocationCount = (int)a.RelocationCount,
+                         WorkBinNum = a.WorkBinNum,
+                         CreateTime = (DateTime)a.CreateTime,
+                         MaterielName = b.MaterielName,
+                         MaterielSpecs = b.MaterielSpecs,
+                         OldStorage = SqlFunc.Subqueryable<EG_WMS_Storage>().Where(s => s.StorageNum == a.OldStorageNum).Select(a => a.StorageName).ToString(),
+                         NewStorage = SqlFunc.Subqueryable<EG_WMS_Storage>().Where(s => s.StorageNum == a.NewStorageNum).Select(a => a.StorageName).ToString()
+                     })
+                     .Skip((page - 1) * pageSize)
+                     .Take(pageSize)
+                     .ToList();
     }
-
     #endregion
 
     #region 删除移库信息
@@ -330,6 +279,25 @@ public class EGRelocationService : IDynamicApiController, ITransient
         public string MaterielNum { get; set; }
 
     }
+
+    /// <summary>
+    /// 移库查询类
+    /// </summary>
+    public class class1
+    {
+        public string RelocatioNum { get; set; }
+        public int RelocationCount { get; set; }
+        public string WorkBinNum { get; set; }
+        public DateTime CreateTime { get; set; }
+        public string MaterielName { get; set; }
+        public string MaterielSpecs { get; set; }
+        public string OldStorage { get; set; }
+        public string NewStorage { get; set; }
+    }
+
+
+
+
     #endregion
 }
 
@@ -502,6 +470,89 @@ public class EGRelocationService : IDynamicApiController, ITransient
 //    }
 //    query = query.OrderBuilder(input);
 //    return await query.ToPagedListAsync(input.Page, input.PageSize);
+//}
+
+#endregion
+
+#region agv移库
+
+//public async Task a(AgvJoinDto input)
+//{
+//    // 生成当前时间时间戳
+//    string timesstamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString();
+//    string relocationdnum = "EGYK" + timesstamp;
+
+//    // 起始点
+//    string startpoint = input.StartPoint;
+//    if (startpoint == null)
+//    {
+//        throw Oops.Oh("起始点不可为空");
+//    }
+
+//    // 目标点
+//    if (input.EndPoint == null)
+//    {
+//        // 根据策略推荐（修改）
+//    }
+
+//    string endpoint = input.EndPoint;
+
+//    // 任务点集
+//    var positions = startpoint + "," + endpoint;
+
+//    TaskEntity taskEntity = input.Adapt<TaskEntity>();
+//    taskEntity.TaskPath = positions;
+//    taskEntity.InAndOutBoundNum = relocationdnum;
+
+//    // 下达agv任务
+
+//    DHMessage item = await taskService.AddAsync(taskEntity);
+
+//    // 下达任务成功
+//    if (item.code == 1000)
+//    {
+//        // 得到移库的料箱
+//        List<MaterielWorkBin> dataList = input.materielWorkBins;
+
+//        // 遍历一共有多少个需要移库的料箱
+//        for (int i = 0; i < dataList.Count; i++)
+//        {
+//            string workbin = dataList[i].WorkBinNum;
+//            string materielnum = dataList[i].MaterielNum;
+//            string productionlot = dataList[i].ProductionLot;
+
+//            // 根据条件去修改临时库存主表里面的库位信息
+
+
+
+//        }
+
+
+
+//    }
+
+
+//}
+
+
+#endregion
+
+#region 得到移库表关联库位关系
+
+//[HttpGet]
+//[ApiDescriptionSettings(Name = "GetAllRelocationsAndStorage")]
+//public List<EG_WMS_Relocation> GetAllRelocationsAndStorage(int page, int pageSize)
+//{
+//    var data = _Relocation.AsQueryable()
+//                .InnerJoin<EG_WMS_Materiel>((x, m) => x.MaterielNum == m.MaterielNum)
+//                .Includes(x => x.NewStorage)
+//                .Includes(x => x.OldStorage)
+//                .OrderBy(x => x.Id)
+//                .Skip((page - 1) * pageSize)
+//                .Take(pageSize)
+//                .ToList();
+
+//    return data;
 //}
 
 #endregion

@@ -38,7 +38,9 @@ public class BaseService : IDynamicApiController, ITransient
     /// 料箱表
     /// </summary>
     private readonly SqlSugarRepository<EG_WMS_WorkBin> _workbin;
-
+    /// <summary>
+    /// 移库表
+    /// </summary>
     private readonly SqlSugarRepository<EG_WMS_Relocation> _Relocation;
 
 
@@ -123,7 +125,7 @@ public class BaseService : IDynamicApiController, ITransient
     #region 查询得到出入库详情表
 
     /// <summary>
-    /// 查询得到出入库详情表（分页查询）
+    /// 查询得到出入库详情表
     /// </summary>
     /// <param name="inandoutbound">出入库编号</param>
     /// <param name="type">出入库（0 - 入库（默认） 1 - 出库 ）</param>
