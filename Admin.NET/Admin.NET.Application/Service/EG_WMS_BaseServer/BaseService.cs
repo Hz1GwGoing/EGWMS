@@ -29,7 +29,7 @@ public class BaseService : IDynamicApiController, ITransient
     /// <summary>
     /// 库位表
     /// </summary>
-    private readonly SqlSugarRepository<EG_WMS_Storage> _Storage;
+    private readonly SqlSugarRepository<Entity.EG_WMS_Storage> _Storage;
     /// <summary>
     /// 区域表
     /// </summary>
@@ -52,7 +52,7 @@ public class BaseService : IDynamicApiController, ITransient
        SqlSugarRepository<EG_WMS_InAndOutBoundDetail> InAndOutBoundDetail,
        SqlSugarRepository<EG_WMS_Inventory> Inventory,
        SqlSugarRepository<EG_WMS_InventoryDetail> InventoryDetail,
-       SqlSugarRepository<EG_WMS_Storage> storage,
+       SqlSugarRepository<Entity.EG_WMS_Storage> storage,
        SqlSugarRepository<EG_WMS_Region> Region,
        SqlSugarRepository<EG_WMS_WorkBin> WorkBin,
        SqlSugarRepository<EG_WMS_Relocation> Relocation
@@ -88,7 +88,7 @@ public class BaseService : IDynamicApiController, ITransient
         List<GetAllInventoryData> datas = _Inventory.AsQueryable()
                     .InnerJoin<EG_WMS_InventoryDetail>((o, cus) => o.InventoryNum == cus.InventoryNum)
                     .InnerJoin<EG_WMS_Materiel>((o, cus, ml) => ml.MaterielNum == o.MaterielNum)
-                    .InnerJoin<EG_WMS_Storage>((o, cus, ml, age) => cus.StorageNum == age.StorageNum)
+                    .InnerJoin<Entity.EG_WMS_Storage>((o, cus, ml, age) => cus.StorageNum == age.StorageNum)
                     .InnerJoin<EG_WMS_Region>((o, cus, ml, age, ion) => age.RegionNum == ion.RegionNum)
                     .InnerJoin<EG_WMS_WareHouse>((o, cus, ml, age, ion, wh) => ion.WHNum == wh.WHNum)
                     .InnerJoin<EG_WMS_WorkBin>((o, cus, ml, age, ion, wh, wb) => cus.WorkBinNum == wb.WorkBinNum)
@@ -141,7 +141,7 @@ public class BaseService : IDynamicApiController, ITransient
                       .InnerJoin<EG_WMS_WorkBin>((a, b, c, d, e, f) => e.WorkBinNum == f.WorkBinNum)
                       .InnerJoin<EG_WMS_Region>((a, b, c, d, e, f, g) => g.RegionNum == e.RegionNum)
                       .InnerJoin<EG_WMS_WareHouse>((a, b, c, d, e, f, g, h) => h.WHNum == e.WHNum)
-                      .InnerJoin<EG_WMS_Storage>((a, b, c, d, e, f, g, h, i) => i.StorageNum == e.StorageNum)
+                      .InnerJoin<Entity.EG_WMS_Storage>((a, b, c, d, e, f, g, h, i) => i.StorageNum == e.StorageNum)
                       .Where((a, b, c, d, e, f, g, h, i) => a.InAndOutBoundType == type && a.InAndOutBoundNum == inandoutbound)
                       .OrderBy(a => a.Id)
                       .Select((a, b, c, d, e, f, g, h, i) => new GetAllInAndBoundDetailData
@@ -170,12 +170,14 @@ public class BaseService : IDynamicApiController, ITransient
     /// <summary>
     /// 根据物料编号查询物料的总数
     /// </summary>
+    /// <param name="page">页数</param>
+    /// <param name="pageSize">每页容量</param>
     /// <returns></returns>
-    public List<MaterielDataSumDto> MaterialAccorDingSumCount()
+    public List<MaterielDataSumDto> MaterialAccorDingSumCount(int page, int pageSize)
     {
         List<MaterielDataSumDto> data = _Inventory.AsQueryable()
                    .InnerJoin<EG_WMS_Materiel>((inv, mat) => inv.MaterielNum == mat.MaterielNum)
-                   .Where((inv, mat) => inv.OutboundStatus == 0)
+                   .Where((inv, mat) => inv.OutboundStatus == 0 && inv.IsDelete == false)
                    .GroupBy((inv, mat) => inv.MaterielNum)
                    .Select((inv, mat) => new MaterielDataSumDto
                    {
@@ -187,7 +189,9 @@ public class BaseService : IDynamicApiController, ITransient
                        MaterielAssistUnit = mat.MaterielAssistUnit,
                        SumCount = (int)SqlFunc.AggregateSum(inv.ICountAll)
                    })
-                   .ToList();
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToList();
 
         return data;
 
@@ -201,14 +205,21 @@ public class BaseService : IDynamicApiController, ITransient
     /// <summary>
     /// 根据物料编号得到这条物料编号所有的库存记录
     /// </summary>
-    /// <param name="MaterielNum"></param>
+    /// <param name="MaterielNum">物料编号</param>
+    /// <param name="page">页数</param>
+    /// <param name="pageSize">每页容量</param>
     /// <returns></returns>
-    public List<GetMaterielNumDataList> GetMaterileNumAllInventoryRecords(string MaterielNum)
+    public List<GetMaterielNumDataList> GetMaterileNumAllInventoryRecords(string MaterielNum, int page, int pageSize)
     {
         var data = _Inventory.AsQueryable()
                    .InnerJoin<EG_WMS_InventoryDetail>((inv, invd) => inv.InventoryNum == invd.InventoryNum)
-                   .Where((inv, invd) => inv.MaterielNum == MaterielNum)
+                   .InnerJoin<EG_WMS_Materiel>((inv, invd, ma) => inv.MaterielNum == ma.MaterielNum)
+                   .InnerJoin<EG_WMS_Region>((inv, invd, ma, re) => invd.RegionNum == re.RegionNum)
+                   .InnerJoin<EG_WMS_WareHouse>((inv, invd, ma, re, wh) => invd.WHNum == wh.WHNum)
+                   .Where((inv, invd) => inv.MaterielNum == MaterielNum && inv.OutboundStatus == 0 && inv.IsDelete == false)
                    .Select<GetMaterielNumDataList>()
+                   .Skip((page - 1) * pageSize)
+                   .Take(pageSize)
                    .ToList();
 
         return data;

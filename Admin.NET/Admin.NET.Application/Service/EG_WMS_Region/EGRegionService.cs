@@ -56,6 +56,21 @@ public class EGRegionService : IDynamicApiController, ITransient
     }
     #endregion
 
+    #region 查询一共有多少个区域
+
+    /// <summary>
+    /// 查询一共有多少个区域
+    /// </summary>
+    /// <returns></returns>
+    public int GetSumRegionCount()
+    {
+        return _rep.AsQueryable().Where(a => a.RegionStatus == 0).Count();
+    }
+
+
+
+    #endregion
+
     #region 增加区域
     /// <summary>
     /// 增加区域

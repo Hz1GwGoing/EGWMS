@@ -7,11 +7,11 @@ public class GetMaterielNumDataList
 
     public int ICountAll { get; set; }
 
-    public int IUsable { get; set; }
+    //public int IUsable { get; set; }
 
-    public int IFrostCount { get; set; }
+    //public int IFrostCount { get; set; }
 
-    public int IWaitingCount { get; set; }
+    //public int IWaitingCount { get; set; }
 
     public string InAndOutBoundNum { get; set; }
 
@@ -40,4 +40,24 @@ public class GetMaterielNumDataList
     public string WorkBinNum { get; set; }
 
     public string InventoryDetailRemake { get; set; }
+
+    // 物料表
+
+    public string MaterielName { get; set; }
+
+    public string MaterielType { get; set; }
+
+    public string MaterielSpecs { get; set; }
+
+    public string MaterielMainUnit { get; set; }
+
+    public string MaterielAssistUnit { get; set; }
+
+    // 区域表
+    public string RegionName { get; set; }
+
+    // 仓库表
+
+    public string WHName { get; set; }
+
 }

@@ -1,7 +1,9 @@
-﻿namespace Admin.NET.Application;
+﻿using Admin.NET.Application.Service.EG_WMS_Storage.Dto;
+
+namespace Admin.NET.Application;
 
 /// <summary>
-/// 库位管理接口（移库的是库位）
+/// 库位管理接口
 /// </summary>
 [ApiDescriptionSettings(ApplicationConst.GroupName, Order = 100)]
 public class EGStorageService : IDynamicApiController, ITransient
@@ -13,6 +15,29 @@ public class EGStorageService : IDynamicApiController, ITransient
         _rep = rep;
     }
 
+    #region 查询区域下库位总数
+
+    /// <summary>
+    /// 查询区域下库位总数
+    /// </summary>
+    /// <returns></returns>
+    public List<GetCountStorage> GetSumStorageCount()
+    {
+        return _rep.AsQueryable()
+            .Where(a => a.StorageStatus == 0)
+            .GroupBy(a => a.RegionNum)
+            .Select(a => new GetCountStorage
+            {
+                RegionNum = a.RegionNum,
+                SumCountStorage = SqlFunc.AggregateCount(a.StorageNum)
+            })
+            .ToList();
+
+    }
+
+
+
+    #endregion
 
     #region 分页查询库位
     /// <summary>
@@ -151,8 +176,6 @@ public class EGStorageService : IDynamicApiController, ITransient
         return await _rep.AsQueryable().Select<EGStorageOutput>().ToListAsync();
     }
     #endregion
-
-
 
     //-------------------------------------//-------------------------------------//
 
