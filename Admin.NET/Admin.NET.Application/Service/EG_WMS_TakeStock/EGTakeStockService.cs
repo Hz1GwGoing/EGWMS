@@ -1,4 +1,6 @@
-﻿namespace Admin.NET.Application;
+﻿using Admin.NET.Application.Service.EGTakeStock.Dto;
+
+namespace Admin.NET.Application;
 
 /// <summary>
 /// 盘点信息接口
@@ -188,6 +190,63 @@ public class EGTakeStockService : IDynamicApiController, ITransient
 
     #endregion
 
+    #region （根据库位盘点）得到生成的盘点任务里面的数据
+
+    /// <summary>
+    /// （根据库位盘点）得到生成的盘点任务里面的数据
+    /// </summary>
+    /// <param name="takestocknum">盘点编号</param>
+    /// <returns></returns>
+    public List<EG_WMS_TakeStockData> a(string takestocknum)
+    {
+
+        // 得到这条记录
+        var takestockdata = _rep.GetFirst(x => x.TakeStockNum == takestocknum);
+
+        if (takestockdata == null)
+        {
+            throw Oops.Oh("没有找到盘点任务");
+        }
+
+        // 得到盘点编号相同的料箱数据
+        List<EG_WMS_TakeStockData> datalist = _TakeStockData.AsQueryable()
+                       .Where(a => a.TakeStockNum == takestocknum)
+                       .ToList();
+
+        return datalist;
+    }
+
+    #endregion
+
+    #region （根据库位盘点）得到库存中库位编号相同的
+
+    public List<ViewTaskStock> GetInventoryStorageIdentical(string takestockstoragenum)
+    {
+        // 根据这条数据查询库存中库位相同的数据
+        return _model.AsQueryable()
+                .InnerJoin<EG_WMS_InventoryDetail>((a, b) => a.InventoryNum == b.InventoryNum)
+                .Where((a, b) => b.StorageNum == takestockstoragenum)
+                .Select((a, b) => new ViewTaskStock
+                {
+                    InventoryNum = a.InventoryNum,
+                    WorkBinNum = b.WorkBinNum,
+                    MaterielNum = a.MaterielNum,
+                    ICountAll = (int)a.ICountAll,
+                    ProductionLot = b.ProductionLot,
+                    StorageNum = b.StorageNum,
+                    RegionNum = b.RegionNum,
+                    WHNum = b.WHNum,
+                    CreateTime = (DateTime)a.CreateTime,
+                    UpdateTime = (DateTime)a.UpdateTime
+                })
+                .ToList();
+    }
+
+
+
+
+    #endregion
+
     #region （根据库位盘点）替换原库存中的数据
 
     /// <summary>
@@ -255,15 +314,16 @@ public class EGTakeStockService : IDynamicApiController, ITransient
 
                     // 修改详细表
 
-                    await _InventoryDetail.AsUpdateable().SetColumns(it => new EG_WMS_InventoryDetail
-                    {
-                        // 生产批次
-                        ProductionLot = invdproductionlot,
-                        WorkBinNum = invdworkbinnum,
-                        UpdateTime = DateTime.Now,
-                    })
-                                     .Where(x => x.InventoryNum == listItem[0].InventoryNum)
-                                     .ExecuteCommandAsync();
+                    await _InventoryDetail.AsUpdateable()
+                                          .SetColumns(it => new EG_WMS_InventoryDetail
+                                          {
+                                              // 生产批次
+                                              ProductionLot = invdproductionlot,
+                                              WorkBinNum = invdworkbinnum,
+                                              UpdateTime = DateTime.Now,
+                                          })
+                                          .Where(x => x.InventoryNum == listItem[0].InventoryNum)
+                                          .ExecuteCommandAsync();
 
                     // 修改盘点记录
 
@@ -828,6 +888,10 @@ public class EGTakeStockService : IDynamicApiController, ITransient
     /// </summary>
     public class ViewTaskStock
     {
+        /// <summary>
+        /// 库存编号
+        /// </summary>
+        public string InventoryNum { get; set; }
 
         /// <summary>
         /// 料箱编号
@@ -863,6 +927,16 @@ public class EGTakeStockService : IDynamicApiController, ITransient
         /// 区域编号
         /// </summary>
         public string RegionNum { get; set; }
+
+        /// <summary>
+        /// 创建时间
+        /// </summary>
+        public DateTime CreateTime { get; set; }
+
+        /// <summary>
+        /// 修改时间
+        /// </summary>
+        public DateTime UpdateTime { get; set; }
     }
     #endregion
 
