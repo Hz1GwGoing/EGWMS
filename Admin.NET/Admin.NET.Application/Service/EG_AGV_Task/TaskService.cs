@@ -23,6 +23,9 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
         private readonly SqlSugarRepository<EG_WMS_Tem_InventoryDetail> _TemInventoryDetail = App.GetService<SqlSugarRepository<EG_WMS_Tem_InventoryDetail>>();
         private readonly SqlSugarRepository<EG_WMS_Inventory> _Inventory = App.GetService<SqlSugarRepository<EG_WMS_Inventory>>();
         private readonly SqlSugarRepository<EG_WMS_InventoryDetail> _InventoryDetail = App.GetService<SqlSugarRepository<EG_WMS_InventoryDetail>>();
+        private readonly SqlSugarRepository<EG_WMS_InAndOutBoundDetail> _InAndOutBoundDetail = App.GetService<SqlSugarRepository<EG_WMS_InAndOutBoundDetail>>();
+        private readonly SqlSugarRepository<EG_WMS_Region> _Region = App.GetService<SqlSugarRepository<EG_WMS_Region>>();
+        private readonly SqlSugarRepository<Entity.EG_WMS_Storage> _Storage = App.GetService<SqlSugarRepository<Entity.EG_WMS_Storage>>();
 
         #endregion
 
@@ -239,6 +242,72 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
                 throw new Exception(ex.Message);
             }
         }
+        #endregion
+
+        #region 请求第三方系统获取的任务点位
+
+
+        public async Task a(RequestPointDto input)
+        {
+            // 查询得到符合任务的信息
+            var dataTask = await _TaskEntity.GetFirstAsync(x => x.TaskNo == input.orderId);
+            if (dataTask == null)
+            {
+                throw Oops.Oh("没有找到符合条件的任务信息");
+            }
+
+            // 根据agv任务的出入库编号，得到物料编号
+            var dataInOutBound = await _InAndOutBoundDetail.GetFirstAsync(x => x.InAndOutBoundNum == dataTask.InAndOutBoundNum);
+
+            if (dataInOutBound == null)
+            {
+                throw Oops.Oh("没有找到符合条件的出入库信息");
+            }
+
+            // 根据物料编号查找所在区域
+            var dataRegion = await _Region.GetFirstAsync(x => x.RegionMaterielNum == dataInOutBound.MaterielNum);
+
+            if (dataRegion == null)
+            {
+                throw Oops.Oh("该物料未指定存放区域");
+            }
+
+            // 在agv任务中查找正在进行任务的目标点，即出入库需要去到的库位编号
+
+            var dataTaskStorage = _TaskEntity.AsQueryable()
+                        // 执行中的任务状态 
+                        .Where(x => x.TaskState == 5)
+                        .ToList();
+
+            List<string> storageArr = new List<string>();
+            for (int i = 0; i < dataTaskStorage.Count; i++)
+            {
+                var taskpath = dataTaskStorage[i].TaskPath;
+
+                string[] strings = taskpath.Split(",");
+
+                storageArr.Add(strings[1]);
+
+
+            }
+
+
+            // 查找该区域下有多少个组（有多少组密集库）
+
+            var dataStorage = _Storage.AsQueryable()
+                      .Where(x => x.RegionNum == dataRegion.RegionNum)
+                      .Select(x => new class2
+                      {
+                          StorageGroup = x.StorageGroup,
+                          SumCount = SqlFunc.AggregateCount(x.StorageNum)
+                      })
+                      .GroupBy(x => x.StorageGroup)
+                      .ToList();
+
+            // 根据组别查找库位
+
+        }
+
         #endregion
 
         #region 获取数据
@@ -659,6 +728,15 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
                                 .Select(x => x)
                                 .ToList();
 
+                // 判断是不是取消的任务
+                if (AgvStatus == 3)
+                {
+
+
+
+                }
+
+
                 #region 判断为入库成功的场景
 
                 // 判断为入库成功的场景
@@ -684,6 +762,18 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
 
                         _Inventory.InsertOrUpdate(invDataList);
                         _InventoryDetail.InsertOrUpdate(invdDataList);
+
+                        // 修改库位表中的信息
+
+                        await _Storage.AsUpdateable()
+                                 .AS("EG_WMS_Storage")
+                                 .SetColumns(it => new Entity.EG_WMS_Storage
+                                 {
+                                     StorageOccupy = 1,
+                                     TaskNo = "",
+                                 })
+                                 .Where(x => x.TaskNo == acceptDTO.orderId)
+                                 .ExecuteCommandAsync();
 
                         #region 归档
                         //for (int i = 0; i < listTemInvData.Count; i++)
@@ -856,4 +946,13 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
         //}
         #endregion
     }
+
+    public class class2
+    {
+        public string StorageGroup { get; set; }
+
+        public int SumCount { get; set; }
+
+    }
+
 }

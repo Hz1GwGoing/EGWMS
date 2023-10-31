@@ -158,7 +158,7 @@ public class EGStorageInput : BasePageInput
     /// <summary>
     /// 是否占用
     /// </summary>
-    public string? StorageOccupy { get; set; }
+    public int? StorageOccupy { get; set; }
 
     /// <summary>
     /// 备注

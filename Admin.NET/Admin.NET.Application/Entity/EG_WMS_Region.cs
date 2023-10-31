@@ -66,4 +66,16 @@ public class EG_WMS_Region : EntityBase
     [SugarColumn(ColumnDescription = "仓库编号", Length = 50)]
     public string? WHNum { get; set; }
 
+    /// <summary>
+    /// 区域绑定物料编号
+    /// </summary>
+    [SugarColumn(ColumnDescription = "区域绑定物料编号")]
+    public string RegionMaterielNum { get; set; }
+
+    /// <summary>
+    /// 区域类型
+    /// </summary>
+    [SugarColumn(ColumnDescription = "区域类型")]
+    public string RegionType { get; set; }
+
 }

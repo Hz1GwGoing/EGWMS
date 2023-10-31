@@ -55,10 +55,10 @@ public class EG_WMS_Storage : EntityBase
     public decimal? StorageHigh { get; set; }
 
     /// <summary>
-    /// 是否占用 0.未占用 1.已占用
+    /// 是否占用（0.未占用 1.已占用 2.预占用）
     /// </summary>
-    [SugarColumn(ColumnDescription = "是否占用（0.未占用 1.已占用）", Length = 5)]
-    public string? StorageOccupy { get; set; }
+    [SugarColumn(ColumnDescription = "是否占用（0.未占用 1.已占用 2.预占用）", Length = 5)]
+    public int? StorageOccupy { get; set; }
 
     /// <summary>
     /// 备注
@@ -115,5 +115,11 @@ public class EG_WMS_Storage : EntityBase
     /// </summary>
     [SugarColumn(ColumnDescription = "组别", Length = 20)]
     public string? StorageGroup { get; set; }
+
+    /// <summary>
+    /// AGV任务编号
+    /// </summary>
+    public string? TaskNo { get; set; }
+
 
 }

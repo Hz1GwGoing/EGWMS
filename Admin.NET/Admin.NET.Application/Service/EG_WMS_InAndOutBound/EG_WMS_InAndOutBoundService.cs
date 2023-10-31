@@ -1,4 +1,6 @@
-﻿namespace Admin.NET.Application;
+﻿using Admin.NET.Application.AGV.AGVEntity;
+
+namespace Admin.NET.Application;
 
 /// <summary>
 /// 出入库接口服务（agv、人工）
@@ -19,6 +21,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
     private readonly SqlSugarRepository<EG_WMS_WorkBin> _workbin = App.GetService<SqlSugarRepository<EG_WMS_WorkBin>>();
     private readonly SqlSugarRepository<EG_WMS_Tem_Inventory> _InventoryTem = App.GetService<SqlSugarRepository<EG_WMS_Tem_Inventory>>();
     private readonly SqlSugarRepository<EG_WMS_Tem_InventoryDetail> _InventoryDetailTem = App.GetService<SqlSugarRepository<EG_WMS_Tem_InventoryDetail>>();
+    private readonly SqlSugarRepository<TaskEntity> _TaskEntity = App.GetService<SqlSugarRepository<TaskEntity>>();
 
 
     #endregion
@@ -131,6 +134,23 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
 
                     try
                     {
+                        // 根据入库编号查询任务编号
+                        var datatask = await _TaskEntity.GetFirstAsync(x => x.InAndOutBoundNum == joinboundnum);
+
+
+                        // 修改库位表中的状态为占用
+                        await _Storage.AsUpdateable()
+                                  .AS("EG_WMS_Storage")
+                                  .SetColumns(it => new EG_WMS_Storage
+                                  {
+                                      // 预占用
+                                      StorageOccupy = 2,
+                                      TaskNo = datatask.TaskNo,
+                                  })
+                                  .Where(x => x.StorageNum == input.EndPoint)
+                                  .ExecuteCommandAsync();
+
+
                         #region 入库操作
 
                         // 生成入库单
