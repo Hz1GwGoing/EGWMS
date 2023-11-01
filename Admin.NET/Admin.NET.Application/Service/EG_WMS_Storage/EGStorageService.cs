@@ -39,64 +39,43 @@ public class EGStorageService : IDynamicApiController, ITransient
 
     #endregion
 
-    #region 分页查询库位
+    #region 分页查询库位表内容（联表：区域、仓库）
+
     /// <summary>
-    /// 分页查询库位
+    /// 分页查询库位表内容（联表：区域、仓库）
     /// </summary>
-    /// <param name="input"></param>
+    /// <param name="page">页数</param>
+    /// <param name="pageSize">每页容量</param>
     /// <returns></returns>
     [HttpPost]
-    [ApiDescriptionSettings(Name = "Page")]
-    public async Task<SqlSugarPagedList<EGStorageOutput>> Page(EGStorageInput input)
+    [ApiDescriptionSettings(Name = "GetStorageRegionAndWH")]
+    public List<StorageRegionAndWhDto> GetStorageRegionAndWH(int page, int pageSize)
     {
-        var query = _rep.AsQueryable()
-                    .WhereIF(!string.IsNullOrWhiteSpace(input.StorageNum), u => u.StorageNum.Contains(input.StorageNum.Trim()))
-                    .WhereIF(!string.IsNullOrWhiteSpace(input.StorageName), u => u.StorageName.Contains(input.StorageName.Trim()))
-                    .WhereIF(!string.IsNullOrWhiteSpace(input.StorageAddress), u => u.StorageAddress.Contains(input.StorageAddress.Trim()))
-                    .WhereIF(!string.IsNullOrWhiteSpace(input.StorageType), u => u.StorageType.Contains(input.StorageType.Trim()))
-                    //.WhereIF(!string.IsNullOrWhiteSpace(input.StorageOccupy), u => u.StorageOccupy.Contains(input.StorageOccupy.Trim()))
-                    .WhereIF(!string.IsNullOrWhiteSpace(input.StorageRemake), u => u.StorageRemake.Contains(input.StorageRemake.Trim()))
-                    .WhereIF(!string.IsNullOrWhiteSpace(input.CreateUserName), u => u.CreateUserName.Contains(input.CreateUserName.Trim()))
-                    .WhereIF(!string.IsNullOrWhiteSpace(input.UpdateUserName), u => u.UpdateUserName.Contains(input.UpdateUserName.Trim()))
-                    // 库位状态
-                    .WhereIF(input.StorageStatus >= 0, u => u.StorageStatus == input.StorageStatus)
-                    .WhereIF(input.RoadwayNum > 0, u => u.RoadwayNum == input.RoadwayNum)
-                    .WhereIF(input.ShelfNum > 0, u => u.ShelfNum == input.ShelfNum)
-                    .WhereIF(input.FloorNumber > 0, u => u.FloorNumber == input.FloorNumber)
-                    // 组别
-                    .WhereIF(!string.IsNullOrWhiteSpace(input.StorageGroup), u => u.StorageGroup.Contains(input.StorageGroup.Trim()))
-                    .WhereIF(!string.IsNullOrWhiteSpace(input.WHNum), u => u.WHNum.Contains(input.WHNum.Trim()))
-                    .WhereIF(!string.IsNullOrWhiteSpace(input.RegionNum), u => u.RegionNum.Contains(input.RegionNum.Trim()))
-                    //处理外键和TreeSelector相关字段的连接
-                    .LeftJoin<EG_WMS_WareHouse>((u, whnum) => u.WHNum == whnum.WHNum)
-                    .LeftJoin<EG_WMS_Region>((u, whnum, regionnum) => u.RegionNum == regionnum.RegionNum)
-                    .Select((u, whnum, regionnum) => new EGStorageOutput
-                    {
-                        StorageNum = u.StorageNum,
-                        StorageName = u.StorageName,
-                        StorageAddress = u.StorageAddress,
-                        StorageType = u.StorageType,
-                        // 库位状态
-                        StorageStatus = u.StorageStatus,
-                        StorageLong = u.StorageLong,
-                        StorageWidth = u.StorageWidth,
-                        StorageHigh = u.StorageHigh,
-                        StorageOccupy = u.StorageOccupy,
-                        StorageRemake = u.StorageRemake,
-                        CreateUserName = u.CreateUserName,
-                        UpdateUserName = u.UpdateUserName,
-                        Id = u.Id,
-                        RoadwayNum = u.RoadwayNum,
-                        ShelfNum = u.ShelfNum,
-                        FloorNumber = u.FloorNumber,
-                        WHNum = u.WHNum,
-                        EGWareHouseWHNum = whnum.WHNum,
-                        RegionNum = u.RegionNum,
-                        EGRegionRegionNum = regionnum.RegionNum,
-                    });
-        query = query.OrderBuilder(input);
-        return await query.ToPagedListAsync(input.Page, input.PageSize);
+        return _rep.AsQueryable()
+             .InnerJoin<EG_WMS_Region>((a, b) => a.RegionNum == b.RegionNum)
+             .InnerJoin<EG_WMS_WareHouse>((a, b, c) => b.WHNum == c.WHNum)
+             .Select((a, b, c) => new StorageRegionAndWhDto
+             {
+                 StorageNum = a.StorageNum,
+                 StorageName = a.StorageName,
+                 StorageStatus = (int)a.StorageStatus,
+                 WHName = c.WHName,
+                 RegionName = b.RegionName,
+                 RoadwayNum = (int)a.RoadwayNum,
+                 ShelfNum = (int)a.ShelfNum,
+                 FloorNumber = (int)a.FloorNumber,
+                 StorageOccupy = (int)a.StorageOccupy,
+                 StorageRemake = a.StorageRemake,
+                 CreateUserName = a.CreateUserName,
+                 CreateTime = (DateTime)a.CreateTime,
+                 StorageGroup = a.StorageGroup,
+             })
+             .Skip((page - 1) * pageSize)
+             .Take(pageSize)
+             .ToList();
     }
+
+
     #endregion
 
     #region 增加库位
@@ -220,6 +199,64 @@ public class EGStorageService : IDynamicApiController, ITransient
     //}
     #endregion
 
-
+    #region 分页查询库位
+    /// <summary>
+    /// 分页查询库位
+    /// </summary>
+    /// <param name="input"></param>
+    /// <returns></returns>
+    //[HttpPost]
+    //[ApiDescriptionSettings(Name = "Page")]
+    //public async Task<SqlSugarPagedList<EGStorageOutput>> Page(EGStorageInput input)
+    //{
+    //    var query = _rep.AsQueryable()
+    //                .WhereIF(!string.IsNullOrWhiteSpace(input.StorageNum), u => u.StorageNum.Contains(input.StorageNum.Trim()))
+    //                .WhereIF(!string.IsNullOrWhiteSpace(input.StorageName), u => u.StorageName.Contains(input.StorageName.Trim()))
+    //                .WhereIF(!string.IsNullOrWhiteSpace(input.StorageAddress), u => u.StorageAddress.Contains(input.StorageAddress.Trim()))
+    //                .WhereIF(!string.IsNullOrWhiteSpace(input.StorageType), u => u.StorageType.Contains(input.StorageType.Trim()))
+    //                //.WhereIF(!string.IsNullOrWhiteSpace(input.StorageOccupy), u => u.StorageOccupy.Contains(input.StorageOccupy.Trim()))
+    //                .WhereIF(!string.IsNullOrWhiteSpace(input.StorageRemake), u => u.StorageRemake.Contains(input.StorageRemake.Trim()))
+    //                .WhereIF(!string.IsNullOrWhiteSpace(input.CreateUserName), u => u.CreateUserName.Contains(input.CreateUserName.Trim()))
+    //                .WhereIF(!string.IsNullOrWhiteSpace(input.UpdateUserName), u => u.UpdateUserName.Contains(input.UpdateUserName.Trim()))
+    //                // 库位状态
+    //                .WhereIF(input.StorageStatus >= 0, u => u.StorageStatus == input.StorageStatus)
+    //                .WhereIF(input.RoadwayNum > 0, u => u.RoadwayNum == input.RoadwayNum)
+    //                .WhereIF(input.ShelfNum > 0, u => u.ShelfNum == input.ShelfNum)
+    //                .WhereIF(input.FloorNumber > 0, u => u.FloorNumber == input.FloorNumber)
+    //                // 组别
+    //                .WhereIF(!string.IsNullOrWhiteSpace(input.StorageGroup), u => u.StorageGroup.Contains(input.StorageGroup.Trim()))
+    //                .WhereIF(!string.IsNullOrWhiteSpace(input.WHNum), u => u.WHNum.Contains(input.WHNum.Trim()))
+    //                .WhereIF(!string.IsNullOrWhiteSpace(input.RegionNum), u => u.RegionNum.Contains(input.RegionNum.Trim()))
+    //                //处理外键和TreeSelector相关字段的连接
+    //                .LeftJoin<EG_WMS_WareHouse>((u, whnum) => u.WHNum == whnum.WHNum)
+    //                .LeftJoin<EG_WMS_Region>((u, whnum, regionnum) => u.RegionNum == regionnum.RegionNum)
+    //                .Select((u, whnum, regionnum) => new EGStorageOutput
+    //                {
+    //                    StorageNum = u.StorageNum,
+    //                    StorageName = u.StorageName,
+    //                    StorageAddress = u.StorageAddress,
+    //                    StorageType = u.StorageType,
+    //                    // 库位状态
+    //                    StorageStatus = u.StorageStatus,
+    //                    StorageLong = u.StorageLong,
+    //                    StorageWidth = u.StorageWidth,
+    //                    StorageHigh = u.StorageHigh,
+    //                    StorageOccupy = u.StorageOccupy,
+    //                    StorageRemake = u.StorageRemake,
+    //                    CreateUserName = u.CreateUserName,
+    //                    UpdateUserName = u.UpdateUserName,
+    //                    Id = u.Id,
+    //                    RoadwayNum = u.RoadwayNum,
+    //                    ShelfNum = u.ShelfNum,
+    //                    FloorNumber = u.FloorNumber,
+    //                    WHNum = u.WHNum,
+    //                    EGWareHouseWHNum = whnum.WHNum,
+    //                    RegionNum = u.RegionNum,
+    //                    EGRegionRegionNum = regionnum.RegionNum,
+    //                });
+    //    query = query.OrderBuilder(input);
+    //    return await query.ToPagedListAsync(input.Page, input.PageSize);
+    //}
+    #endregion
 }
 
