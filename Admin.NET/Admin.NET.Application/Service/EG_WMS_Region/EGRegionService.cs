@@ -5,11 +5,22 @@
 [ApiDescriptionSettings(ApplicationConst.GroupName, Order = 100)]
 public class EGRegionService : IDynamicApiController, ITransient
 {
+    #region 实体引入
     private readonly SqlSugarRepository<EG_WMS_Region> _rep;
-    public EGRegionService(SqlSugarRepository<EG_WMS_Region> rep)
+    private readonly SqlSugarRepository<EG_WMS_Storage> _Storage;
+    #endregion
+
+    #region 关系注入
+    public EGRegionService
+    (
+    SqlSugarRepository<EG_WMS_Region> rep,
+    SqlSugarRepository<EG_WMS_Storage> Storage
+    )
     {
         _rep = rep;
+        _Storage = Storage;
     }
+    #endregion
 
 
     #region 分页查询区域
@@ -164,6 +175,12 @@ public class EGRegionService : IDynamicApiController, ITransient
                     Value = u.Id
                 }
                 ).ToListAsync();
+    }
+
+    private class class3
+    {
+
+
     }
     #endregion
 

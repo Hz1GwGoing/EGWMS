@@ -1,4 +1,7 @@
-﻿namespace Admin.NET.Application.Service.EG_WMS_BaseServer;
+﻿using Admin.NET.Application.Entity;
+using System.Collections.Generic;
+
+namespace Admin.NET.Application.Service.EG_WMS_BaseServer;
 
 /// <summary>
 /// 基础接口，获得所有数据
@@ -229,6 +232,63 @@ public class BaseService : IDynamicApiController, ITransient
     }
 
 
+
+    #endregion
+
+    #region （策略）返回推荐的库位
+
+    /// <summary>
+    /// （策略）返回推荐的库位
+    /// </summary>
+    /// <param name="materielNum">物料编号</param>
+    /// <returns></returns>
+    public string StrategyReturnRecommendStorage(string materielNum)
+    {
+        // 根据物料编号，得到这个物料属于那个区域
+        var dataRegion = _Region.GetFirst(x => x.RegionMaterielNum == materielNum);
+        if (dataRegion == null)
+        {
+            throw Oops.Oh("区域未绑定物料");
+        }
+
+        // 查询是否有正在进行中的任务库位的组别
+
+        var dataStorageGroup = _Storage.AsQueryable()
+                   .Where(a => a.TaskNo != null && a.RegionNum == dataRegion.RegionNum)
+                   .Distinct()
+                   .Select(a => new
+                   {
+                       a.StorageGroup,
+                   })
+                   .ToList();
+
+        // 将有任务的组别保存
+        string[] strings = new string[dataStorageGroup.Count];
+        for (int i = 0; i < dataStorageGroup.Count; i++)
+        {
+            strings[i] = dataStorageGroup[i].StorageGroup;
+        }
+
+        // 查询库位并且排除不符合条件的组别和库位
+
+        var getStorage = _Storage.AsQueryable()
+                 .Where(a => a.StorageStatus == 0 && a.StorageOccupy == 0 && a.RegionNum == dataRegion.RegionNum && !strings.Contains(a.StorageGroup))
+                 .OrderBy(a => a.StorageNum, OrderByType.Desc)
+                 .Select(a => new
+                 {
+                     a.StorageNum,
+                     a.StorageGroup,
+                 })
+                 .ToList();
+
+
+        if (getStorage == null || getStorage.Count == 0)
+        {
+            throw Oops.Oh("没有合适的库位");
+        }
+
+        return getStorage[0].StorageNum;
+    }
 
     #endregion
 

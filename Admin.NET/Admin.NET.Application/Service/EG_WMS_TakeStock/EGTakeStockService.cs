@@ -1,6 +1,4 @@
-﻿using Admin.NET.Application.Service.EGTakeStock.Dto;
-
-namespace Admin.NET.Application;
+﻿namespace Admin.NET.Application;
 
 /// <summary>
 /// 盘点信息接口
@@ -554,334 +552,6 @@ public class EGTakeStockService : IDynamicApiController, ITransient
 
     #endregion
 
-
-
-    // 弃案
-    // 物料盘 所有库位上包含有指定物料的托盘分别生成一个
-    // 库位盘 按照勾选的库位 生成盘点任务
-
-    // 已修改，根据库位（盘点料箱）
-
-    #region （根据库位）来盘点料箱（输入料箱数量，多了盘盈，少了盘亏）
-
-    /// <summary>
-    /// （根据库位）来盘点料箱（输入料箱数量，多了盘盈，少了盘亏）
-    /// </summary>
-    /// <param name="storagenum">库位编号</param>
-    /// <param name="takestockcount">盘点数量</param>
-    /// <returns></returns>
-    /// <exception cref="Exception"></exception>
-    [HttpPost]
-    [ApiDescriptionSettings(Name = "ReasonStorageTakeStockMessage")]
-    public async Task ReasonStorageTakeStockMessage(string storagenum, int? takestockcount)
-    {
-        // 自动生成盘点编号（时间戳）
-        string timesStamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString();
-        string takestocknum = "EGPD" + timesStamp;
-
-        // 查询库存详情表中库位编号相等的
-        List<EG_WMS_InventoryDetail> inventoryDetailData = await _InventoryDetail.GetListAsync(u => u.StorageNum == storagenum);
-        if (inventoryDetailData.Count == 0)
-        {
-            throw new Exception("没有存在这个库位!");
-        }
-        else
-        {
-            // 得到库位编号相同上所有的料箱数量（简易）
-            int sumCount = inventoryDetailData.Count;
-
-            // 没有输入盘点数量
-            if (takestockcount == null)
-            {
-                EG_WMS_TakeStock eGTakeStock = new EG_WMS_TakeStock()
-                {
-                    TakeStockNum = takestocknum,
-                    //MaterielNum = materielnum,
-                    // 料箱数量
-                    SumTakeStockCount = sumCount,
-                    // 盘点状态
-                    TakeStockStatus = 0,
-                    TakeStockDiffCount = null,
-                    TakeStockCount = null,
-                    // 盘点类别
-                    TakeStockType = 1,
-                    CreateTime = DateTime.Now,
-                    UpdateTime = DateTime.Now,
-                };
-                await _rep.InsertAsync(eGTakeStock);
-            }
-            else
-            {
-                // 差值数量
-                int diffCount = (int)(sumCount - takestockcount);
-
-                // 盘亏
-                if (diffCount > 0)
-                {
-                    EG_WMS_TakeStock eGTakeStock = new EG_WMS_TakeStock()
-                    {
-                        TakeStockNum = takestocknum,
-                        // 料箱数量
-                        SumTakeStockCount = sumCount,
-                        // 盘点状态
-                        TakeStockStatus = 2,
-                        TakeStockDiffCount = diffCount,
-                        TakeStockCount = takestockcount,
-                        // 盘点类别
-                        TakeStockType = 1,
-                        CreateTime = DateTime.Now,
-                        UpdateTime = DateTime.Now,
-                    };
-                    await _rep.InsertAsync(eGTakeStock);
-                }
-                // 盘赢
-                else if (diffCount <= 0)
-                {
-                    // 转换为绝对值
-                    int absDiffcount = Math.Abs(diffCount);
-
-                    EG_WMS_TakeStock eGTakeStock = new EG_WMS_TakeStock()
-                    {
-                        TakeStockNum = takestocknum,
-                        // 料箱数量
-                        SumTakeStockCount = sumCount,
-                        // 盘点状态
-                        TakeStockStatus = 1,
-                        TakeStockDiffCount = absDiffcount,
-                        TakeStockCount = takestockcount,
-                        // 盘点类别
-                        TakeStockType = 1,
-                        CreateTime = DateTime.Now,
-                        UpdateTime = DateTime.Now,
-                    };
-                    await _rep.InsertAsync(eGTakeStock);
-                }
-
-            }
-        }
-    }
-    #endregion
-
-    #region （根据库位）输入盘点数量改变未盘点的状态
-
-    /// <summary>
-    ///（根据库位）输入盘点数量改变未盘点的状态
-    /// </summary>
-    /// <param name="takestocknum">盘点编号</param>
-    /// <param name="takestockcount">盘点数量</param>
-    /// <returns></returns>
-    /// <exception cref="Exception"></exception>
-    [HttpPut]
-    [ApiDescriptionSettings(Name = "UpdateTakeStockStorageNumMessageStatus")]
-    public async Task UpdateTakeStockStorageNumMessageStatus(string takestocknum, int takestockcount)
-    {
-        // 根据用户输入的盘点编号查找相应记录
-        List<EG_WMS_TakeStock> is_vaild = await _rep.GetListAsync(u => u.TakeStockNum == takestocknum);
-        if (is_vaild.Count == 0)
-        {
-            throw new Exception("为找到此条盘点记录");
-        }
-        else
-        {
-            // 获得库位上的料箱数量（简易）
-            int sumCount = (int)is_vaild[0].SumTakeStockCount;
-
-            // 差值数量
-            int diffCount = sumCount - takestockcount;
-            // 盘亏
-            if (diffCount > 0)
-            {
-                // 将盘点表中的盘点状态改编成盘亏
-                _rep.AsUpdateable()
-               .AS("EGTakeStock")
-               .SetColumns(it => new EG_WMS_TakeStock
-               { TakeStockStatus = 2, TakeStockCount = takestockcount, TakeStockDiffCount = diffCount })
-               .Where(u => u.TakeStockNum == takestocknum)
-               .ExecuteCommand();
-
-            }
-            // 盘赢
-            else if (diffCount <= 0)
-            {
-                // 转换为绝对值
-                int absDiffcount = Math.Abs(diffCount);
-
-                // 将盘点表中的盘点状态改编成盘赢
-                _rep.AsUpdateable()
-               .AS("EGTakeStock")
-               .SetColumns(it => new EG_WMS_TakeStock
-               { TakeStockStatus = 1, TakeStockCount = takestockcount, TakeStockDiffCount = absDiffcount })
-               .Where(u => u.TakeStockNum == takestocknum)
-               .ExecuteCommand();
-            }
-
-        }
-
-    }
-
-    #endregion
-
-    // 已修改，根据物料（盘点料箱）
-
-    #region （根据物料）生成盘点信息（输入物料编号，得到该物料的所有箱数）
-
-    /// <summary>
-    /// （根据物料）生成盘点信息（输入物料编号，得到该物料的所有箱数）
-    /// </summary>
-    /// <param name="materielnum">物料编号</param>
-    /// <param name="takestockcount">盘点数量</param>
-    /// <returns></returns>
-    /// <exception cref="Exception"></exception>
-
-    [HttpPost]
-    [ApiDescriptionSettings(Name = "AddTakeStockMessage")]
-    public async Task AddTakeStockMessage(string materielnum, int? takestockcount)
-    {
-
-        // 自动生成时间戳
-        string timesStamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString();
-
-        string takestocknum = "EGPD" + timesStamp;
-
-        List<EG_WMS_Inventory> is_valid = await _model.GetListAsync(u => u.MaterielNum == materielnum);
-        if (is_valid.Count == 0)
-        {
-            throw new Exception("此条物料编号不存在！");
-        }
-        else
-        {
-            // 得到所有物料编号相同的料箱的数量（简易，得到的集合中，有几条物料信息就有几个料箱）
-            int sumCount = is_valid.Count;
-
-            // 没有输入盘点数量
-            if (takestockcount == null)
-            {
-                EG_WMS_TakeStock eGTakeStock = new EG_WMS_TakeStock()
-                {
-                    TakeStockNum = takestocknum,
-                    // 料箱数量
-                    SumTakeStockCount = sumCount,
-                    //MaterielNum = materielNum,
-                    // 盘点状态
-                    TakeStockStatus = 0,
-                    TakeStockDiffCount = null,
-                    TakeStockCount = null,
-                    // 盘点类别
-                    TakeStockType = 0,
-                    CreateTime = DateTime.Now,
-                    UpdateTime = DateTime.Now,
-                };
-                await _rep.InsertAsync(eGTakeStock);
-            }
-            else
-            {
-                // 差值数量
-                int diffCount = (int)(sumCount - takestockcount);
-                // 盘亏
-                if (diffCount > 0)
-                {
-                    EG_WMS_TakeStock eGTakeStock = new EG_WMS_TakeStock()
-                    {
-                        TakeStockNum = takestocknum,
-                        //MaterielNum = materielNum,
-                        // 料箱数量
-                        SumTakeStockCount = sumCount,
-                        // 盘点状态
-                        TakeStockStatus = 2,
-                        TakeStockDiffCount = diffCount,
-                        TakeStockCount = takestockcount,
-                        // 盘点类别
-                        TakeStockType = 0,
-                        CreateTime = DateTime.Now,
-                        UpdateTime = DateTime.Now,
-                    };
-                    await _rep.InsertAsync(eGTakeStock);
-                }
-                // 盘赢
-                else if (diffCount <= 0)
-                {
-                    // 转换为绝对值
-                    int absDiffcount = Math.Abs(diffCount);
-
-                    EG_WMS_TakeStock eGTakeStock = new EG_WMS_TakeStock()
-                    {
-                        TakeStockNum = takestocknum,
-                        //MaterielNum = materielNum,
-                        // 料箱数量
-                        SumTakeStockCount = sumCount,
-                        // 盘点状态
-                        TakeStockStatus = 1,
-                        TakeStockDiffCount = absDiffcount,
-                        TakeStockCount = takestockcount,
-                        // 盘点类别
-                        TakeStockType = 0,
-                        CreateTime = DateTime.Now,
-                        UpdateTime = DateTime.Now,
-                    };
-                    await _rep.InsertAsync(eGTakeStock);
-                }
-            }
-        }
-    }
-
-    #endregion
-
-    #region （根据物料）输入盘点数量改变未盘点的状态
-
-    /// <summary>
-    /// （根据物料）输入盘点数量改变未盘点的状态
-    /// </summary>
-    /// <param name="takestocknum">盘点编号</param>
-    /// <param name="takestockcount">盘点数量</param>
-    /// <returns></returns>
-    /// <exception cref="Exception"></exception>
-    [HttpPut]
-    [ApiDescriptionSettings(Name = "UpdateTakeStockMaterielNumMessageStatus")]
-    public async Task UpdateTakeStockMaterielNumMessageStatus(string takestocknum, int takestockcount)
-    {
-        // 根据用户输入的盘点编号查找相应记录
-        List<EG_WMS_TakeStock> is_vaild = await _rep.GetListAsync(u => u.TakeStockNum == takestocknum);
-        if (is_vaild.Count == 0)
-        {
-            throw new Exception("为找到此条盘点记录");
-        }
-        else
-        {
-            // 得到盘点表的料箱数量
-            int sumCount = (int)is_vaild[0].SumTakeStockCount;
-            // 差值数量
-            int diffCount = sumCount - takestockcount;
-            // 盘亏
-            if (diffCount > 0)
-            {
-                // 将盘点表中的盘点状态改编成盘亏
-                _rep.AsUpdateable()
-               .AS("EGTakeStock")
-               .SetColumns(it => new EG_WMS_TakeStock
-               { TakeStockStatus = 2, TakeStockCount = takestockcount, TakeStockDiffCount = diffCount })
-               .Where(u => u.TakeStockNum == takestocknum)
-               .ExecuteCommand();
-
-            }
-            // 盘赢
-            else if (diffCount <= 0)
-            {
-                // 转换为绝对值
-                int absDiffcount = Math.Abs(diffCount);
-                // 将盘点表中的盘点状态改编成盘赢
-                _rep.AsUpdateable()
-               .AS("EGTakeStock")
-               .SetColumns(it => new EG_WMS_TakeStock
-               { TakeStockStatus = 1, TakeStockCount = takestockcount, TakeStockDiffCount = absDiffcount })
-               .Where(u => u.TakeStockNum == takestocknum)
-               .ExecuteCommand();
-            }
-
-        }
-
-    }
-    #endregion
-
     #region 料箱数据实体
     /// <summary>
     /// 料箱数据实体
@@ -939,7 +609,6 @@ public class EGTakeStockService : IDynamicApiController, ITransient
         public DateTime UpdateTime { get; set; }
     }
     #endregion
-
 
     //-------------------------------------//-------------------------------------//
 
@@ -1617,5 +1286,332 @@ public class EGTakeStockService : IDynamicApiController, ITransient
     //}
 
     #endregion
+
+    // 弃案
+    // 物料盘 所有库位上包含有指定物料的托盘分别生成一个
+    // 库位盘 按照勾选的库位 生成盘点任务
+
+    // 已修改，根据库位（盘点料箱）
+
+    #region （根据库位）来盘点料箱（输入料箱数量，多了盘盈，少了盘亏）
+
+    /// <summary>
+    /// （根据库位）来盘点料箱（输入料箱数量，多了盘盈，少了盘亏）
+    /// </summary>
+    /// <param name="storagenum">库位编号</param>
+    /// <param name="takestockcount">盘点数量</param>
+    /// <returns></returns>
+    /// <exception cref="Exception"></exception>
+    //[HttpPost]
+    //[ApiDescriptionSettings(Name = "ReasonStorageTakeStockMessage")]
+    //public async Task ReasonStorageTakeStockMessage(string storagenum, int? takestockcount)
+    //{
+    //    // 自动生成盘点编号（时间戳）
+    //    string timesStamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString();
+    //    string takestocknum = "EGPD" + timesStamp;
+
+    //    // 查询库存详情表中库位编号相等的
+    //    List<EG_WMS_InventoryDetail> inventoryDetailData = await _InventoryDetail.GetListAsync(u => u.StorageNum == storagenum);
+    //    if (inventoryDetailData.Count == 0)
+    //    {
+    //        throw new Exception("没有存在这个库位!");
+    //    }
+    //    else
+    //    {
+    //        // 得到库位编号相同上所有的料箱数量（简易）
+    //        int sumCount = inventoryDetailData.Count;
+
+    //        // 没有输入盘点数量
+    //        if (takestockcount == null)
+    //        {
+    //            EG_WMS_TakeStock eGTakeStock = new EG_WMS_TakeStock()
+    //            {
+    //                TakeStockNum = takestocknum,
+    //                //MaterielNum = materielnum,
+    //                // 料箱数量
+    //                SumTakeStockCount = sumCount,
+    //                // 盘点状态
+    //                TakeStockStatus = 0,
+    //                TakeStockDiffCount = null,
+    //                TakeStockCount = null,
+    //                // 盘点类别
+    //                TakeStockType = 1,
+    //                CreateTime = DateTime.Now,
+    //                UpdateTime = DateTime.Now,
+    //            };
+    //            await _rep.InsertAsync(eGTakeStock);
+    //        }
+    //        else
+    //        {
+    //            // 差值数量
+    //            int diffCount = (int)(sumCount - takestockcount);
+
+    //            // 盘亏
+    //            if (diffCount > 0)
+    //            {
+    //                EG_WMS_TakeStock eGTakeStock = new EG_WMS_TakeStock()
+    //                {
+    //                    TakeStockNum = takestocknum,
+    //                    // 料箱数量
+    //                    SumTakeStockCount = sumCount,
+    //                    // 盘点状态
+    //                    TakeStockStatus = 2,
+    //                    TakeStockDiffCount = diffCount,
+    //                    TakeStockCount = takestockcount,
+    //                    // 盘点类别
+    //                    TakeStockType = 1,
+    //                    CreateTime = DateTime.Now,
+    //                    UpdateTime = DateTime.Now,
+    //                };
+    //                await _rep.InsertAsync(eGTakeStock);
+    //            }
+    //            // 盘赢
+    //            else if (diffCount <= 0)
+    //            {
+    //                // 转换为绝对值
+    //                int absDiffcount = Math.Abs(diffCount);
+
+    //                EG_WMS_TakeStock eGTakeStock = new EG_WMS_TakeStock()
+    //                {
+    //                    TakeStockNum = takestocknum,
+    //                    // 料箱数量
+    //                    SumTakeStockCount = sumCount,
+    //                    // 盘点状态
+    //                    TakeStockStatus = 1,
+    //                    TakeStockDiffCount = absDiffcount,
+    //                    TakeStockCount = takestockcount,
+    //                    // 盘点类别
+    //                    TakeStockType = 1,
+    //                    CreateTime = DateTime.Now,
+    //                    UpdateTime = DateTime.Now,
+    //                };
+    //                await _rep.InsertAsync(eGTakeStock);
+    //            }
+
+    //        }
+    //    }
+    //}
+    #endregion
+
+    #region （根据库位）输入盘点数量改变未盘点的状态
+
+    /// <summary>
+    ///（根据库位）输入盘点数量改变未盘点的状态
+    /// </summary>
+    /// <param name="takestocknum">盘点编号</param>
+    /// <param name="takestockcount">盘点数量</param>
+    /// <returns></returns>
+    /// <exception cref="Exception"></exception>
+    //[HttpPut]
+    //[ApiDescriptionSettings(Name = "UpdateTakeStockStorageNumMessageStatus")]
+    //public async Task UpdateTakeStockStorageNumMessageStatus(string takestocknum, int takestockcount)
+    //{
+    //    // 根据用户输入的盘点编号查找相应记录
+    //    List<EG_WMS_TakeStock> is_vaild = await _rep.GetListAsync(u => u.TakeStockNum == takestocknum);
+    //    if (is_vaild.Count == 0)
+    //    {
+    //        throw new Exception("为找到此条盘点记录");
+    //    }
+    //    else
+    //    {
+    //        // 获得库位上的料箱数量（简易）
+    //        int sumCount = (int)is_vaild[0].SumTakeStockCount;
+
+    //        // 差值数量
+    //        int diffCount = sumCount - takestockcount;
+    //        // 盘亏
+    //        if (diffCount > 0)
+    //        {
+    //            // 将盘点表中的盘点状态改编成盘亏
+    //            _rep.AsUpdateable()
+    //           .AS("EGTakeStock")
+    //           .SetColumns(it => new EG_WMS_TakeStock
+    //           { TakeStockStatus = 2, TakeStockCount = takestockcount, TakeStockDiffCount = diffCount })
+    //           .Where(u => u.TakeStockNum == takestocknum)
+    //           .ExecuteCommand();
+
+    //        }
+    //        // 盘赢
+    //        else if (diffCount <= 0)
+    //        {
+    //            // 转换为绝对值
+    //            int absDiffcount = Math.Abs(diffCount);
+
+    //            // 将盘点表中的盘点状态改编成盘赢
+    //            _rep.AsUpdateable()
+    //           .AS("EGTakeStock")
+    //           .SetColumns(it => new EG_WMS_TakeStock
+    //           { TakeStockStatus = 1, TakeStockCount = takestockcount, TakeStockDiffCount = absDiffcount })
+    //           .Where(u => u.TakeStockNum == takestocknum)
+    //           .ExecuteCommand();
+    //        }
+
+    //    }
+
+    //}
+
+    #endregion
+
+    // 已修改，根据物料（盘点料箱）
+
+    #region （根据物料）生成盘点信息（输入物料编号，得到该物料的所有箱数）
+
+    /// <summary>
+    /// （根据物料）生成盘点信息（输入物料编号，得到该物料的所有箱数）
+    /// </summary>
+    /// <param name="materielnum">物料编号</param>
+    /// <param name="takestockcount">盘点数量</param>
+    /// <returns></returns>
+    /// <exception cref="Exception"></exception>
+
+    //[HttpPost]
+    //[ApiDescriptionSettings(Name = "AddTakeStockMessage")]
+    //public async Task AddTakeStockMessage(string materielnum, int? takestockcount)
+    //{
+
+    //    // 自动生成时间戳
+    //    string timesStamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString();
+
+    //    string takestocknum = "EGPD" + timesStamp;
+
+    //    List<EG_WMS_Inventory> is_valid = await _model.GetListAsync(u => u.MaterielNum == materielnum);
+    //    if (is_valid.Count == 0)
+    //    {
+    //        throw new Exception("此条物料编号不存在！");
+    //    }
+    //    else
+    //    {
+    //        // 得到所有物料编号相同的料箱的数量（简易，得到的集合中，有几条物料信息就有几个料箱）
+    //        int sumCount = is_valid.Count;
+
+    //        // 没有输入盘点数量
+    //        if (takestockcount == null)
+    //        {
+    //            EG_WMS_TakeStock eGTakeStock = new EG_WMS_TakeStock()
+    //            {
+    //                TakeStockNum = takestocknum,
+    //                // 料箱数量
+    //                SumTakeStockCount = sumCount,
+    //                //MaterielNum = materielNum,
+    //                // 盘点状态
+    //                TakeStockStatus = 0,
+    //                TakeStockDiffCount = null,
+    //                TakeStockCount = null,
+    //                // 盘点类别
+    //                TakeStockType = 0,
+    //                CreateTime = DateTime.Now,
+    //                UpdateTime = DateTime.Now,
+    //            };
+    //            await _rep.InsertAsync(eGTakeStock);
+    //        }
+    //        else
+    //        {
+    //            // 差值数量
+    //            int diffCount = (int)(sumCount - takestockcount);
+    //            // 盘亏
+    //            if (diffCount > 0)
+    //            {
+    //                EG_WMS_TakeStock eGTakeStock = new EG_WMS_TakeStock()
+    //                {
+    //                    TakeStockNum = takestocknum,
+    //                    //MaterielNum = materielNum,
+    //                    // 料箱数量
+    //                    SumTakeStockCount = sumCount,
+    //                    // 盘点状态
+    //                    TakeStockStatus = 2,
+    //                    TakeStockDiffCount = diffCount,
+    //                    TakeStockCount = takestockcount,
+    //                    // 盘点类别
+    //                    TakeStockType = 0,
+    //                    CreateTime = DateTime.Now,
+    //                    UpdateTime = DateTime.Now,
+    //                };
+    //                await _rep.InsertAsync(eGTakeStock);
+    //            }
+    //            // 盘赢
+    //            else if (diffCount <= 0)
+    //            {
+    //                // 转换为绝对值
+    //                int absDiffcount = Math.Abs(diffCount);
+
+    //                EG_WMS_TakeStock eGTakeStock = new EG_WMS_TakeStock()
+    //                {
+    //                    TakeStockNum = takestocknum,
+    //                    //MaterielNum = materielNum,
+    //                    // 料箱数量
+    //                    SumTakeStockCount = sumCount,
+    //                    // 盘点状态
+    //                    TakeStockStatus = 1,
+    //                    TakeStockDiffCount = absDiffcount,
+    //                    TakeStockCount = takestockcount,
+    //                    // 盘点类别
+    //                    TakeStockType = 0,
+    //                    CreateTime = DateTime.Now,
+    //                    UpdateTime = DateTime.Now,
+    //                };
+    //                await _rep.InsertAsync(eGTakeStock);
+    //            }
+    //        }
+    //    }
+    //}
+
+    #endregion
+
+    #region （根据物料）输入盘点数量改变未盘点的状态
+
+    /// <summary>
+    /// （根据物料）输入盘点数量改变未盘点的状态
+    /// </summary>
+    /// <param name="takestocknum">盘点编号</param>
+    /// <param name="takestockcount">盘点数量</param>
+    /// <returns></returns>
+    /// <exception cref="Exception"></exception>
+    //[HttpPut]
+    //[ApiDescriptionSettings(Name = "UpdateTakeStockMaterielNumMessageStatus")]
+    //public async Task UpdateTakeStockMaterielNumMessageStatus(string takestocknum, int takestockcount)
+    //{
+    //    // 根据用户输入的盘点编号查找相应记录
+    //    List<EG_WMS_TakeStock> is_vaild = await _rep.GetListAsync(u => u.TakeStockNum == takestocknum);
+    //    if (is_vaild.Count == 0)
+    //    {
+    //        throw new Exception("为找到此条盘点记录");
+    //    }
+    //    else
+    //    {
+    //        // 得到盘点表的料箱数量
+    //        int sumCount = (int)is_vaild[0].SumTakeStockCount;
+    //        // 差值数量
+    //        int diffCount = sumCount - takestockcount;
+    //        // 盘亏
+    //        if (diffCount > 0)
+    //        {
+    //            // 将盘点表中的盘点状态改编成盘亏
+    //            _rep.AsUpdateable()
+    //           .AS("EGTakeStock")
+    //           .SetColumns(it => new EG_WMS_TakeStock
+    //           { TakeStockStatus = 2, TakeStockCount = takestockcount, TakeStockDiffCount = diffCount })
+    //           .Where(u => u.TakeStockNum == takestocknum)
+    //           .ExecuteCommand();
+
+    //        }
+    //        // 盘赢
+    //        else if (diffCount <= 0)
+    //        {
+    //            // 转换为绝对值
+    //            int absDiffcount = Math.Abs(diffCount);
+    //            // 将盘点表中的盘点状态改编成盘赢
+    //            _rep.AsUpdateable()
+    //           .AS("EGTakeStock")
+    //           .SetColumns(it => new EG_WMS_TakeStock
+    //           { TakeStockStatus = 1, TakeStockCount = takestockcount, TakeStockDiffCount = absDiffcount })
+    //           .Where(u => u.TakeStockNum == takestocknum)
+    //           .ExecuteCommand();
+    //        }
+
+    //    }
+
+    //}
+    #endregion
+
 }
 

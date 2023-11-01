@@ -1,6 +1,6 @@
 ﻿using Admin.NET.Application.Service.EG_WMS_Storage.Dto;
 
-namespace Admin.NET.Application;
+namespace Admin.NET.Application.Service.EG_WMS_Storage;
 
 /// <summary>
 /// 库位管理接口
@@ -8,9 +8,9 @@ namespace Admin.NET.Application;
 [ApiDescriptionSettings(ApplicationConst.GroupName, Order = 100)]
 public class EGStorageService : IDynamicApiController, ITransient
 {
-    private readonly SqlSugarRepository<EG_WMS_Storage> _rep;
+    private readonly SqlSugarRepository<Entity.EG_WMS_Storage> _rep;
 
-    public EGStorageService(SqlSugarRepository<EG_WMS_Storage> rep)
+    public EGStorageService(SqlSugarRepository<Entity.EG_WMS_Storage> rep)
     {
         _rep = rep;
     }
@@ -35,6 +35,32 @@ public class EGStorageService : IDynamicApiController, ITransient
 
     }
 
+
+
+    #endregion
+
+    #region 得到每个区域下有多少个库位
+
+    public List<SelectRegionStorageCountDto> SelectRegionStorageCount()
+    {
+        return _rep.AsQueryable()
+             .InnerJoin<EG_WMS_Region>((a, b) => a.RegionNum == b.RegionNum)
+             .InnerJoin<EG_WMS_WareHouse>((a, b, c) => b.WHNum == c.WHNum)
+             .GroupBy(a => a.RegionNum)
+             .Select((a, b, c) => new SelectRegionStorageCountDto
+             {
+                 RegionNum = a.RegionNum,
+                 RegionName = b.RegionName,
+                 TotalStorage = SqlFunc.AggregateCount(a.StorageNum),
+                 EnabledStorage = SqlFunc.AggregateCount(a.StorageStatus == 0),
+                 UsedStorage = SqlFunc.AggregateCount(a.StorageOccupy == 1),
+                 WHName = c.WHName,
+                 Remake = a.StorageRemake,
+                 CreateUserName = a.CreateUserName,
+                 UpdateUserName = a.UpdateUserName
+             })
+             .ToList();
+    }
 
 
     #endregion
@@ -88,7 +114,7 @@ public class EGStorageService : IDynamicApiController, ITransient
     [ApiDescriptionSettings(Name = "Add")]
     public async Task Add(AddEGStorageInput input)
     {
-        var entity = input.Adapt<EG_WMS_Storage>();
+        var entity = input.Adapt<Entity.EG_WMS_Storage>();
         await _rep.InsertAsync(entity);
     }
     #endregion
@@ -119,7 +145,7 @@ public class EGStorageService : IDynamicApiController, ITransient
     [ApiDescriptionSettings(Name = "Update")]
     public async Task Update(UpdateEGStorageInput input)
     {
-        var entity = input.Adapt<EG_WMS_Storage>();
+        var entity = input.Adapt<Entity.EG_WMS_Storage>();
         await _rep.AsUpdateable(entity).IgnoreColumns(ignoreAllNullColumns: true).ExecuteCommandAsync();
     }
 
@@ -133,7 +159,7 @@ public class EGStorageService : IDynamicApiController, ITransient
     /// <returns></returns>
     [HttpGet]
     [ApiDescriptionSettings(Name = "Detail")]
-    public async Task<EG_WMS_Storage> Get([FromQuery] QueryByIdEGStorageInput input)
+    public async Task<Entity.EG_WMS_Storage> Get([FromQuery] QueryByIdEGStorageInput input)
     {
         // 模糊查询
         return await _rep.GetFirstAsync(u => u.StorageNum.Contains(input.StorageNum) ||
