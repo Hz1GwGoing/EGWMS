@@ -119,6 +119,7 @@ public class EG_WMS_Storage : EntityBase
     /// <summary>
     /// AGV任务编号
     /// </summary>
+    [SugarColumn(ColumnDescription = "AGV任务编号", Length = 20)]
     public string? TaskNo { get; set; }
 
 

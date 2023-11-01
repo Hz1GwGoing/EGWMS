@@ -7,7 +7,7 @@ using Admin.NET.Application.Service.EG_AGV_Task.DTO;
 
 namespace Admin.NET.Application.Service.EG_AGV_Task
 {
-    [ApiDescriptionSettings("AGV模块接口V2.0", Name = "任务信息", Order = 100)]
+    [ApiDescriptionSettings("AGV模块接口V3.0", Name = "任务信息", Order = 100)]
     public class TaskService : IDynamicApiController, ITransient
     {
         private static readonly DHRequester _DHRequester = new DHRequester();
@@ -603,6 +603,7 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
         #endregion
 
         #region RCS上报信息
+
         /// <summary>
         ///  接受RCS上报信息
         /// </summary>
@@ -732,10 +733,53 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
                 if (AgvStatus == 3)
                 {
 
+                    // 入库情况
+                    if (listInBoundData[0].InAndOutBoundType == 0)
+                    {
+                        try
+                        {
+                            await _InAndOutBound.AsUpdateable()
+                                   .AS("EG_WMS_InAndOutBound")
+                                   .SetColumns(it => new Entity.EG_WMS_InAndOutBound
+                                   {
+                                       // 未入库
+                                       InAndOutBoundStatus = 0,
+                                       UpdateTime = DateTime.Now,
+                                   })
+                                   .Where(x => x.InAndOutBoundNum == listInBoundData[0].InAndOutBoundNum)
+                                   .ExecuteCommandAsync();
 
+                        }
+                        catch (Exception ex)
+                        {
 
+                            throw Oops.Oh(ex);
+                        }
+                    }
+
+                    // 出库情况
+                    else if (listInBoundData[0].InAndOutBoundType == 1)
+                    {
+                        try
+                        {
+                            await _InAndOutBound.AsUpdateable()
+                                                .AS("EG_WMS_InAndOutBound")
+                                                .SetColumns(it => new Entity.EG_WMS_InAndOutBound
+                                                {
+                                                    // 未出库
+                                                    InAndOutBoundStatus = 2,
+                                                    UpdateTime = DateTime.Now,
+                                                })
+                                                .Where(x => x.InAndOutBoundNum == listInBoundData[0].InAndOutBoundNum)
+                                                .ExecuteCommandAsync();
+                        }
+                        catch (Exception ex)
+                        {
+
+                            throw Oops.Oh(ex);
+                        }
+                    }
                 }
-
 
                 #region 判断为入库成功的场景
 
@@ -829,6 +873,19 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
                                       .ToList();
 
                         List<EG_WMS_Inventory> invData = dataTemInvtory.Adapt<List<EG_WMS_Inventory>>();
+
+                        // 修改库位表中的信息
+
+                        await _Storage.AsUpdateable()
+                                 .AS("EG_WMS_Storage")
+                                 .SetColumns(it => new Entity.EG_WMS_Storage
+                                 {
+                                     // 未占用
+                                     StorageOccupy = 0,
+                                     TaskNo = "",
+                                 })
+                                 .Where(x => x.TaskNo == acceptDTO.orderId)
+                                 .ExecuteCommandAsync();
 
                         _Inventory.InsertOrUpdate(invData);
 

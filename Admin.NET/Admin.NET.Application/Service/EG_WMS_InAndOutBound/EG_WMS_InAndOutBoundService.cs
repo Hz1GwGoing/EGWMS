@@ -417,6 +417,21 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
 
             if (item.code == 1000)
             {
+                // 根据出库编号查询任务编号
+                var datatask = await _TaskEntity.GetFirstAsync(x => x.InAndOutBoundNum == outboundnum);
+
+                // 修改库位表中的状态为占用
+                await _Storage.AsUpdateable()
+                          .AS("EG_WMS_Storage")
+                          .SetColumns(it => new EG_WMS_Storage
+                          {
+                              // 预占用
+                              StorageOccupy = 2,
+                              TaskNo = datatask.TaskNo,
+                          })
+                          .Where(x => x.StorageNum == input.EndPoint)
+                          .ExecuteCommandAsync();
+
 
                 #region 生成出库
 
