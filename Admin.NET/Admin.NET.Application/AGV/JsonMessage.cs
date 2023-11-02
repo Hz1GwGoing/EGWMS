@@ -23,7 +23,26 @@
         public int code { get; set; }
         public object data { get; set; }
         public string desc { get; set; }
+
     }
+
+    public class DHMessage<T>
+    {
+        public int code { get; set; }
+        public T data { get; set; }
+        public string desc { get; set; }
+
+    }
+
+    /// <summary>
+    /// 获取任务点返回
+    /// </summary>
+    //public class ThirdPartyMessage : DHMessage
+    //{
+    //    public string pointName { get; set; }
+
+    //}
+
     public class taskV2
     {
         public bool? fromCache { get; set; }

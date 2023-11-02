@@ -1,5 +1,5 @@
-﻿using Admin.NET.Application.Entity;
-using System.Collections.Generic;
+﻿using Admin.NET.Core;
+using Newtonsoft.Json;
 
 namespace Admin.NET.Application.Service.EG_WMS_BaseServer;
 
@@ -10,70 +10,91 @@ namespace Admin.NET.Application.Service.EG_WMS_BaseServer;
 [ApiDescriptionSettings(ApplicationConst.GroupName, Order = 100)]
 public class BaseService : IDynamicApiController, ITransient
 {
+    #region 关系注入
+
+    private readonly SqlSugarRepository<TaskEntity> _TaskEntity = App.GetService<SqlSugarRepository<TaskEntity>>();
+    private readonly SqlSugarRepository<TaskDetailEntity> _TaskDetailEntity = App.GetService<SqlSugarRepository<TaskDetailEntity>>();
+    private readonly SqlSugarRepository<TemLogicEntity> _TemLogicEntity = App.GetService<SqlSugarRepository<TemLogicEntity>>();
+    private readonly SqlSugarRepository<InfoEntity> _InfoEntity = App.GetService<SqlSugarRepository<InfoEntity>>();
+    private readonly SqlSugarRepository<Entity.EG_WMS_InAndOutBound> _InAndOutBound = App.GetService<SqlSugarRepository<Entity.EG_WMS_InAndOutBound>>();
+    private readonly SqlSugarRepository<EG_WMS_Tem_Inventory> _TemInventory = App.GetService<SqlSugarRepository<EG_WMS_Tem_Inventory>>();
+    private readonly SqlSugarRepository<EG_WMS_Tem_InventoryDetail> _TemInventoryDetail = App.GetService<SqlSugarRepository<EG_WMS_Tem_InventoryDetail>>();
+    private readonly SqlSugarRepository<EG_WMS_Inventory> _Inventory = App.GetService<SqlSugarRepository<EG_WMS_Inventory>>();
+    private readonly SqlSugarRepository<EG_WMS_InventoryDetail> _InventoryDetail = App.GetService<SqlSugarRepository<EG_WMS_InventoryDetail>>();
+    private readonly SqlSugarRepository<EG_WMS_InAndOutBoundDetail> _InAndOutBoundDetail = App.GetService<SqlSugarRepository<EG_WMS_InAndOutBoundDetail>>();
+    private readonly SqlSugarRepository<Entity.EG_WMS_Region> _Region = App.GetService<SqlSugarRepository<Entity.EG_WMS_Region>>();
+    private readonly SqlSugarRepository<Entity.EG_WMS_Storage> _Storage = App.GetService<SqlSugarRepository<Entity.EG_WMS_Storage>>();
+
+    #endregion
 
     #region 引用实体
 
-    /// <summary>
-    /// 出入库主表
-    /// </summary>
-    private readonly SqlSugarRepository<Entity.EG_WMS_InAndOutBound> _InAndOutBound;
-    /// <summary>
-    /// 出入库详细表
-    /// </summary>
-    private readonly SqlSugarRepository<EG_WMS_InAndOutBoundDetail> _InAndOutBoundDetail;
-    /// <summary>
-    /// 库存表
-    /// </summary>
-    private readonly SqlSugarRepository<EG_WMS_Inventory> _Inventory;
-    /// <summary>
-    /// 库存详情表
-    /// </summary>
-    private readonly SqlSugarRepository<EG_WMS_InventoryDetail> _InventoryDetail;
-    /// <summary>
-    /// 库位表
-    /// </summary>
-    private readonly SqlSugarRepository<Entity.EG_WMS_Storage> _Storage;
-    /// <summary>
-    /// 区域表
-    /// </summary>
-    private readonly SqlSugarRepository<EG_WMS_Region> _Region;
-    /// <summary>
-    /// 料箱表
-    /// </summary>
-    private readonly SqlSugarRepository<EG_WMS_WorkBin> _workbin;
-    /// <summary>
-    /// 移库表
-    /// </summary>
-    private readonly SqlSugarRepository<EG_WMS_Relocation> _Relocation;
+    ///// <summary>
+    ///// 出入库主表
+    ///// </summary>
+    //private readonly SqlSugarRepository<Entity.EG_WMS_InAndOutBound> _InAndOutBound;
+    ///// <summary>
+    ///// 出入库详细表
+    ///// </summary>
+    //private readonly SqlSugarRepository<EG_WMS_InAndOutBoundDetail> _InAndOutBoundDetail;
+    ///// <summary>
+    ///// 库存表
+    ///// </summary>
+    //private readonly SqlSugarRepository<EG_WMS_Inventory> _Inventory;
+    ///// <summary>
+    ///// 库存详情表
+    ///// </summary>
+    //private readonly SqlSugarRepository<EG_WMS_InventoryDetail> _InventoryDetail;
+    ///// <summary>
+    ///// 库位表
+    ///// </summary>
+    //private readonly SqlSugarRepository<Entity.EG_WMS_Storage> _Storage;
+    ///// <summary>
+    ///// 区域表
+    ///// </summary>
+    //private readonly SqlSugarRepository<EG_WMS_Region> _Region;
+    ///// <summary>
+    ///// 料箱表
+    ///// </summary>
+    //private readonly SqlSugarRepository<EG_WMS_WorkBin> _workbin;
+    ///// <summary>
+    ///// 移库表
+    ///// </summary>
+    //private readonly SqlSugarRepository<EG_WMS_Relocation> _Relocation;
 
 
     #endregion
 
     #region 关系注入
 
-    public BaseService
-       (
-       SqlSugarRepository<Entity.EG_WMS_InAndOutBound> InAndOutBound,
-       SqlSugarRepository<EG_WMS_InAndOutBoundDetail> InAndOutBoundDetail,
-       SqlSugarRepository<EG_WMS_Inventory> Inventory,
-       SqlSugarRepository<EG_WMS_InventoryDetail> InventoryDetail,
-       SqlSugarRepository<Entity.EG_WMS_Storage> storage,
-       SqlSugarRepository<EG_WMS_Region> Region,
-       SqlSugarRepository<EG_WMS_WorkBin> WorkBin,
-       SqlSugarRepository<EG_WMS_Relocation> Relocation
+    //public BaseService
+    //   (
+    //   SqlSugarRepository<Entity.EG_WMS_InAndOutBound> InAndOutBound,
+    //   SqlSugarRepository<EG_WMS_InAndOutBoundDetail> InAndOutBoundDetail,
+    //   SqlSugarRepository<EG_WMS_Inventory> Inventory,
+    //   SqlSugarRepository<EG_WMS_InventoryDetail> InventoryDetail,
+    //   SqlSugarRepository<Entity.EG_WMS_Storage> storage,
+    //   SqlSugarRepository<EG_WMS_Region> Region,
+    //   SqlSugarRepository<EG_WMS_WorkBin> WorkBin,
+    //   SqlSugarRepository<EG_WMS_Relocation> Relocation
 
-       )
+    //   )
+    //{
+    //    _InAndOutBound = InAndOutBound;
+    //    _Inventory = Inventory;
+    //    _InventoryDetail = InventoryDetail;
+    //    _InAndOutBoundDetail = InAndOutBoundDetail;
+    //    _Storage = storage;
+    //    _Region = Region;
+    //    _workbin = WorkBin;
+    //    _Relocation = Relocation;
+    //}
+
+
+    public BaseService()
     {
-        _InAndOutBound = InAndOutBound;
-        _Inventory = Inventory;
-        _InventoryDetail = InventoryDetail;
-        _InAndOutBoundDetail = InAndOutBoundDetail;
-        _Storage = storage;
-        _Region = Region;
-        _workbin = WorkBin;
-        _Relocation = Relocation;
-    }
 
+    }
 
     #endregion
 
@@ -94,7 +115,7 @@ public class BaseService : IDynamicApiController, ITransient
                     .InnerJoin<EG_WMS_InventoryDetail>((o, cus) => o.InventoryNum == cus.InventoryNum)
                     .InnerJoin<EG_WMS_Materiel>((o, cus, ml) => ml.MaterielNum == o.MaterielNum)
                     .InnerJoin<Entity.EG_WMS_Storage>((o, cus, ml, age) => cus.StorageNum == age.StorageNum)
-                    .InnerJoin<EG_WMS_Region>((o, cus, ml, age, ion) => age.RegionNum == ion.RegionNum)
+                    .InnerJoin<Entity.EG_WMS_Region>((o, cus, ml, age, ion) => age.RegionNum == ion.RegionNum)
                     .InnerJoin<EG_WMS_WareHouse>((o, cus, ml, age, ion, wh) => ion.WHNum == wh.WHNum)
                     .InnerJoin<EG_WMS_WorkBin>((o, cus, ml, age, ion, wh, wb) => cus.WorkBinNum == wb.WorkBinNum)
                     .OrderBy(o => o.Id)
@@ -144,7 +165,7 @@ public class BaseService : IDynamicApiController, ITransient
                       .InnerJoin<EG_WMS_Materiel>((a, b, c, d) => d.MaterielNum == c.MaterielNum)
                       .InnerJoin<EG_WMS_InventoryDetail>((a, b, c, d, e) => e.InventoryNum == c.InventoryNum)
                       .InnerJoin<EG_WMS_WorkBin>((a, b, c, d, e, f) => e.WorkBinNum == f.WorkBinNum)
-                      .InnerJoin<EG_WMS_Region>((a, b, c, d, e, f, g) => g.RegionNum == e.RegionNum)
+                      .InnerJoin<Entity.EG_WMS_Region>((a, b, c, d, e, f, g) => g.RegionNum == e.RegionNum)
                       .InnerJoin<EG_WMS_WareHouse>((a, b, c, d, e, f, g, h) => h.WHNum == e.WHNum)
                       .InnerJoin<Entity.EG_WMS_Storage>((a, b, c, d, e, f, g, h, i) => i.StorageNum == e.StorageNum)
                       .Where((a, b, c, d, e, f, g, h, i) => a.InAndOutBoundType == type && a.InAndOutBoundNum == inandoutbound)
@@ -178,6 +199,9 @@ public class BaseService : IDynamicApiController, ITransient
     /// <param name="page">页数</param>
     /// <param name="pageSize">每页容量</param>
     /// <returns></returns>
+
+    [HttpPost]
+    [ApiDescriptionSettings(Name = "MaterialAccorDingSumCount")]
     public List<MaterielDataSumDto> MaterialAccorDingSumCount(int page, int pageSize)
     {
         List<MaterielDataSumDto> data = _Inventory.AsQueryable()
@@ -214,12 +238,14 @@ public class BaseService : IDynamicApiController, ITransient
     /// <param name="page">页数</param>
     /// <param name="pageSize">每页容量</param>
     /// <returns></returns>
+    [HttpPost]
+    [ApiDescriptionSettings(Name = "GetMaterileNumAllInventoryRecords")]
     public List<GetMaterielNumDataList> GetMaterileNumAllInventoryRecords(string MaterielNum, int page, int pageSize)
     {
         var data = _Inventory.AsQueryable()
                    .InnerJoin<EG_WMS_InventoryDetail>((inv, invd) => inv.InventoryNum == invd.InventoryNum)
                    .InnerJoin<EG_WMS_Materiel>((inv, invd, ma) => inv.MaterielNum == ma.MaterielNum)
-                   .InnerJoin<EG_WMS_Region>((inv, invd, ma, re) => invd.RegionNum == re.RegionNum)
+                   .InnerJoin<Entity.EG_WMS_Region>((inv, invd, ma, re) => invd.RegionNum == re.RegionNum)
                    .InnerJoin<EG_WMS_WareHouse>((inv, invd, ma, re, wh) => invd.WHNum == wh.WHNum)
                    .Where((inv, invd) => inv.MaterielNum == MaterielNum && inv.OutboundStatus == 0 && inv.IsDelete == false)
                    .Select<GetMaterielNumDataList>()
@@ -235,17 +261,19 @@ public class BaseService : IDynamicApiController, ITransient
 
     #endregion
 
-    #region （策略）返回推荐的库位
+    #region （策略）入库推荐的库位
 
     /// <summary>
-    /// （策略）返回推荐的库位
+    /// （策略）入库推荐的库位
     /// </summary>
     /// <param name="materielNum">物料编号</param>
     /// <returns></returns>
+    [HttpPost]
+    [ApiDescriptionSettings(Name = "StrategyReturnRecommendStorage")]
     public string StrategyReturnRecommendStorage(string materielNum)
     {
         // 根据物料编号，得到这个物料属于那个区域
-        var dataRegion = _Region.GetFirst(x => x.RegionMaterielNum == materielNum);
+        var dataRegion = _Region.AsQueryable().Where(x => x.RegionMaterielNum == materielNum).ToList();
         if (dataRegion == null)
         {
             throw Oops.Oh("区域未绑定物料");
@@ -254,7 +282,7 @@ public class BaseService : IDynamicApiController, ITransient
         // 查询是否有正在进行中的任务库位的组别
 
         var dataStorageGroup = _Storage.AsQueryable()
-                   .Where(a => a.TaskNo != null && a.RegionNum == dataRegion.RegionNum)
+                   .Where(a => a.TaskNo != null && a.RegionNum == dataRegion[0].RegionNum)
                    .Distinct()
                    .Select(a => new
                    {
@@ -272,7 +300,8 @@ public class BaseService : IDynamicApiController, ITransient
         // 查询库位并且排除不符合条件的组别和库位
 
         var getStorage = _Storage.AsQueryable()
-                 .Where(a => a.StorageStatus == 0 && a.StorageOccupy == 0 && a.RegionNum == dataRegion.RegionNum && !strings.Contains(a.StorageGroup))
+                 .Where(a => a.StorageStatus == 0 && a.StorageGroup != null
+                 && a.StorageOccupy == 0 && a.RegionNum == dataRegion[0].RegionNum && !strings.Contains(a.StorageGroup))
                  .OrderBy(a => a.StorageNum, OrderByType.Desc)
                  .Select(a => new
                  {
@@ -288,8 +317,94 @@ public class BaseService : IDynamicApiController, ITransient
         }
 
         return getStorage[0].StorageNum;
+
     }
 
     #endregion
 
+    #region （策略）出库推荐的库位
+
+    /// <summary>
+    /// （策略）出库推荐的库位
+    /// </summary>
+    /// <returns></returns>
+    [HttpPost]
+    [ApiDescriptionSettings(Name = "StrategyReturnRecommendStorageOutBound")]
+    public string StrategyReturnRecommendStorageOutBound(string materielNum)
+    {
+        // 根据物料编号，得到这个物料属于那个区域
+        var dataRegion = _Region.AsQueryable().Where(x => x.RegionMaterielNum == materielNum).ToList();
+        if (dataRegion == null)
+        {
+            throw Oops.Oh("区域未绑定物料");
+        }
+
+        // 查询是否有正在进行中的任务库位的组别
+
+        var dataStorageGroup = _Storage.AsQueryable()
+                   .Where(a => a.TaskNo != null && a.RegionNum == dataRegion[0].RegionNum)
+                   .Distinct()
+                   .Select(a => new
+                   {
+                       a.StorageGroup,
+                   })
+                   .ToList();
+
+        // 将有任务的组别保存
+        string[] strings = new string[dataStorageGroup.Count];
+        for (int i = 0; i < dataStorageGroup.Count; i++)
+        {
+            strings[i] = dataStorageGroup[i].StorageGroup;
+        }
+
+        // 查询库位并且排除不符合条件的组别和库位
+
+        var getStorage = _Storage.AsQueryable()
+                 .Where(a => a.StorageStatus == 0 && a.StorageGroup != null
+                 && a.StorageOccupy == 1 && a.RegionNum == dataRegion[0].RegionNum && !strings.Contains(a.StorageGroup))
+                 .OrderBy(a => a.StorageNum, OrderByType.Asc)
+                 .Select(a => new
+                 {
+                     a.StorageNum,
+                     a.StorageGroup,
+                 })
+                 .ToList();
+
+        if (getStorage == null || getStorage.Count == 0)
+        {
+            throw Oops.Oh("没有合适的库位");
+        }
+
+        return getStorage[0].StorageNum;
+
+    }
+
+
+    #endregion
+
+    #region （策略）AGV请求任务点
+
+    public DHMessage<object> a(string orderId, string modelProcessCode)
+    {
+        //ThirdPartyMessage partyMessage = new ThirdPartyMessage();
+        DHMessage<object> DHResult = new DHMessage<object>();
+        // 找到这个任务编号相同的这条数据
+        var taskData = _TaskEntity.GetFirst(x => x.TaskNo == orderId);
+
+        if (taskData == null)
+        {
+            DHResult.code = 1000;
+        }
+
+        // 根据这个任务编号得到入库编号
+
+        //var inand _InAndOutBoundDetail.GetFirst(x => x.InAndOutBoundNum == taskData.InAndOutBoundNum);
+
+        return DHResult;
+
+
+    }
+
+
+    #endregion
 }

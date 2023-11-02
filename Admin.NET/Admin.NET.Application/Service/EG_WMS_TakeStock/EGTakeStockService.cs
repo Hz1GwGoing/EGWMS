@@ -53,6 +53,45 @@ public class EGTakeStockService : IDynamicApiController, ITransient
     }
     #endregion
 
+    #region 分页查询盘点信息
+    /// <summary>
+    /// 分页查询盘点信息
+    /// </summary>
+    /// <param name="input"></param>
+    /// <returns></returns>
+    [HttpPost]
+    [ApiDescriptionSettings(Name = "Page")]
+    public async Task<SqlSugarPagedList<EGTakeStockOutput>> Page(EGTakeStockInput input)
+    {
+        var query = _rep.AsQueryable()
+                    .WhereIF(!string.IsNullOrWhiteSpace(input.TakeStockNum), u => u.TakeStockNum.Contains(input.TakeStockNum.Trim()))
+                    .WhereIF(input.TakeStockStatus > 0, u => u.TakeStockStatus == input.TakeStockStatus)
+                    // 盘点数量
+                    .WhereIF(input.TakeStockCount > 0, u => u.TakeStockCount == input.TakeStockCount)
+                    // 差值数量
+                    .WhereIF(input.TakeStockDiffCount > 0, u => u.TakeStockDiffCount == input.TakeStockDiffCount)
+                    .WhereIF(!string.IsNullOrWhiteSpace(input.TakeStockUser), u => u.TakeStockUser.Contains(input.TakeStockUser.Trim()))
+                    .WhereIF(!string.IsNullOrWhiteSpace(input.TakeStockRemake), u => u.TakeStockRemake.Contains(input.TakeStockRemake.Trim()))
+                    .WhereIF(!string.IsNullOrWhiteSpace(input.MaterielNum), u => u.MaterielNum.Contains(input.MaterielNum.Trim()))
+                    // 获取创建日期
+                    .WhereIF(input.CreateTime > DateTime.MinValue, u => u.CreateTime >= input.CreateTime)
+                    .Select<EGTakeStockOutput>()
+;
+        if (input.TakeStockTimeRange != null && input.TakeStockTimeRange.Count > 0)
+        {
+            DateTime? start = input.TakeStockTimeRange[0];
+            query = query.WhereIF(start.HasValue, u => u.TakeStockTime > start);
+            if (input.TakeStockTimeRange.Count > 1 && input.TakeStockTimeRange[1].HasValue)
+            {
+                var end = input.TakeStockTimeRange[1].Value.AddDays(1);
+                query = query.Where(u => u.TakeStockTime < end);
+            }
+        }
+        query = query.OrderBuilder(input);
+        return await query.ToPagedListAsync(input.Page, input.PageSize);
+    }
+    #endregion
+
     #region 获取盘点信息（模糊查询）
     /// <summary>
     /// 获取盘点信息
@@ -195,7 +234,9 @@ public class EGTakeStockService : IDynamicApiController, ITransient
     /// </summary>
     /// <param name="takestocknum">盘点编号</param>
     /// <returns></returns>
-    public List<EG_WMS_TakeStockData> a(string takestocknum)
+    [HttpPost]
+    [ApiDescriptionSettings(Name = "GetTakeStockData")]
+    public List<EG_WMS_TakeStockData> GetTakeStockData(string takestocknum)
     {
 
         // 得到这条记录
@@ -218,6 +259,13 @@ public class EGTakeStockService : IDynamicApiController, ITransient
 
     #region （根据库位盘点）得到库存中库位编号相同的
 
+    /// <summary>
+    /// （根据库位盘点）得到库存中库位编号相同的
+    /// </summary>
+    /// <param name="takestockstoragenum">盘点库位编号</param>
+    /// <returns></returns>
+    [HttpPost]
+    [ApiDescriptionSettings(Name = "GetInventoryStorageIdentical")]
     public List<ViewTaskStock> GetInventoryStorageIdentical(string takestockstoragenum)
     {
         // 根据这条数据查询库存中库位相同的数据
@@ -354,6 +402,8 @@ public class EGTakeStockService : IDynamicApiController, ITransient
     /// <param name="MaterielNum">物料编号</param>
     /// <param name="TakeStockRemake">盘点备注</param>
     /// <returns></returns>
+    [HttpPost]
+    [ApiDescriptionSettings(Name = "GenerateInventoryTask")]
     public async Task GenerateInventoryTask(string MaterielNum, string? TakeStockRemake)
     {
         // 人工输入需要盘点的物料编号
@@ -412,6 +462,8 @@ public class EGTakeStockService : IDynamicApiController, ITransient
     /// <param name="input">料箱</param>
     /// <param name="takestocknum">盘点编号</param>
     /// <returns></returns>
+    [HttpPost]
+    [ApiDescriptionSettings(Name = "InsertWorkBinSaveTakeStockData")]
     public async Task InsertWorkBinSaveTakeStockData(List<MaterielWorkBin> input, string takestocknum)
     {
         // 得到料箱
@@ -473,6 +525,9 @@ public class EGTakeStockService : IDynamicApiController, ITransient
     /// <param name="input"></param>
     /// <returns></returns>
     /// <exception cref="Exception"></exception>
+
+    [HttpPost]
+    [ApiDescriptionSettings(Name = "UpdateDataSaveInventory")]
     public async Task UpdateDataSaveInventory(TakeStockModel input)
     {
         try
@@ -627,44 +682,7 @@ public class EGTakeStockService : IDynamicApiController, ITransient
     //}
     #endregion
 
-    #region 分页查询盘点信息
-    /// <summary>
-    /// 分页查询盘点信息
-    /// </summary>
-    /// <param name="input"></param>
-    /// <returns></returns>
-    //    [HttpPost]
-    //    [ApiDescriptionSettings(Name = "Page")]
-    //    public async Task<SqlSugarPagedList<EGTakeStockOutput>> Page(EGTakeStockInput input)
-    //    {
-    //        var query = _rep.AsQueryable()
-    //                    .WhereIF(!string.IsNullOrWhiteSpace(input.TakeStockNum), u => u.TakeStockNum.Contains(input.TakeStockNum.Trim()))
-    //                    .WhereIF(input.TakeStockStatus > 0, u => u.TakeStockStatus == input.TakeStockStatus)
-    //                    // 盘点数量
-    //                    .WhereIF(input.TakeStockCount > 0, u => u.TakeStockCount == input.TakeStockCount)
-    //                    // 差值数量
-    //                    .WhereIF(input.TakeStockDiffCount > 0, u => u.TakeStockDiffCount == input.TakeStockDiffCount)
-    //                    .WhereIF(!string.IsNullOrWhiteSpace(input.TakeStockUser), u => u.TakeStockUser.Contains(input.TakeStockUser.Trim()))
-    //                    .WhereIF(!string.IsNullOrWhiteSpace(input.TakeStockRemake), u => u.TakeStockRemake.Contains(input.TakeStockRemake.Trim()))
-    //                    .WhereIF(!string.IsNullOrWhiteSpace(input.MaterielNum), u => u.MaterielNum.Contains(input.MaterielNum.Trim()))
-    //                    // 获取创建日期
-    //                    .WhereIF(input.CreateTime > DateTime.MinValue, u => u.CreateTime >= input.CreateTime)
-    //                    .Select<EGTakeStockOutput>()
-    //;
-    //        if (input.TakeStockTimeRange != null && input.TakeStockTimeRange.Count > 0)
-    //        {
-    //            DateTime? start = input.TakeStockTimeRange[0];
-    //            query = query.WhereIF(start.HasValue, u => u.TakeStockTime > start);
-    //            if (input.TakeStockTimeRange.Count > 1 && input.TakeStockTimeRange[1].HasValue)
-    //            {
-    //                var end = input.TakeStockTimeRange[1].Value.AddDays(1);
-    //                query = query.Where(u => u.TakeStockTime < end);
-    //            }
-    //        }
-    //        query = query.OrderBuilder(input);
-    //        return await query.ToPagedListAsync(input.Page, input.PageSize);
-    //    }
-    #endregion
+
 
     #region 更新盘点信息
     /// <summary>

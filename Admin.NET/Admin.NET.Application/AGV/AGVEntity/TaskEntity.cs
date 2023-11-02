@@ -100,6 +100,6 @@ public class TaskEntity : EntityBase
     /// 出入库编号
     /// </summary>
     [SugarColumn(ColumnDescription = "出入库编号")]
-    public string InAndOutBoundNum { get; set; }
+    public string? InAndOutBoundNum { get; set; }
 
 }

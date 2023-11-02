@@ -21,6 +21,8 @@ public class EGStorageService : IDynamicApiController, ITransient
     /// 查询区域下库位总数
     /// </summary>
     /// <returns></returns>
+    [HttpGet]
+    [ApiDescriptionSettings(Name = "GetSumStorageCount")]
     public List<GetCountStorage> GetSumStorageCount()
     {
         return _rep.AsQueryable()
@@ -41,23 +43,35 @@ public class EGStorageService : IDynamicApiController, ITransient
 
     #region 得到每个区域下有多少个库位
 
+    /// <summary>
+    /// 得到每个区域下有多少个库位
+    /// </summary>
+    /// <returns></returns>
+
+    [HttpGet]
+    [ApiDescriptionSettings(Name = "SelectRegionStorageCount")]
     public List<SelectRegionStorageCountDto> SelectRegionStorageCount()
     {
         return _rep.AsQueryable()
-             .InnerJoin<EG_WMS_Region>((a, b) => a.RegionNum == b.RegionNum)
+             .InnerJoin<Entity.EG_WMS_Region>((a, b) => a.RegionNum == b.RegionNum)
              .InnerJoin<EG_WMS_WareHouse>((a, b, c) => b.WHNum == c.WHNum)
              .GroupBy(a => a.RegionNum)
              .Select((a, b, c) => new SelectRegionStorageCountDto
              {
                  RegionNum = a.RegionNum,
                  RegionName = b.RegionName,
+                 WHNum = c.WHNum,
                  TotalStorage = SqlFunc.AggregateCount(a.StorageNum),
                  EnabledStorage = SqlFunc.AggregateCount(a.StorageStatus == 0),
-                 UsedStorage = SqlFunc.AggregateCount(a.StorageOccupy == 1),
+                 UsedStorage = SqlFunc.AggregateSum(SqlFunc.IIF(a.StorageOccupy == 1, 1, 0)),
                  WHName = c.WHName,
                  Remake = a.StorageRemake,
                  CreateUserName = a.CreateUserName,
-                 UpdateUserName = a.UpdateUserName
+                 UpdateUserName = a.UpdateUserName,
+                 // 区域绑定物料
+                 RegionMaterielNum = b.RegionMaterielNum,
+
+
              })
              .ToList();
     }
@@ -78,7 +92,7 @@ public class EGStorageService : IDynamicApiController, ITransient
     public List<StorageRegionAndWhDto> GetStorageRegionAndWH(int page, int pageSize)
     {
         return _rep.AsQueryable()
-             .InnerJoin<EG_WMS_Region>((a, b) => a.RegionNum == b.RegionNum)
+             .InnerJoin<Entity.EG_WMS_Region>((a, b) => a.RegionNum == b.RegionNum)
              .InnerJoin<EG_WMS_WareHouse>((a, b, c) => b.WHNum == c.WHNum)
              .Select((a, b, c) => new StorageRegionAndWhDto
              {

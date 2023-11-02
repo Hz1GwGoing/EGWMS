@@ -4,6 +4,8 @@ public class SelectRegionStorageCountDto
 {
     public string RegionNum { get; set; }
     public string RegionName { get; set; }
+
+    public string WHNum { get; set; }
     /// <summary>
     /// 库位总数
     /// </summary>
@@ -20,4 +22,10 @@ public class SelectRegionStorageCountDto
     public string Remake { get; set; }
     public string CreateUserName { get; set; }
     public string UpdateUserName { get; set; }
+
+    /// <summary>
+    /// 区域绑定物料
+    /// </summary>
+    public string RegionMaterielNum { get; set; }
+
 }

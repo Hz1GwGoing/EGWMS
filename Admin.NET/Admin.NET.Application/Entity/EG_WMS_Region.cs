@@ -70,12 +70,12 @@ public class EG_WMS_Region : EntityBase
     /// 区域绑定物料编号
     /// </summary>
     [SugarColumn(ColumnDescription = "区域绑定物料编号")]
-    public string RegionMaterielNum { get; set; }
+    public string? RegionMaterielNum { get; set; }
 
     /// <summary>
     /// 区域类型
     /// </summary>
     [SugarColumn(ColumnDescription = "区域类型")]
-    public string RegionType { get; set; }
+    public string? RegionType { get; set; }
 
 }

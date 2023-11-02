@@ -55,6 +55,12 @@ public class EGTakeStockOutput
     /// </summary>
     public long Id { get; set; }
 
+    /// <summary>
+    /// 盘点库位编号
+    /// </summary>
+    public string? TakeStockStorageNum { get; set; }
+
+
 }
 
 

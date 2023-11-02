@@ -1,4 +1,4 @@
-﻿using Admin.NET.Application.AGV.AGVEntity;
+﻿using Admin.NET.Application.Service.EG_WMS_BaseServer;
 
 namespace Admin.NET.Application;
 
@@ -10,6 +10,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
 {
     // agv接口
     TaskService taskService = new TaskService();
+    BaseService BaseService = new BaseService();
 
     #region 关系注入
     private readonly SqlSugarRepository<EG_WMS_InAndOutBound> _rep = App.GetService<SqlSugarRepository<EG_WMS_InAndOutBound>>();
@@ -108,7 +109,9 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
             // 目标点
             if (input.EndPoint == null)
             {
-                // 根据策略推荐（修改）
+                // 根据策略推荐（简单策略）（修改）
+                input.EndPoint = BaseService.StrategyReturnRecommendStorage(input.materielWorkBins[0].MaterielNum);
+
             }
 
             string endpoint = input.EndPoint;

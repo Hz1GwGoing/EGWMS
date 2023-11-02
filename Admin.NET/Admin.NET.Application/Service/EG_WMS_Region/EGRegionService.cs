@@ -1,4 +1,8 @@
-﻿namespace Admin.NET.Application;
+﻿using Admin.NET.Application.Service.EG_WMS_Region.Dto;
+
+namespace Admin.NET.Application;
+
+
 /// <summary>
 /// 区域管理接口
 /// </summary>
@@ -21,7 +25,6 @@ public class EGRegionService : IDynamicApiController, ITransient
         _Storage = Storage;
     }
     #endregion
-
 
     #region 分页查询区域
     /// <summary>
@@ -73,12 +76,24 @@ public class EGRegionService : IDynamicApiController, ITransient
     /// 查询一共有多少个区域
     /// </summary>
     /// <returns></returns>
-    public int GetSumRegionCount()
+    [HttpGet]
+    [ApiDescriptionSettings(Name = "GetSumRegionCount")]
+    public List<GetSumRegionCountDto> GetSumRegionCount()
     {
-        return _rep.AsQueryable().Where(a => a.RegionStatus == 0).Count();
+        return _rep.AsQueryable()
+                   .InnerJoin<EG_WMS_WareHouse>((a, b) => a.WHNum == b.WHNum)
+                   .Where(a => a.RegionStatus == 0)
+                   .Select((a, b) => new GetSumRegionCountDto
+                   {
+                       WHNum = a.WHNum,
+                       WHName = b.WHName,
+                       sumcount = SqlFunc.AggregateCount(a.RegionNum)
+
+                   })
+                   .GroupBy(a => a.WHNum)
+                   .ToList();
+
     }
-
-
 
     #endregion
 
@@ -92,9 +107,8 @@ public class EGRegionService : IDynamicApiController, ITransient
     [ApiDescriptionSettings(Name = "Add")]
     public async Task Add(AddEGRegionInput input)
     {
-
+        input.RegionNum = "Region" + new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString();
         var entity = input.Adapt<EG_WMS_Region>();
-
         await _rep.InsertAsync(entity);
     }
     #endregion
@@ -177,11 +191,6 @@ public class EGRegionService : IDynamicApiController, ITransient
                 ).ToListAsync();
     }
 
-    private class class3
-    {
-
-
-    }
     #endregion
 
 
