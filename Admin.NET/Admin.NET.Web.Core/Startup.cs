@@ -85,6 +85,10 @@ public class Startup : AppStartup
             //.AddXmlDataContractSerializerFormatters()
             .AddInjectWithUnifyResult<AdminResultProvider>();
 
+        // 
+        services.AddUnifyProvider<DHResultProvider>("easygreat");
+
+
         // 第三方授权登录
         var authOpt = App.GetOptions<OAuthOptions>();
         services.AddAuthentication(options =>

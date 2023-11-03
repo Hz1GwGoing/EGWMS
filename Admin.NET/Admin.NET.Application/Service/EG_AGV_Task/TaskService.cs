@@ -611,6 +611,7 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
         /// <exception cref="Exception"></exception>
         [HttpPost("/AGV/Task/AcceptAsync")]
         [AllowAnonymous]
+        [UnifyProvider("easygreat")]
         public async Task<int> AcceptAsuncNew(AcceptDTO acceptDTO)
         {
             try
@@ -841,7 +842,7 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
                                  .SetColumns(it => new Entity.EG_WMS_Storage
                                  {
                                      StorageOccupy = 1,
-                                     TaskNo = "",
+                                     TaskNo = null,
                                  })
                                  .Where(x => x.TaskNo == acceptDTO.orderId)
                                  .ExecuteCommandAsync();
@@ -909,7 +910,7 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
                                  {
                                      // 未占用
                                      StorageOccupy = 0,
-                                     TaskNo = "",
+                                     TaskNo = null,
                                  })
                                  .Where(x => x.TaskNo == acceptDTO.orderId)
                                  .ExecuteCommandAsync();

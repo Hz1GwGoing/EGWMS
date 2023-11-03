@@ -107,10 +107,10 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
             }
 
             // 目标点
-            if (input.EndPoint == null)
+            if (input.EndPoint == null || input.EndPoint == "")
             {
-                // 根据策略推荐（简单策略）（修改）
-                input.EndPoint = BaseService.StrategyReturnRecommendStorage(input.materielWorkBins[0].MaterielNum);
+                // 根据策略推荐
+                input.EndPoint = BaseService.StrategyReturnRecommEndStorage(input.materielWorkBins[0].MaterielNum);
 
             }
 
@@ -400,9 +400,10 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
 
             // 目标点
             string endpoint = input.EndPoint;
-            if (endpoint == null)
+            if (endpoint == null || input.EndPoint == "")
             {
                 // 根据策略推荐
+                input.EndPoint = BaseService.StrategyReturnRecommendStorageOutBound(input.materielWorkBins[0].MaterielNum);
             }
 
             // 任务点集
