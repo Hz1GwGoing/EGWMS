@@ -19,16 +19,22 @@ public class EG_WMS_Storage : EntityBase
     public string? StorageName { get; set; }
 
     /// <summary>
-    /// 库位地址
+    /// 是否占用（0.未占用 1.已占用 2.预占用）
     /// </summary>
-    [SugarColumn(ColumnDescription = "库位地址", Length = 100)]
-    public string? StorageAddress { get; set; }
+    [SugarColumn(ColumnDescription = "是否占用（0.未占用 1.已占用 2.预占用）", Length = 5)]
+    public int? StorageOccupy { get; set; }
 
     /// <summary>
     /// 库位状态 0.正常 1.异常
     /// </summary>
     [SugarColumn(ColumnDescription = "库位状态（0.正常 1.异常）")]
     public int? StorageStatus { get; set; }
+
+    /// <summary>
+    /// 库位地址
+    /// </summary>
+    [SugarColumn(ColumnDescription = "库位地址", Length = 100)]
+    public string? StorageAddress { get; set; }
 
     /// <summary>
     /// 库位类别
@@ -53,12 +59,6 @@ public class EG_WMS_Storage : EntityBase
     /// </summary>
     [SugarColumn(ColumnDescription = "库位高", Length = 10, DecimalDigits = 5)]
     public decimal? StorageHigh { get; set; }
-
-    /// <summary>
-    /// 是否占用（0.未占用 1.已占用 2.预占用）
-    /// </summary>
-    [SugarColumn(ColumnDescription = "是否占用（0.未占用 1.已占用 2.预占用）", Length = 5)]
-    public int? StorageOccupy { get; set; }
 
     /// <summary>
     /// 备注

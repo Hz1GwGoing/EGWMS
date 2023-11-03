@@ -748,6 +748,20 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
                                    .Where(x => x.InAndOutBoundNum == listInBoundData[0].InAndOutBoundNum)
                                    .ExecuteCommandAsync();
 
+                            // 取消入库占用
+
+                            await _Storage.AsUpdateable()
+                                     .AS("EG_WMS_Storage")
+                                     .SetColumns(it => new Entity.EG_WMS_Storage
+                                     {
+                                         // 未占用
+                                         StorageOccupy = 0,
+                                         UpdateTime = DateTime.Now,
+                                     })
+                                     .Where(x => x.TaskNo == acceptDTO.orderId)
+                                     .ExecuteCommandAsync();
+
+
                         }
                         catch (Exception ex)
                         {
@@ -771,6 +785,20 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
                                                 })
                                                 .Where(x => x.InAndOutBoundNum == listInBoundData[0].InAndOutBoundNum)
                                                 .ExecuteCommandAsync();
+
+                            // 取消出库预占用
+
+                            await _Storage.AsUpdateable()
+                                     .AS("EG_WMS_Storage")
+                                     .SetColumns(it => new Entity.EG_WMS_Storage
+                                     {
+                                         // 未占用
+                                         StorageOccupy = 1,
+                                         UpdateTime = DateTime.Now,
+                                     })
+                                     .Where(x => x.TaskNo == acceptDTO.orderId)
+                                     .ExecuteCommandAsync();
+
                         }
                         catch (Exception ex)
                         {
@@ -926,89 +954,96 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
 
         #endregion
 
-        #region 接受RCS的上报信息
-        /// <summary>
-        /// 接受RCS的上报信息
-        /// </summary>
-        /// <param name="acceptDto"></param>
-        /// <returns></returns>
-        //[HttpPost("/AGV/Task/AcceptAsync")]
-        //[AllowAnonymous]
-        //public string AcceptAsync(AcceptDTO acceptDto)
-        //{
-        //    //var para = JsonConvert.SerializeObject(acceptDto);
-        //    //_ = FileUtil.DebugTxt("任务上报参数记录", MessageTypeEnum.记录, para, "", "DH主动上报记录");
-        //    if (acceptDto.status == null)
-        //    {
-        //        throw Oops.Oh($"上报的状态不能为空值！");
-        //        //throw new Exception("DH上报的状态为空值！");
-        //    }
-        //    try
-        //    {
-        //        if (string.IsNullOrEmpty(acceptDto.orderId))
-        //        {
-        //            //throw new Exception("任务ID不可为空！");
-        //            throw Oops.Oh($"任务ID不可为空！");
-        //        }
-        //        var item = _TaskEntity.GetFirst(p => p.TaskNo == acceptDto.orderId.Trim());
-        //        // （3 已取消 5 发送失败 6 运行中 7 执行失败 8 已完成 
-        //        // 9 已下发 10 等待确认 20 取货中 21 取货完成 22 放货中 23 放货完成）
-        //        if (item.TaskState == 8 || item.TaskState == 3)
-        //        {
-        //            //_ = FileUtil.DebugTxt(item.TaskState, MessageTypeEnum.记录, para, "", "DH状态上报顺序Error");
-        //            return "";
-        //        }
-        //        #region 数据入库
-        //        try
-        //        {
-        //            if (!string.IsNullOrEmpty(acceptDto.deviceNum))
-        //            {
-        //                item.AGV = acceptDto.deviceNum;
-        //                //9-已下发
-        //                if (acceptDto.status == 9)
-        //                {
-        //                    item.STime = DateTime.Now;
-        //                }
-        //                //3-已取消，5-发送失败，7-执行失败，8-已完成
-        //                if (acceptDto.status == 3 || acceptDto.status == 5 || acceptDto.status == 7 ||
-        //                    acceptDto.status == 8)
-        //                {
-        //                    item.ETime = DateTime.Now;
-        //                }
-        //            }
-        //            item.Message = acceptDto.errorDesc; //失败原因
-        //            item.TaskState = acceptDto.status;
-        //            item.SubTaskSeq = acceptDto.subTaskSeq;
-        //            item.SubTaskStatus = acceptDto.subTaskStatus;
-        //            _TaskEntity.InsertOrUpdate(item);
-        //        }
-        //        catch (Exception ex)
-        //        {
-        //            //_ = FileUtil.DebugTxt($"{ex.Message}", MessageTypeEnum.错误, para, ex.StackTrace, "任务状态数据入库Error");
-        //        }
-        //        #endregion
-
-        //        #region 触发主动上报第三方
-
-        //        #endregion
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        //_ = FileUtil.DebugTxt($"{ex.Message}", MessageTypeEnum.错误, para, ex.StackTrace, "接受RCS的上报信息Error");
-        //        throw Oops.Oh($"{ex.Message}");
-        //        //throw new Exception(ex.Message);
-        //    }
-        //    return "上报成功";
-        //}
-        #endregion
-    }
-
-    public class class2
-    {
-        public string StorageGroup { get; set; }
-
-        public int SumCount { get; set; }
 
     }
+
+
+    //-------------------------------------//-------------------------------------//
+
+
+    #region 接受RCS的上报信息
+    /// <summary>
+    /// 接受RCS的上报信息
+    /// </summary>
+    /// <param name="acceptDto"></param>
+    /// <returns></returns>
+    //[HttpPost("/AGV/Task/AcceptAsync")]
+    //[AllowAnonymous]
+    //public string AcceptAsync(AcceptDTO acceptDto)
+    //{
+    //    //var para = JsonConvert.SerializeObject(acceptDto);
+    //    //_ = FileUtil.DebugTxt("任务上报参数记录", MessageTypeEnum.记录, para, "", "DH主动上报记录");
+    //    if (acceptDto.status == null)
+    //    {
+    //        throw Oops.Oh($"上报的状态不能为空值！");
+    //        //throw new Exception("DH上报的状态为空值！");
+    //    }
+    //    try
+    //    {
+    //        if (string.IsNullOrEmpty(acceptDto.orderId))
+    //        {
+    //            //throw new Exception("任务ID不可为空！");
+    //            throw Oops.Oh($"任务ID不可为空！");
+    //        }
+    //        var item = _TaskEntity.GetFirst(p => p.TaskNo == acceptDto.orderId.Trim());
+    //        // （3 已取消 5 发送失败 6 运行中 7 执行失败 8 已完成 
+    //        // 9 已下发 10 等待确认 20 取货中 21 取货完成 22 放货中 23 放货完成）
+    //        if (item.TaskState == 8 || item.TaskState == 3)
+    //        {
+    //            //_ = FileUtil.DebugTxt(item.TaskState, MessageTypeEnum.记录, para, "", "DH状态上报顺序Error");
+    //            return "";
+    //        }
+    //        #region 数据入库
+    //        try
+    //        {
+    //            if (!string.IsNullOrEmpty(acceptDto.deviceNum))
+    //            {
+    //                item.AGV = acceptDto.deviceNum;
+    //                //9-已下发
+    //                if (acceptDto.status == 9)
+    //                {
+    //                    item.STime = DateTime.Now;
+    //                }
+    //                //3-已取消，5-发送失败，7-执行失败，8-已完成
+    //                if (acceptDto.status == 3 || acceptDto.status == 5 || acceptDto.status == 7 ||
+    //                    acceptDto.status == 8)
+    //                {
+    //                    item.ETime = DateTime.Now;
+    //                }
+    //            }
+    //            item.Message = acceptDto.errorDesc; //失败原因
+    //            item.TaskState = acceptDto.status;
+    //            item.SubTaskSeq = acceptDto.subTaskSeq;
+    //            item.SubTaskStatus = acceptDto.subTaskStatus;
+    //            _TaskEntity.InsertOrUpdate(item);
+    //        }
+    //        catch (Exception ex)
+    //        {
+    //            //_ = FileUtil.DebugTxt($"{ex.Message}", MessageTypeEnum.错误, para, ex.StackTrace, "任务状态数据入库Error");
+    //        }
+    //        #endregion
+
+    //        #region 触发主动上报第三方
+
+    //        #endregion
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        //_ = FileUtil.DebugTxt($"{ex.Message}", MessageTypeEnum.错误, para, ex.StackTrace, "接受RCS的上报信息Error");
+    //        throw Oops.Oh($"{ex.Message}");
+    //        //throw new Exception(ex.Message);
+    //    }
+    //    return "上报成功";
+    //}
+    #endregion
+
+
+}
+
+public class class2
+{
+    public string StorageGroup { get; set; }
+
+    public int SumCount { get; set; }
 
 }
