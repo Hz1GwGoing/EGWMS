@@ -1,7 +1,4 @@
-﻿using Admin.NET.Core;
-using System.ComponentModel.DataAnnotations;
-
-namespace Admin.NET.Application;
+﻿namespace Admin.NET.Application;
 
 /// <summary>
 /// EGRegion基础输入参数
@@ -38,6 +35,15 @@ public class EGRegionBaseInput
     /// </summary>
     public virtual string? WHNum { get; set; }
 
+    /// <summary>
+    /// 区域绑定物料编号
+    /// </summary>
+    public string? RegionMaterielNum { get; set; }
+
+    /// <summary>
+    /// 区域类型
+    /// </summary>
+    public string? RegionType { get; set; }
 }
 
 /// <summary>
@@ -105,20 +111,7 @@ public class AddEGRegionInput : EGRegionBaseInput
     /// <summary>
     /// 区域编号
     /// </summary>
-    [Required(ErrorMessage = "区域编号不能为空")]
     public override string? RegionNum { get; set; }
-
-    /// <summary>
-    /// 区域绑定物料编号
-    /// </summary>
-    public string? RegionMaterielNum { get; set; }
-
-
-    /// <summary>
-    /// 区域类型
-    /// </summary>
-    public string? RegionType { get; set; }
-
 
 }
 

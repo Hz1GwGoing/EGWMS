@@ -17,7 +17,7 @@ public class EG_WMS_Tem_Inventory : EntityBase
     /// 库存总数
     /// </summary>
     [SugarColumn(ColumnDescription = "库存总数")]
-    public int? ICountAll { get; set; }
+    public int ICountAll { get; set; }
 
     /// <summary>
     /// 可用库存

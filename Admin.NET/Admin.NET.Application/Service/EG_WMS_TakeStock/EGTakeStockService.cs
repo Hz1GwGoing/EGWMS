@@ -128,6 +128,7 @@ public class EGTakeStockService : IDynamicApiController, ITransient
 
     // 新案
 
+    // 根据库位盘点
     #region （根据库位盘点）查找料箱（记录下来）
 
     /// <summary>
@@ -355,7 +356,7 @@ public class EGTakeStockService : IDynamicApiController, ITransient
                                  UpdateTime = DateTime.Now,
                                  InventoryRemake = $"此库存已被盘点修改，盘点编号为：{listData.TakeStockNum}"
                              })
-                             .Where(x => x.InventoryNum == listItem[0].InventoryNum)
+                             .Where(x => x.InventoryNum == invNum)
                              .ExecuteCommandAsync();
 
                     // 修改详细表
@@ -368,7 +369,7 @@ public class EGTakeStockService : IDynamicApiController, ITransient
                                               WorkBinNum = invdworkbinnum,
                                               UpdateTime = DateTime.Now,
                                           })
-                                          .Where(x => x.InventoryNum == listItem[0].InventoryNum)
+                                          .Where(x => x.InventoryNum == invNum)
                                           .ExecuteCommandAsync();
 
                     // 修改盘点记录
@@ -395,6 +396,7 @@ public class EGTakeStockService : IDynamicApiController, ITransient
 
     #endregion
 
+    // 根据物料盘点
     #region （根据物料盘点）生成盘点任务
     /// <summary>
     /// （根据物料盘点）生成盘点任务
@@ -681,8 +683,6 @@ public class EGTakeStockService : IDynamicApiController, ITransient
     //    await _rep.InsertAsync(entity);
     //}
     #endregion
-
-
 
     #region 更新盘点信息
     /// <summary>

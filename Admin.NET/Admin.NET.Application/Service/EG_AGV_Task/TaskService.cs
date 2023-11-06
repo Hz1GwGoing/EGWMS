@@ -729,10 +729,9 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
                                 .Select(x => x)
                                 .ToList();
 
-                // 判断是不是取消的任务
+                #region 判断是不是取消的任务
                 if (AgvStatus == 3)
                 {
-
                     // 入库情况
                     if (listInBoundData[0].InAndOutBoundType == 0)
                     {
@@ -744,6 +743,7 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
                                    {
                                        // 未入库
                                        InAndOutBoundStatus = 0,
+                                       SuccessOrNot = 1,
                                        UpdateTime = DateTime.Now,
                                    })
                                    .Where(x => x.InAndOutBoundNum == listInBoundData[0].InAndOutBoundNum)
@@ -783,6 +783,7 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
                                                     // 未出库
                                                     InAndOutBoundStatus = 2,
                                                     UpdateTime = DateTime.Now,
+                                                    SuccessOrNot = 1,
                                                 })
                                                 .Where(x => x.InAndOutBoundNum == listInBoundData[0].InAndOutBoundNum)
                                                 .ExecuteCommandAsync();
@@ -793,7 +794,7 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
                                      .AS("EG_WMS_Storage")
                                      .SetColumns(it => new Entity.EG_WMS_Storage
                                      {
-                                         // 未占用
+                                         // 占用
                                          StorageOccupy = 1,
                                          UpdateTime = DateTime.Now,
                                      })
@@ -808,6 +809,7 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
                         }
                     }
                 }
+                #endregion
 
                 #region 判断为入库成功的场景
 
@@ -894,13 +896,26 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
                 {
                     try
                     {
-                        // 查询得到临时库存主表中修改的数据
-                        var dataTemInvtory = _TemInventory.AsQueryable()
-                                      .Where(x => x.InAndOutBoundNum == listInBoundData[0].InAndOutBoundNum)
-                                      .Select(x => x)
-                                      .ToList();
+                        // 得到临时库存详细表里面的库存编号
+                        var teminvdetail = _TemInventoryDetail.AsQueryable()
+                                            .Where(x => x.StorageNum == listInBoundData[0].StartPoint)
+                                            .ToList();
 
+                        // 查询得到临时库存主表中修改的数据
+
+                        List<EG_WMS_Tem_Inventory> dataTemInvtory = new List<EG_WMS_Tem_Inventory>();
+                        for (int i = 0; i < teminvdetail.Count; i++)
+                        {
+                            dataTemInvtory.AddRange(_TemInventory.AsQueryable()
+                                                 .Where(x => x.InventoryNum == teminvdetail[i].InventoryNum)
+                                                 .Select(x => x)
+                                                 .ToList());
+
+                        }
                         List<EG_WMS_Inventory> invData = dataTemInvtory.Adapt<List<EG_WMS_Inventory>>();
+
+                        _Inventory.InsertOrUpdate(invData);
+
 
                         // 修改库位表中的信息
 
@@ -915,7 +930,6 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
                                  .Where(x => x.TaskNo == acceptDTO.orderId)
                                  .ExecuteCommandAsync();
 
-                        _Inventory.InsertOrUpdate(invData);
 
                     }
                     catch (Exception ex)

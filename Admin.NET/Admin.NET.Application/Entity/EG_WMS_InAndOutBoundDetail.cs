@@ -19,9 +19,9 @@ public class EG_WMS_InAndOutBoundDetail : EntityBase
     public string? WHNum { get; set; }
 
     /// <summary>
-    /// 库位编号
+    /// 库位编号（策略推荐）
     /// </summary>
-    [SugarColumn(ColumnDescription = "库位编号", Length = 50)]
+    [SugarColumn(ColumnDescription = "库位编号（策略推荐）", Length = 50)]
     public string? StorageNum { get; set; }
 
     /// <summary>

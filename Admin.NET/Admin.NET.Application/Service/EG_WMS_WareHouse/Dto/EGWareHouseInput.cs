@@ -115,7 +115,6 @@ public class AddEGWareHouseInput : EGWareHouseBaseInput
     /// <summary>
     /// 仓库编号
     /// </summary>
-    [Required(ErrorMessage = "仓库编号不能为空")]
     public override string WHNum { get; set; }
 
     /// <summary>

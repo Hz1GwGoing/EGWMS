@@ -1,9 +1,8 @@
 ﻿namespace Admin.NET.Application.Service.EG_WMS_BaseServer;
 
 /// <summary>
-/// 基础接口，获得所有数据
+/// 基础实用接口
 /// </summary>
-
 [ApiDescriptionSettings(ApplicationConst.GroupName, Order = 100)]
 public class BaseService : IDynamicApiController, ITransient
 {
@@ -258,10 +257,12 @@ public class BaseService : IDynamicApiController, ITransient
 
     #endregion
 
+    //-------------------------------------/策略/-------------------------------------//
+
     #region （策略）（密集库）AGV入库WMS自动推荐的库位
 
     /// <summary>
-    /// （策略）入库自动推荐的库位
+    /// （策略）（密集库）AGV入库WMS自动推荐的库位
     /// </summary>
     /// <param name="materielNum">物料编号</param>
     /// <returns></returns>
@@ -272,7 +273,7 @@ public class BaseService : IDynamicApiController, ITransient
         // 根据物料编号，得到这个物料属于那个区域
         var dataRegion = _Region.AsQueryable().Where(x => x.RegionMaterielNum == materielNum).ToList();
 
-        if (dataRegion == null)
+        if (dataRegion == null || dataRegion.Count == 0)
         {
             throw Oops.Oh("区域未绑定物料");
         }
@@ -290,7 +291,7 @@ public class BaseService : IDynamicApiController, ITransient
 
         // 区域库位总数
         int datacount = _Storage.AsQueryable()
-                    .Where(x => x.RegionNum == dataRegion[0].RegionNum && x.StorageOccupy == 0 && x.StorageStatus == 0)
+                    .Where(x => x.RegionNum == dataRegion[0].RegionNum)
                     .Count();
 
         if (data.Count == datacount)
@@ -426,7 +427,7 @@ public class BaseService : IDynamicApiController, ITransient
     #region （策略）（密集库）AGV出库WMS自动推荐的库位
 
     /// <summary>
-    /// （策略）出库自动推荐的库位
+    /// （策略）（密集库）AGV出库WMS自动推荐的库位
     /// </summary>
     /// <returns></returns>
     [HttpPost]
@@ -435,7 +436,7 @@ public class BaseService : IDynamicApiController, ITransient
     {
         // 根据物料编号，得到这个物料属于那个区域
         var dataRegion = _Region.AsQueryable().Where(x => x.RegionMaterielNum == materielNum).ToList();
-        if (dataRegion == null)
+        if (dataRegion == null || dataRegion.Count == 0)
         {
             throw Oops.Oh("区域未绑定物料");
         }

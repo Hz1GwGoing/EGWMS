@@ -46,11 +46,13 @@ public class EGStorageService : IDynamicApiController, ITransient
     /// <summary>
     /// 得到每个区域下有多少个库位
     /// </summary>
+    /// <param name="page">页数</param>
+    /// <param name="pageSize">每页容量</param>
     /// <returns></returns>
 
     [HttpGet]
     [ApiDescriptionSettings(Name = "SelectRegionStorageCount")]
-    public List<SelectRegionStorageCountDto> SelectRegionStorageCount()
+    public List<SelectRegionStorageCountDto> SelectRegionStorageCount(int page, int pageSize)
     {
         return _rep.AsQueryable()
              .InnerJoin<Entity.EG_WMS_Region>((a, b) => a.RegionNum == b.RegionNum)
@@ -61,18 +63,19 @@ public class EGStorageService : IDynamicApiController, ITransient
                  RegionNum = a.RegionNum,
                  RegionName = b.RegionName,
                  WHNum = c.WHNum,
+                 WHName = c.WHName,
                  TotalStorage = SqlFunc.AggregateCount(a.StorageNum),
                  EnabledStorage = SqlFunc.AggregateCount(a.StorageStatus == 0),
                  UsedStorage = SqlFunc.AggregateSum(SqlFunc.IIF(a.StorageOccupy == 1, 1, 0)),
-                 WHName = c.WHName,
                  Remake = a.StorageRemake,
                  CreateUserName = a.CreateUserName,
                  UpdateUserName = a.UpdateUserName,
                  // 区域绑定物料
                  RegionMaterielNum = b.RegionMaterielNum,
 
-
              })
+             .Skip((page - 1) * pageSize)
+             .Take(pageSize)
              .ToList();
     }
 

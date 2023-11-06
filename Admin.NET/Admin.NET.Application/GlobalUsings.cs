@@ -20,6 +20,7 @@ global using Admin.NET.Application.Service.EG_AGV_Task;
 global using Admin.NET.Application.Service.EGWareHouse.Dto;
 global using Admin.NET.Application.Service.EGInventory.Dto;
 global using Admin.NET.Application.Service.EGRelocation.Dto;
+global using Admin.NET.Application.Service.EG_WMS_BaseServer;
 global using Admin.NET.Application.Service.EG_WMS_TakeStock.Dto;
 global using Admin.NET.Application.Service.EG_WMS_BaseServer.Dto;
 global using Admin.NET.Application.Service.EG_WMS_InAndOutBound.Dto;
