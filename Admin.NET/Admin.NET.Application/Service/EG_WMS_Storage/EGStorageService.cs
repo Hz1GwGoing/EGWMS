@@ -1,6 +1,4 @@
-﻿using Admin.NET.Application.Service.EG_WMS_Storage.Dto;
-
-namespace Admin.NET.Application.Service.EG_WMS_Storage;
+﻿namespace Admin.NET.Application.Service.EG_WMS_Storage;
 
 /// <summary>
 /// 库位管理接口
@@ -97,6 +95,7 @@ public class EGStorageService : IDynamicApiController, ITransient
         return _rep.AsQueryable()
              .InnerJoin<Entity.EG_WMS_Region>((a, b) => a.RegionNum == b.RegionNum)
              .InnerJoin<EG_WMS_WareHouse>((a, b, c) => b.WHNum == c.WHNum)
+             .OrderBy(a => a.StorageNum, OrderByType.Asc)
              .Select((a, b, c) => new StorageRegionAndWhDto
              {
                  StorageNum = a.StorageNum,
@@ -104,6 +103,7 @@ public class EGStorageService : IDynamicApiController, ITransient
                  StorageStatus = (int)a.StorageStatus,
                  WHName = c.WHName,
                  RegionName = b.RegionName,
+                 StorageType = a.StorageType,
                  RoadwayNum = (int)a.RoadwayNum,
                  ShelfNum = (int)a.ShelfNum,
                  FloorNumber = (int)a.FloorNumber,
@@ -200,7 +200,6 @@ public class EGStorageService : IDynamicApiController, ITransient
     #endregion
 
     //-------------------------------------//-------------------------------------//
-
 
     #region 获取仓库名称
     /// <summary>

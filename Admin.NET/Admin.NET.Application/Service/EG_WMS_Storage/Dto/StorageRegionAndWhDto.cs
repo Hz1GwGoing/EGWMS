@@ -68,4 +68,9 @@ public class StorageRegionAndWhDto
     /// </summary>
     public DateTime CreateTime { get; set; }
 
+    /// <summary>
+    /// 库位类别
+    /// </summary>
+    public string StorageType { get; set; }
+
 }

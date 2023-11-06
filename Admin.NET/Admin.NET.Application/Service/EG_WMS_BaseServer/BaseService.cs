@@ -2,6 +2,7 @@
 
 /// <summary>
 /// 基础实用接口
+/// HGW 2023/11/6
 /// </summary>
 [ApiDescriptionSettings(ApplicationConst.GroupName, Order = 100)]
 public class BaseService : IDynamicApiController, ITransient
@@ -257,6 +258,8 @@ public class BaseService : IDynamicApiController, ITransient
 
     #endregion
 
+
+
     //-------------------------------------/策略/-------------------------------------//
 
     #region （策略）（密集库）AGV入库WMS自动推荐的库位
@@ -484,8 +487,14 @@ public class BaseService : IDynamicApiController, ITransient
 
     #endregion
 
-    #region （策略）AGV请求任务点
+    #region （策略）AGV请求任务点（开发中）
 
+    /// <summary>
+    /// 开发中
+    /// </summary>
+    /// <param name="orderId"></param>
+    /// <param name="modelProcessCode"></param>
+    /// <returns></returns>
     [UnifyProvider("easygreat")]
     public object a(string orderId, string modelProcessCode)
     {

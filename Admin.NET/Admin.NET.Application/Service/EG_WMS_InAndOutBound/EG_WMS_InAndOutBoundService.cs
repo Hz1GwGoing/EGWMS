@@ -384,6 +384,8 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
     /// <param name="input"></param>
     /// <returns></returns>
     /// <exception cref="Exception"></exception>
+    [HttpPost]
+    [ApiDescriptionSettings(Name = "AgvOutBoundTask")]
     public async Task AgvOutBoundTask(AgvBoundDto input)
     {
         // 生成当前时间时间戳

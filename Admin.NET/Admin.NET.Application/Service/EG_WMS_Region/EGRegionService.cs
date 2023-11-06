@@ -1,6 +1,4 @@
-﻿using Admin.NET.Application.Service.EG_WMS_Region.Dto;
-
-namespace Admin.NET.Application;
+﻿namespace Admin.NET.Application;
 
 
 /// <summary>

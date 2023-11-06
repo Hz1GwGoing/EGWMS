@@ -176,7 +176,7 @@ public class EGRelocationService : IDynamicApiController, ITransient
                          RelocatioNum = a.RelocatioNum,
                          RelocationCount = (int)a.RelocationCount,
                          WorkBinNum = a.WorkBinNum,
-                         CreateTime = (DateTime)a.CreateTime,
+                         RelocationTime = (DateTime)a.RelocationTime,
                          MaterielName = b.MaterielName,
                          MaterielSpecs = b.MaterielSpecs,
                          OldStorage = SqlFunc.Subqueryable<EG_WMS_Storage>().Where(s => s.StorageNum == a.OldStorageNum).Select(a => a.StorageName).ToString(),
@@ -185,8 +185,75 @@ public class EGRelocationService : IDynamicApiController, ITransient
                      .Skip((page - 1) * pageSize)
                      .Take(pageSize)
                      .ToList();
+
+    }
+
+    #endregion
+
+    #region 得到移库表关联库位关系（分页查询）（时间范围）
+    /// <summary>
+    /// 得到移库表关联库位关系（分页查询）（时间范围）
+    /// </summary>
+    /// <param name="input"></param>
+    /// <returns></returns>
+    [HttpPost]
+    [ApiDescriptionSettings(Name = "GetAllRelocationsAndStorageTime")]
+    public List<class1> GetAllRelocationsAndStorageTime([FromBody] PagingTimeFrameBO input)
+    {
+
+        return _Relocation.AsQueryable()
+                     .InnerJoin<EG_WMS_Materiel>((a, b) => a.MaterielNum == b.MaterielNum)
+                     .Select((a, b) => new class1
+                     {
+                         RelocatioNum = a.RelocatioNum,
+                         RelocationCount = (int)a.RelocationCount,
+                         WorkBinNum = a.WorkBinNum,
+                         RelocationTime = (DateTime)a.RelocationTime,
+                         MaterielName = b.MaterielName,
+                         MaterielSpecs = b.MaterielSpecs,
+                         OldStorage = SqlFunc.Subqueryable<EG_WMS_Storage>().Where(s => s.StorageNum == a.OldStorageNum).Select(a => a.StorageName).ToString(),
+                         NewStorage = SqlFunc.Subqueryable<EG_WMS_Storage>().Where(s => s.StorageNum == a.NewStorageNum).Select(a => a.StorageName).ToString()
+                     })
+                     .Where(a => a.RelocationTime > input.dateTimes[0] && a.RelocationTime < input.dateTimes[1])
+                     .Skip((input.page - 1) * input.pageSize)
+                     .Take(input.pageSize)
+                     .ToList();
+
     }
     #endregion
+
+    #region 分页查询移库信息
+    /// <summary>
+    /// 分页查询移库信息
+    /// </summary>
+    /// <param name="input"></param>
+    /// <returns></returns>
+    [HttpPost]
+    [ApiDescriptionSettings(Name = "Page")]
+    public async Task<SqlSugarPagedList<EGRelocationOutput>> Page(EGRelocationInput input)
+    {
+        var query = _Relocation.AsQueryable()
+                     .InnerJoin<EG_WMS_Materiel>((a, b) => a.MaterielNum == b.MaterielNum)
+                    // 获取创建日期
+                    .WhereIF(input.CreateTime > DateTime.MinValue, u => u.CreateTime >= input.CreateTime)
+                    .Select<EGRelocationOutput>();
+
+        if (input.RelocationTimeRange != null && input.RelocationTimeRange.Count > 0)
+        {
+            DateTime? start = input.RelocationTimeRange[0];
+            query = query.WhereIF(start.HasValue, u => u.RelocationTime > start);
+            if (input.RelocationTimeRange.Count > 1 && input.RelocationTimeRange[1].HasValue)
+            {
+                var end = input.RelocationTimeRange[1].Value.AddDays(1);
+                query = query.Where(u => u.RelocationTime < end);
+            }
+        }
+        query = query.OrderBuilder(input);
+        return await query.ToPagedListAsync(input.Page, input.PageSize);
+    }
+
+    #endregion
+
 
     #region 删除移库信息
     /// <summary>
@@ -285,11 +352,18 @@ public class EGRelocationService : IDynamicApiController, ITransient
         public string RelocatioNum { get; set; }
         public int RelocationCount { get; set; }
         public string WorkBinNum { get; set; }
-        public DateTime CreateTime { get; set; }
+        public DateTime RelocationTime { get; set; }
         public string MaterielName { get; set; }
         public string MaterielSpecs { get; set; }
         public string OldStorage { get; set; }
         public string NewStorage { get; set; }
+    }
+
+    public class PagingTimeFrameBO
+    {
+        public int page { get; set; }
+        public int pageSize { get; set; }
+        public DateTime[] dateTimes { get; set; }
     }
 
 
@@ -423,52 +497,6 @@ public class EGRelocationService : IDynamicApiController, ITransient
 //            #endregion
 //        }
 //    }
-#endregion
-
-#region 分页查询移库信息
-/// <summary>
-/// 分页查询移库信息
-/// </summary>
-/// <param name="input"></param>
-/// <returns></returns>
-//[HttpPost]
-//[ApiDescriptionSettings(Name = "Page")]
-//public async Task<SqlSugarPagedList<EGRelocationOutput>> Page(EGRelocationInput input)
-//{
-//    var query = _Relocation.AsQueryable()
-//                .WhereIF(!string.IsNullOrWhiteSpace(input.RelocatioNum), u => u.RelocatioNum.Contains(input.RelocatioNum.Trim()))
-//                .WhereIF(input.RelocationType > 0, u => u.RelocationType == input.RelocationType)
-//                .WhereIF(input.RelocationCount > 0, u => u.RelocationCount == input.RelocationCount)
-//                .WhereIF(!string.IsNullOrWhiteSpace(input.RelocationUser), u => u.RelocationUser.Contains(input.RelocationUser.Trim()))
-//                .WhereIF(!string.IsNullOrWhiteSpace(input.WHNum), u => u.WHNum.Contains(input.WHNum.Trim()))
-//                .WhereIF(!string.IsNullOrWhiteSpace(input.PalletNum), u => u.PalletNum.Contains(input.PalletNum.Trim()))
-//                .WhereIF(!string.IsNullOrWhiteSpace(input.WorkBinNum), u => u.WorkBinNum.Contains(input.WorkBinNum.Trim()))
-//                .WhereIF(!string.IsNullOrWhiteSpace(input.RelocationRemake), u => u.RelocationRemake.Contains(input.RelocationRemake.Trim()))
-//                .WhereIF(!string.IsNullOrWhiteSpace(input.MaterielNum), u => u.MaterielNum.Contains(input.MaterielNum.Trim()))
-//                // 旧库位
-//                .WhereIF(!string.IsNullOrWhiteSpace(input.OldStorage), u => u.OldStorageNum.Contains(input.OldStorage.Trim()))
-//                // 新库位
-//                .WhereIF(!string.IsNullOrWhiteSpace(input.NewStorage), u => u.NewStorageNum.Contains(input.NewStorage.Trim()))
-
-//                // 获取创建日期
-//                .WhereIF(input.CreateTime > DateTime.MinValue, u => u.CreateTime >= input.CreateTime)
-
-//                .Select<EGRelocationOutput>();
-
-//    if (input.RelocationTimeRange != null && input.RelocationTimeRange.Count > 0)
-//    {
-//        DateTime? start = input.RelocationTimeRange[0];
-//        query = query.WhereIF(start.HasValue, u => u.RelocationTime > start);
-//        if (input.RelocationTimeRange.Count > 1 && input.RelocationTimeRange[1].HasValue)
-//        {
-//            var end = input.RelocationTimeRange[1].Value.AddDays(1);
-//            query = query.Where(u => u.RelocationTime < end);
-//        }
-//    }
-//    query = query.OrderBuilder(input);
-//    return await query.ToPagedListAsync(input.Page, input.PageSize);
-//}
-
 #endregion
 
 #region agv移库
