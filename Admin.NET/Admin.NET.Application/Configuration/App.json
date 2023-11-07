@@ -9,6 +9,10 @@
   "AppSettings": {
     "InjectSpecificationDocument": true // 生产环境是否开启Swagger
   },
+  // 子列隐藏
+  "SpecificationDocumentSettings": {
+    "DocExpansionState": "None"
+  },
   "DynamicApiControllerSettings": {
     //"DefaultRoutePrefix": "api", // 默认路由前缀
     "CamelCaseSeparator": "", // 驼峰命名分隔符

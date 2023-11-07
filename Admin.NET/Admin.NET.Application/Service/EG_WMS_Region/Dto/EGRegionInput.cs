@@ -125,13 +125,28 @@ public class DeleteEGRegionInput : BaseIdInput
 /// <summary>
 /// EGRegion更新输入参数
 /// </summary>
-public class UpdateEGRegionInput : EGRegionBaseInput
+public class UpdateEGRegionInput
 {
     /// <summary>
     /// Id
     /// </summary>
     [Required(ErrorMessage = "Id不能为空")]
     public long Id { get; set; }
+
+    /// <summary>
+    /// 区域名称
+    /// </summary>
+    public string? RegionName { get; set; }
+
+    /// <summary>
+    /// 区域绑定物料编号
+    /// </summary>
+    public string? RegionMaterielNum { get; set; }
+
+    /// <summary>
+    /// 区域类型
+    /// </summary>
+    public string? RegionType { get; set; }
 
 }
 

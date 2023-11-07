@@ -4,6 +4,11 @@ public class StorageRegionAndWhDto
 {
 
     /// <summary>
+    ///  库位id
+    /// </summary>
+    public long ID { get; set; }
+
+    /// <summary>
     /// 库位编号
     /// </summary>
     public string StorageNum { get; set; }
@@ -72,5 +77,7 @@ public class StorageRegionAndWhDto
     /// 库位类别
     /// </summary>
     public string StorageType { get; set; }
+
+    public int TotalCount { get; set; }
 
 }

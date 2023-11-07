@@ -24,4 +24,11 @@ public class TemLogicEntity : EntityBase
     /// </summary>
     [SugarColumn(ColumnDescription = "任务点位数")]
     public int PointNum { get; set; }
+
+    /// <summary>
+    /// 是否需要去等待点（0 - 是，1 - 否）
+    /// </summary>
+    [SugarColumn(ColumnDescription = "是否需要去等待点（0 - 是，1 - 否）")]
+    public int HoldingPoint { get; set; }
+
 }

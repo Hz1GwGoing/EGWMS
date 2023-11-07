@@ -136,8 +136,16 @@ public class EGRegionService : IDynamicApiController, ITransient
     [ApiDescriptionSettings(Name = "Update")]
     public async Task Update(UpdateEGRegionInput input)
     {
-        var entity = input.Adapt<EG_WMS_Region>();
-        await _rep.AsUpdateable(entity).IgnoreColumns(ignoreAllNullColumns: true).ExecuteCommandAsync();
+        await _rep.AsUpdateable()
+                           .SetColumns(it => new EG_WMS_Region
+                           {
+                               RegionMaterielNum = input.RegionMaterielNum,
+                               RegionName = input.RegionName,
+                               RegionType = input.RegionType,
+                               UpdateTime = DateTime.Now,
+                           })
+                           .Where(it => it.Id == input.Id)
+                           .ExecuteCommandAsync();
     }
     #endregion
 

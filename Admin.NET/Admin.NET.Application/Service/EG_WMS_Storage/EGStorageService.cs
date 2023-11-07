@@ -7,10 +7,12 @@
 public class EGStorageService : IDynamicApiController, ITransient
 {
     private readonly SqlSugarRepository<Entity.EG_WMS_Storage> _rep;
+    private readonly SqlSugarRepository<Entity.EG_WMS_Region> _region;
 
-    public EGStorageService(SqlSugarRepository<Entity.EG_WMS_Storage> rep)
+    public EGStorageService(SqlSugarRepository<Entity.EG_WMS_Storage> rep, SqlSugarRepository<Entity.EG_WMS_Region> region)
     {
         _rep = rep;
+        _region = region;
     }
 
     #region 查询区域下库位总数
@@ -52,29 +54,29 @@ public class EGStorageService : IDynamicApiController, ITransient
     [ApiDescriptionSettings(Name = "SelectRegionStorageCount")]
     public List<SelectRegionStorageCountDto> SelectRegionStorageCount(int page, int pageSize)
     {
-        return _rep.AsQueryable()
-             .InnerJoin<Entity.EG_WMS_Region>((a, b) => a.RegionNum == b.RegionNum)
-             .InnerJoin<EG_WMS_WareHouse>((a, b, c) => b.WHNum == c.WHNum)
-             .GroupBy(a => a.RegionNum)
-             .Select((a, b, c) => new SelectRegionStorageCountDto
-             {
-                 RegionNum = a.RegionNum,
-                 RegionName = b.RegionName,
-                 WHNum = c.WHNum,
-                 WHName = c.WHName,
-                 TotalStorage = SqlFunc.AggregateCount(a.StorageNum),
-                 EnabledStorage = SqlFunc.AggregateCount(a.StorageStatus == 0),
-                 UsedStorage = SqlFunc.AggregateSum(SqlFunc.IIF(a.StorageOccupy == 1, 1, 0)),
-                 Remake = a.StorageRemake,
-                 CreateUserName = a.CreateUserName,
-                 UpdateUserName = a.UpdateUserName,
-                 // 区域绑定物料
-                 RegionMaterielNum = b.RegionMaterielNum,
 
-             })
-             .Skip((page - 1) * pageSize)
-             .Take(pageSize)
-             .ToList();
+        return _region.AsQueryable()
+                     .LeftJoin<Entity.EG_WMS_Storage>((a, b) => a.RegionNum == b.RegionNum)
+                     .InnerJoin<EG_WMS_WareHouse>((a, b, c) => a.WHNum == c.WHNum)
+                     .GroupBy(a => a.RegionNum)
+                     .Select((a, b, c) => new SelectRegionStorageCountDto
+                     {
+                         RegionNum = a.RegionNum,
+                         RegionName = a.RegionName,
+                         WHNum = c.WHNum,
+                         WHName = c.WHName,
+                         TotalStorage = SqlFunc.AggregateCount(b.StorageNum),
+                         EnabledStorage = SqlFunc.AggregateCount(b.StorageStatus == 0),
+                         UsedStorage = SqlFunc.AggregateSum(SqlFunc.IIF(b.StorageOccupy == 1, 1, 0)),
+                         Remake = b.StorageRemake,
+                         CreateUserName = a.CreateUserName,
+                         UpdateUserName = a.UpdateUserName,
+                         // 区域绑定物料
+                         RegionMaterielNum = a.RegionMaterielNum,
+                     })
+                     .Skip((page - 1) * pageSize)
+                     .Take(pageSize)
+                     .ToList();
     }
 
 
@@ -92,30 +94,34 @@ public class EGStorageService : IDynamicApiController, ITransient
     [ApiDescriptionSettings(Name = "GetStorageRegionAndWH")]
     public List<StorageRegionAndWhDto> GetStorageRegionAndWH(int page, int pageSize)
     {
-        return _rep.AsQueryable()
-             .InnerJoin<Entity.EG_WMS_Region>((a, b) => a.RegionNum == b.RegionNum)
-             .InnerJoin<EG_WMS_WareHouse>((a, b, c) => b.WHNum == c.WHNum)
-             .OrderBy(a => a.StorageNum, OrderByType.Asc)
-             .Select((a, b, c) => new StorageRegionAndWhDto
-             {
-                 StorageNum = a.StorageNum,
-                 StorageName = a.StorageName,
-                 StorageStatus = (int)a.StorageStatus,
-                 WHName = c.WHName,
-                 RegionName = b.RegionName,
-                 StorageType = a.StorageType,
-                 RoadwayNum = (int)a.RoadwayNum,
-                 ShelfNum = (int)a.ShelfNum,
-                 FloorNumber = (int)a.FloorNumber,
-                 StorageOccupy = (int)a.StorageOccupy,
-                 StorageRemake = a.StorageRemake,
-                 CreateUserName = a.CreateUserName,
-                 CreateTime = (DateTime)a.CreateTime,
-                 StorageGroup = a.StorageGroup,
-             })
-             .Skip((page - 1) * pageSize)
-             .Take(pageSize)
-             .ToList();
+        var query = _rep.AsQueryable()
+        .InnerJoin<Entity.EG_WMS_Region>((a, b) => a.RegionNum == b.RegionNum)
+        .InnerJoin<EG_WMS_WareHouse>((a, b, c) => b.WHNum == c.WHNum)
+        .OrderBy(a => a.StorageNum, OrderByType.Asc)
+        .Select((a, b, c) => new StorageRegionAndWhDto
+        {
+            // 库位id
+            ID = a.Id,
+            StorageNum = a.StorageNum,
+            StorageName = a.StorageName,
+            StorageStatus = (int)a.StorageStatus,
+            WHName = c.WHName,
+            RegionName = b.RegionName,
+            StorageType = a.StorageType,
+            RoadwayNum = (int)a.RoadwayNum,
+            ShelfNum = (int)a.ShelfNum,
+            FloorNumber = (int)a.FloorNumber,
+            StorageOccupy = (int)a.StorageOccupy,
+            StorageRemake = a.StorageRemake,
+            CreateUserName = a.CreateUserName,
+            CreateTime = (DateTime)a.CreateTime,
+            StorageGroup = a.StorageGroup,
+        });
+
+        int totalCount = query.Count();
+        List<StorageRegionAndWhDto> result = query.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+        result.Insert(0, new StorageRegionAndWhDto { TotalCount = totalCount });
+        return result;
     }
 
 
@@ -200,6 +206,33 @@ public class EGStorageService : IDynamicApiController, ITransient
     #endregion
 
     //-------------------------------------//-------------------------------------//
+
+    #region 归档
+    //return _rep.AsQueryable()
+    //     .InnerJoin<Entity.EG_WMS_Region>((a, b) => a.RegionNum == b.RegionNum)
+    //     .InnerJoin<EG_WMS_WareHouse>((a, b, c) => b.WHNum == c.WHNum)
+    //     .OrderBy(a => a.StorageNum, OrderByType.Asc)
+    //     .Select((a, b, c) => new StorageRegionAndWhDto
+    //     {
+    //         StorageNum = a.StorageNum,
+    //         StorageName = a.StorageName,
+    //         StorageStatus = (int)a.StorageStatus,
+    //         WHName = c.WHName,
+    //         RegionName = b.RegionName,
+    //         StorageType = a.StorageType,
+    //         RoadwayNum = (int)a.RoadwayNum,
+    //         ShelfNum = (int)a.ShelfNum,
+    //         FloorNumber = (int)a.FloorNumber,
+    //         StorageOccupy = (int)a.StorageOccupy,
+    //         StorageRemake = a.StorageRemake,
+    //         CreateUserName = a.CreateUserName,
+    //         CreateTime = (DateTime)a.CreateTime,
+    //         StorageGroup = a.StorageGroup,
+    //     })
+    //     .Skip((page - 1) * pageSize)
+    //     .Take(pageSize)
+    //     .ToList();
+    #endregion
 
     #region 获取仓库名称
     /// <summary>

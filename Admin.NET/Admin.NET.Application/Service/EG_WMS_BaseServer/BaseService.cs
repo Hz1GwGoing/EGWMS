@@ -2,11 +2,11 @@
 
 /// <summary>
 /// 基础实用接口
-/// HGW 2023/11/6
 /// </summary>
 [ApiDescriptionSettings(ApplicationConst.GroupName, Order = 100)]
 public class BaseService : IDynamicApiController, ITransient
 {
+
     #region 关系注入
 
     private readonly SqlSugarRepository<TaskEntity> _TaskEntity = App.GetService<SqlSugarRepository<TaskEntity>>();
@@ -259,7 +259,6 @@ public class BaseService : IDynamicApiController, ITransient
     #endregion
 
 
-
     //-------------------------------------/策略/-------------------------------------//
 
     #region （策略）（密集库）AGV入库WMS自动推荐的库位
@@ -502,16 +501,31 @@ public class BaseService : IDynamicApiController, ITransient
 
         // 找到这个任务编号相同的这条数据
         var taskData = _TaskEntity.GetFirst(x => x.TaskNo == orderId);
-
+        if (taskData == null)
+        {
+            throw Oops.Oh("没有找到相同的任务编号");
+        }
 
         // 根据这个任务编号得到入库编号
 
-        //var inand _InAndOutBoundDetail.GetFirst(x => x.InAndOutBoundNum == taskData.InAndOutBoundNum);
+        var inand = _InAndOutBoundDetail.GetFirst(x => x.InAndOutBoundNum == taskData.InAndOutBoundNum);
+
+        // 得到这次任务的物料编号
+
+        if (inand == null)
+        {
+            throw Oops.Oh("没有找到这个任务执行时的出入库编号");
+        }
+
+        string malnum = StrategyReturnRecommEndStorage(inand.MaterielNum);
+
 
         return new
         {
             PointName = orderId,
         };
+
+
 
 
     }

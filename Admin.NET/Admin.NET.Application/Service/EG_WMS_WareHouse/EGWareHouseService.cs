@@ -48,6 +48,18 @@ public class EGWareHouseService : IDynamicApiController, ITransient
 
     #endregion
 
+    #region MyRegion
+    public async Task a()
+    {
+
+
+
+    }
+
+
+    #endregion
+
+
     #region 增加仓库
     /// <summary>
     /// 增加仓库

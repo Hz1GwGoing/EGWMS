@@ -21,6 +21,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
     private readonly SqlSugarRepository<EG_WMS_Tem_Inventory> _InventoryTem = App.GetService<SqlSugarRepository<EG_WMS_Tem_Inventory>>();
     private readonly SqlSugarRepository<EG_WMS_Tem_InventoryDetail> _InventoryDetailTem = App.GetService<SqlSugarRepository<EG_WMS_Tem_InventoryDetail>>();
     private readonly SqlSugarRepository<TaskEntity> _TaskEntity = App.GetService<SqlSugarRepository<TaskEntity>>();
+    private readonly SqlSugarRepository<TemLogicEntity> _TemLogicEntity = App.GetService<SqlSugarRepository<TemLogicEntity>>();
 
 
     #endregion
@@ -89,7 +90,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
     /// <param name="input"></param>
     /// <returns></returns>
     [HttpPost]
-    [ApiDescriptionSettings(Name = "AgvJoinBoundTask")]
+    [ApiDescriptionSettings(Name = "AgvJoinBoundTask", Order = 50)]
     public async Task AgvJoinBoundTask(AgvJoinDto input)
     {
         // 生成当前时间时间戳
@@ -108,6 +109,15 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
             // 目标点
             if (input.EndPoint == null || input.EndPoint == "")
             {
+                // 根据模板编号去查询是否需要前往等待点
+                var temLogicModel = await _TemLogicEntity.GetFirstAsync(x => x.TemLogicNo == input.ModelNo);
+                if (temLogicModel != null && temLogicModel.HoldingPoint == 0)
+                {
+
+
+
+                }
+
                 // 根据策略推荐
                 input.EndPoint = BaseService.StrategyReturnRecommEndStorage(input.materielWorkBins[0].MaterielNum);
 
@@ -385,7 +395,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
     /// <returns></returns>
     /// <exception cref="Exception"></exception>
     [HttpPost]
-    [ApiDescriptionSettings(Name = "AgvOutBoundTask")]
+    [ApiDescriptionSettings(Name = "AgvOutBoundTask", Order = 45)]
     public async Task AgvOutBoundTask(AgvBoundDto input)
     {
         // 生成当前时间时间戳
@@ -587,7 +597,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
     /// <returns></returns>
 
     [HttpPost]
-    [ApiDescriptionSettings(Name = "ArtificialJoinBoundAdd")]
+    [ApiDescriptionSettings(Name = "ArtificialJoinBoundAdd", Order = 40)]
     public async Task ArtificialJoinBoundAdd(EGInBoundDto input)
     {
         // 生成当前时间时间戳
@@ -823,7 +833,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
     /// <exception cref="Exception"></exception>
 
     [HttpPost]
-    [ApiDescriptionSettings(Name = "ArtificialOutBoundAdd")]
+    [ApiDescriptionSettings(Name = "ArtificialOutBoundAdd", Order = 35)]
     public async Task ArtificialOutBoundAdd(EGOutBoundDto input)
     {
 
@@ -1008,7 +1018,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
     /// <param name="input"></param>
     /// <returns></returns>
     [HttpPost]
-    [ApiDescriptionSettings(Name = "Page")]
+    [ApiDescriptionSettings(Name = "Page", Order = 30)]
     public async Task<SqlSugarPagedList<EG_WMS_InAndOutBoundOutput>> Page(EG_WMS_InAndOutBoundInput input)
     {
         var query = _rep.AsQueryable()
@@ -1046,7 +1056,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
     /// <param name="input"></param>
     /// <returns></returns>
     [HttpPost]
-    [ApiDescriptionSettings(Name = "Delete")]
+    [ApiDescriptionSettings(Name = "Delete", Order = 25)]
     public async Task Delete(DeleteEG_WMS_InAndOutBoundInput input)
     {
         var entity = await _rep.GetFirstAsync(u => u.Id == input.Id) ?? throw Oops.Oh(ErrorCodeEnum.D1002);
@@ -1062,7 +1072,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
     /// <param name="input"></param>
     /// <returns></returns>
     [HttpGet]
-    [ApiDescriptionSettings(Name = "Detail")]
+    [ApiDescriptionSettings(Name = "Detail", Order = 20)]
     public async Task<EG_WMS_InAndOutBound> Get([FromQuery] QueryByIdEG_WMS_InAndOutBoundInput input)
     {
         return await _rep.GetFirstAsync(u => u.Id == input.Id);
@@ -1076,7 +1086,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
     /// <param name="input"></param>
     /// <returns></returns>
     [HttpGet]
-    [ApiDescriptionSettings(Name = "List")]
+    [ApiDescriptionSettings(Name = "List", Order = 15)]
     public async Task<List<EG_WMS_InAndOutBoundOutput>> List([FromQuery] EG_WMS_InAndOutBoundInput input)
     {
         return await _rep.AsQueryable().Select<EG_WMS_InAndOutBoundOutput>().ToListAsync();

@@ -60,7 +60,7 @@ public class EGTakeStockService : IDynamicApiController, ITransient
     /// <param name="input"></param>
     /// <returns></returns>
     [HttpPost]
-    [ApiDescriptionSettings(Name = "Page")]
+    [ApiDescriptionSettings(Name = "Page", Order = 150)]
     public async Task<SqlSugarPagedList<EGTakeStockOutput>> Page(EGTakeStockInput input)
     {
         var query = _rep.AsQueryable()
@@ -99,7 +99,7 @@ public class EGTakeStockService : IDynamicApiController, ITransient
     /// <param name="input"></param>
     /// <returns></returns>
     [HttpGet]
-    [ApiDescriptionSettings(Name = "Detail")]
+    [ApiDescriptionSettings(Name = "Detail", Order = 140)]
     public async Task<EG_WMS_TakeStock> Get([FromQuery] QueryByIdEGTakeStockInput input)
     {
         //return await _rep.GetFirstAsync(u => u.Id == input.Id);
@@ -118,7 +118,7 @@ public class EGTakeStockService : IDynamicApiController, ITransient
     /// <param name="input"></param>
     /// <returns></returns>
     [HttpGet]
-    [ApiDescriptionSettings(Name = "List")]
+    [ApiDescriptionSettings(Name = "List", Order = 120)]
     public async Task<List<EGTakeStockOutput>> List([FromQuery] EGTakeStockInput input)
     {
         return await _rep.AsQueryable().Select<EGTakeStockOutput>().ToListAsync();
@@ -137,7 +137,7 @@ public class EGTakeStockService : IDynamicApiController, ITransient
     /// <param name="input"></param>
     /// <returns></returns>
     [HttpPost]
-    [ApiDescriptionSettings(Name = "GetMaerielWorkBinAddData")]
+    [ApiDescriptionSettings(Name = "GetMaerielWorkBinAddData", Order = 100)]
     public async Task GetMaerielWorkBinAddData(GetMaterielWorkBinData input)
     {
         try
@@ -236,7 +236,7 @@ public class EGTakeStockService : IDynamicApiController, ITransient
     /// <param name="takestocknum">盘点编号</param>
     /// <returns></returns>
     [HttpPost]
-    [ApiDescriptionSettings(Name = "GetTakeStockData")]
+    [ApiDescriptionSettings(Name = "GetTakeStockData", Order = 99)]
     public List<EG_WMS_TakeStockData> GetTakeStockData(string takestocknum)
     {
 
@@ -266,7 +266,7 @@ public class EGTakeStockService : IDynamicApiController, ITransient
     /// <param name="takestockstoragenum">盘点库位编号</param>
     /// <returns></returns>
     [HttpPost]
-    [ApiDescriptionSettings(Name = "GetInventoryStorageIdentical")]
+    [ApiDescriptionSettings(Name = "GetInventoryStorageIdentical", Order = 98)]
     public List<ViewTaskStock> GetInventoryStorageIdentical(string takestockstoragenum)
     {
         // 根据这条数据查询库存中库位相同的数据
@@ -304,7 +304,7 @@ public class EGTakeStockService : IDynamicApiController, ITransient
     /// <returns></returns>
     /// <exception cref="Exception"></exception>
     [HttpPost]
-    [ApiDescriptionSettings(Name = "ReplaceaInventoryData")]
+    [ApiDescriptionSettings(Name = "ReplaceaInventoryData", Order = 97)]
     public async Task ReplaceaInventoryData(string workbinnum, string materielnum)
     {
         try
