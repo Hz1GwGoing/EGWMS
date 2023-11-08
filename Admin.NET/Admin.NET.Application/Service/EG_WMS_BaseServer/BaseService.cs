@@ -1,4 +1,6 @@
-﻿namespace Admin.NET.Application.Service.EG_WMS_BaseServer;
+﻿using Admin.NET.Application.Entity;
+
+namespace Admin.NET.Application.Service.EG_WMS_BaseServer;
 
 /// <summary>
 /// 基础实用接口
@@ -224,7 +226,7 @@ public class BaseService : IDynamicApiController, ITransient
     }
 
 
-    #endregion
+    #endregion 
 
     #region 根据物料编号得到这条物料编号所有的库存记录
 
@@ -261,7 +263,7 @@ public class BaseService : IDynamicApiController, ITransient
 
     //-------------------------------------/策略/-------------------------------------//
 
-    #region （策略）（密集库）AGV入库WMS自动推荐的库位
+    #region （策略）（密集库）AGV入库WMS自动推荐的库位（优先最靠里的库位）
 
     /// <summary>
     /// （策略）（密集库）AGV入库WMS自动推荐的库位
@@ -426,16 +428,17 @@ public class BaseService : IDynamicApiController, ITransient
 
     #endregion
 
-    #region （策略）（密集库）AGV出库WMS自动推荐的库位
+    #region （策略）（密集库）AGV出库WMS自动推荐的库位（判断生产日期）
 
     /// <summary>
-    /// （策略）（密集库）AGV出库WMS自动推荐的库位
+    /// （策略）（密集库）AGV出库WMS自动推荐的库位（判断生产日期）
     /// </summary>
     /// <returns></returns>
     [HttpPost]
     [ApiDescriptionSettings(Name = "StrategyReturnRecommendStorageOutBound")]
     public string StrategyReturnRecommendStorageOutBound(string materielNum)
     {
+
         // 根据物料编号，得到这个物料属于那个区域
         var dataRegion = _Region.AsQueryable().Where(x => x.RegionMaterielNum == materielNum).ToList();
         if (dataRegion == null || dataRegion.Count == 0)
@@ -461,11 +464,41 @@ public class BaseService : IDynamicApiController, ITransient
             strings[i] = dataStorageGroup[i].StorageGroup;
         }
 
+        // 查询所有的组别（排除不符合条件的组别）
+        var getGroup = _Storage.AsQueryable()
+                        .Where(x => !strings.Contains(x.StorageGroup))
+                        .Distinct()
+                        .Select(x => new
+                        {
+                            x.StorageGroup
+                        })
+                        .ToList();
+
+        // 如果这一组的最后一个的时间还没有达到，则这一组都用不了
+        string[] stringss = new string[getGroup.Count];
+        for (int i = 0; i < getGroup.Count; i++)
+        {
+            var notStorageGroup = _Storage.AsQueryable()
+                                 .Where(x => x.StorageGroup == getGroup[i].StorageGroup)
+                                 .OrderBy(x => x.StorageGroup, OrderByType.Asc)
+                                 .ToList()
+                                 .Last();
+
+            // 这个组的最后一条数据不符合条件，把这个组别保存下来
+            if (notStorageGroup.StorageProductionDate.ToDateTime().AddHours(48) > DateTime.Now)
+            {
+                stringss[i] = notStorageGroup.StorageGroup.ToString();
+            }
+
+        }
+
         // 查询库位并且排除不符合条件的组别和库位
 
         var getStorage = _Storage.AsQueryable()
                  .Where(a => a.StorageStatus == 0 && a.StorageGroup != null
-                 && a.StorageOccupy == 1 && a.RegionNum == dataRegion[0].RegionNum && !strings.Contains(a.StorageGroup))
+                 && a.StorageOccupy == 1 && a.RegionNum == dataRegion[0].RegionNum &&
+                 !strings.Contains(a.StorageGroup) && !stringss.Contains(a.StorageGroup) &&
+                 a.StorageProductionDate.ToDateTime().AddHours(48) < DateTime.Now)
                  .OrderBy(a => a.StorageNum, OrderByType.Asc)
                  .Select(a => new
                  {
@@ -473,6 +506,9 @@ public class BaseService : IDynamicApiController, ITransient
                      a.StorageGroup,
                  })
                  .ToList();
+
+        // 得到符合条件的组别
+
 
         if (getStorage == null || getStorage.Count == 0)
         {
@@ -482,6 +518,66 @@ public class BaseService : IDynamicApiController, ITransient
         return getStorage[0].StorageNum;
 
     }
+
+
+    #endregion
+
+    #region （策略）（密集库）AGV出库WMS自动推荐的库位（不判断生产日期）
+
+    /// <summary>
+    /// （策略）（密集库）AGV出库WMS自动推荐的库位（不判断生产日期）
+    /// </summary>
+    /// <returns></returns>
+    //[HttpPost]
+    //[ApiDescriptionSettings(Name = "StrategyReturnRecommendStorageOutBound")]
+    //public string StrategyReturnRecommendStorageOutBound(string materielNum)
+    //{
+    //    // 根据物料编号，得到这个物料属于那个区域
+    //    var dataRegion = _Region.AsQueryable().Where(x => x.RegionMaterielNum == materielNum).ToList();
+    //    if (dataRegion == null || dataRegion.Count == 0)
+    //    {
+    //        throw Oops.Oh("区域未绑定物料");
+    //    }
+
+    //    // 查询是否有正在进行中的任务库位的组别
+
+    //    var dataStorageGroup = _Storage.AsQueryable()
+    //               .Where(a => a.TaskNo != null && a.RegionNum == dataRegion[0].RegionNum)
+    //               .Distinct()
+    //               .Select(a => new
+    //               {
+    //                   a.StorageGroup,
+    //               })
+    //               .ToList();
+
+    //    // 将有任务的组别保存
+    //    string[] strings = new string[dataStorageGroup.Count];
+    //    for (int i = 0; i < dataStorageGroup.Count; i++)
+    //    {
+    //        strings[i] = dataStorageGroup[i].StorageGroup;
+    //    }
+
+    //    // 查询库位并且排除不符合条件的组别和库位
+
+    //    var getStorage = _Storage.AsQueryable()
+    //             .Where(a => a.StorageStatus == 0 && a.StorageGroup != null
+    //             && a.StorageOccupy == 1 && a.RegionNum == dataRegion[0].RegionNum && !strings.Contains(a.StorageGroup))
+    //             .OrderBy(a => a.StorageNum, OrderByType.Asc)
+    //             .Select(a => new
+    //             {
+    //                 a.StorageNum,
+    //                 a.StorageGroup,
+    //             })
+    //             .ToList();
+
+    //    if (getStorage == null || getStorage.Count == 0)
+    //    {
+    //        throw Oops.Oh("没有合适的库位");
+    //    }
+
+    //    return getStorage[0].StorageNum;
+
+    //}
 
 
     #endregion

@@ -97,14 +97,6 @@ public class EG_WMS_Storage : EntityBase
     public int? FloorNumber { get; set; }
 
     /// <summary>
-    /// 仓库编号
-    /// </summary>
-    /// ！
-
-    [SugarColumn(ColumnDescription = "仓库编号", Length = 50)]
-    public string? WHNum { get; set; }
-
-    /// <summary>
     /// 区域编号
     /// </summary>
     [SugarColumn(ColumnDescription = "区域编号", Length = 20)]
@@ -121,6 +113,12 @@ public class EG_WMS_Storage : EntityBase
     /// </summary>
     [SugarColumn(ColumnDescription = "AGV任务编号", Length = 20)]
     public string? TaskNo { get; set; }
+
+    /// <summary>
+    /// 此库位料箱生产日期
+    /// </summary>
+    [SugarColumn(ColumnDescription = "此库位料箱生产日期")]
+    public DateTime? StorageProductionDate { get; set; }
 
 
 }

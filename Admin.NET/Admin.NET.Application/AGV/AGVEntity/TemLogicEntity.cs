@@ -29,6 +29,6 @@ public class TemLogicEntity : EntityBase
     /// 是否需要去等待点（0 - 是，1 - 否）
     /// </summary>
     [SugarColumn(ColumnDescription = "是否需要去等待点（0 - 是，1 - 否）")]
-    public int HoldingPoint { get; set; }
+    public string HoldingPoint { get; set; }
 
 }

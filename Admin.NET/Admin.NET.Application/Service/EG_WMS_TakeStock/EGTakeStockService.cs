@@ -397,23 +397,23 @@ public class EGTakeStockService : IDynamicApiController, ITransient
     #endregion
 
     // 根据物料盘点
+
     #region （根据物料盘点）生成盘点任务
     /// <summary>
     /// （根据物料盘点）生成盘点任务
     /// </summary>
-    /// <param name="MaterielNum">物料编号</param>
-    /// <param name="TakeStockRemake">盘点备注</param>
     /// <returns></returns>
+
     [HttpPost]
-    [ApiDescriptionSettings(Name = "GenerateInventoryTask")]
-    public async Task GenerateInventoryTask(string MaterielNum, string? TakeStockRemake)
+    [ApiDescriptionSettings(Name = "GenerateInventoryTask", Order = 90)]
+    public async Task GenerateInventoryTask(GenerateInventoryBO input)
     {
         // 人工输入需要盘点的物料编号
         // 得到所有这个物料的数据
 
         var data = _model.AsQueryable()
                .InnerJoin<EG_WMS_InventoryDetail>((a, b) => a.InventoryNum == b.InventoryNum)
-               .Where((a, b) => a.MaterielNum == MaterielNum)
+               .Where((a, b) => a.MaterielNum == input.MaterielNum)
                .Select((a, b) => new
                {
                    a,
@@ -445,7 +445,7 @@ public class EGTakeStockService : IDynamicApiController, ITransient
                 TakeStockStorageNum = data[i].StorageNum,
                 CreateTime = DateTime.Now,
                 TakeStockStatus = 0,
-                TakeStockRemake = TakeStockRemake,
+                TakeStockRemake = input.TakeStockRemake,
             };
 
             await _rep.InsertAsync(takedata);
@@ -461,18 +461,17 @@ public class EGTakeStockService : IDynamicApiController, ITransient
     /// <summary>
     /// （根据物料盘点）将该库位上需要盘点的料箱保存到盘点数据表中
     /// </summary>
-    /// <param name="input">料箱</param>
-    /// <param name="takestocknum">盘点编号</param>
+    /// <param name="input">盘点数据</param>
     /// <returns></returns>
     [HttpPost]
-    [ApiDescriptionSettings(Name = "InsertWorkBinSaveTakeStockData")]
-    public async Task InsertWorkBinSaveTakeStockData(List<MaterielWorkBin> input, string takestocknum)
+    [ApiDescriptionSettings(Name = "InsertWorkBinSaveTakeStockData", Order = 89)]
+    public async Task InsertWorkBinSaveTakeStockData(InsertWorkBinSaveBO input)
     {
         // 得到料箱
-        List<MaterielWorkBin> countData = input;
+        List<MaterielWorkBin> countData = input.MaterielWorkBins;
 
         // 得到需要盘点的盘点编号
-        var _takeListData = await _rep.GetFirstAsync(x => x.TakeStockNum == takestocknum);
+        var _takeListData = await _rep.GetFirstAsync(x => x.TakeStockNum == input.takestocknum);
         // 根据库位编号绑定区域
         var _storageListData = await _Storage.GetFirstAsync(x => x.StorageNum == _takeListData.TakeStockStorageNum);
         var _regionListData = await _Region.GetFirstAsync(x => x.RegionNum == _storageListData.RegionNum);
@@ -495,7 +494,7 @@ public class EGTakeStockService : IDynamicApiController, ITransient
             // 生成盘点数据
             EG_WMS_TakeStockData data = new EG_WMS_TakeStockData()
             {
-                TakeStockNum = takestocknum,
+                TakeStockNum = input.takestocknum,
                 WorkBinNum = workbinnum,
                 MaterielNum = materienum,
                 ProductionLot = productionlot,
@@ -529,7 +528,7 @@ public class EGTakeStockService : IDynamicApiController, ITransient
     /// <exception cref="Exception"></exception>
 
     [HttpPost]
-    [ApiDescriptionSettings(Name = "UpdateDataSaveInventory")]
+    [ApiDescriptionSettings(Name = "UpdateDataSaveInventory", Order = 88)]
     public async Task UpdateDataSaveInventory(TakeStockModel input)
     {
         try
@@ -664,6 +663,12 @@ public class EGTakeStockService : IDynamicApiController, ITransient
         /// 修改时间
         /// </summary>
         public DateTime UpdateTime { get; set; }
+    }
+
+    public class GenerateInventoryBO
+    {
+        public string MaterielNum { get; set; }
+        public string? TakeStockRemake { get; set; }
     }
     #endregion
 

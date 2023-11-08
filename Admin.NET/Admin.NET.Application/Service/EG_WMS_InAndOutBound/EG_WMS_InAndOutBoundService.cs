@@ -111,7 +111,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
             {
                 // 根据模板编号去查询是否需要前往等待点
                 var temLogicModel = await _TemLogicEntity.GetFirstAsync(x => x.TemLogicNo == input.ModelNo);
-                if (temLogicModel != null && temLogicModel.HoldingPoint == 0)
+                if (temLogicModel != null && temLogicModel.HoldingPoint == "")
                 {
 
 
@@ -146,9 +146,17 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
 
                     try
                     {
+                        // 得到入库的数据
+                        List<MaterielWorkBin> list = input.materielWorkBins;
                         // 根据入库编号查询任务编号
                         var datatask = await _TaskEntity.GetFirstAsync(x => x.InAndOutBoundNum == joinboundnum);
 
+                        List<DateTime> datetime = new List<DateTime>();
+                        // 将料箱的生产日期保存
+                        for (int i = 0; i < list.Count; i++)
+                        {
+                            datetime.Add(list[i].ProductionDate);
+                        }
 
                         // 修改库位表中的状态为占用
                         await _Storage.AsUpdateable()
@@ -158,6 +166,8 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                                       // 预占用
                                       StorageOccupy = 2,
                                       TaskNo = datatask.TaskNo,
+                                      // 得到日期最大的生产日期
+                                      StorageProductionDate = datetime.Max(),
                                   })
                                   .Where(x => x.StorageNum == input.EndPoint)
                                   .ExecuteCommandAsync();
@@ -224,16 +234,12 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                         await _rep.InsertAsync(joinbound);
                         await _InAndOutBoundDetail.InsertAsync(joinbounddetail);
 
-                        // 得到入库的数据
-                        List<MaterielWorkBin> list = input.materielWorkBins;
+
                         string wbnum = "";
                         string wlnum = "";
                         int sumcount = 0;
                         for (int i = 0; i < list.Count; i++)
                         {
-                            // 雪花ID
-                            //var idone = SnowFlakeSingle.instance.NextId();
-                            //var idtwo = SnowFlakeSingle.instance.NextId();
                             // 库存编号（主表和详细表）
                             string inventorynum = $"{i}EGKC" + timesstamp;
                             // 料箱编号（详细表、料箱表）

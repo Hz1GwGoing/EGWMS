@@ -926,6 +926,7 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
                                      // 未占用
                                      StorageOccupy = 0,
                                      TaskNo = null,
+                                     StorageProductionDate = null,
                                  })
                                  .Where(x => x.TaskNo == acceptDTO.orderId)
                                  .ExecuteCommandAsync();
