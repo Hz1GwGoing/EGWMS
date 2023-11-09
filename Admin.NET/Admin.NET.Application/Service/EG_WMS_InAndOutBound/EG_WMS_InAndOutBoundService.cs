@@ -1,4 +1,8 @@
-﻿namespace Admin.NET.Application;
+﻿using Admin.NET.Application.Service.AGV.V2.Task.DTO;
+using System.Collections.Generic;
+using static SKIT.FlurlHttpClient.Wechat.Api.Models.ComponentTCBDescribeCloudBaseRunEnvironmentsResponse.Types.Environment.Types;
+
+namespace Admin.NET.Application;
 
 /// <summary>
 /// 出入库接口服务（agv、人工）
@@ -236,7 +240,6 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
 
 
                         string wbnum = "";
-                        string wlnum = "";
                         int sumcount = 0;
                         for (int i = 0; i < list.Count; i++)
                         {
@@ -331,12 +334,10 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                             if (list.Count > 1)
                             {
                                 wbnum = workbinnum + "," + wbnum;
-                                wlnum = materienum + "," + wlnum;
                             }
                             else
                             {
                                 wbnum = workbinnum;
-                                wlnum = materienum;
                             }
                         }
                         // 修改入库详情表里面的料箱编号和物料编号
@@ -347,7 +348,8 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                                              {
                                                  WHNum = _regionlistdata.WHNum,
                                                  WorkBinNum = wbnum,
-                                                 MaterielNum = wlnum,
+                                                 // 只会有一种物料
+                                                 MaterielNum = list[0].MaterielNum,
                                              })
                                              .Where(u => u.InAndOutBoundNum == joinboundnum)
                                              .ExecuteCommandAsync();
@@ -688,9 +690,15 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
             // 得到入库的数据
             List<MaterielWorkBin> item = input.materielWorkBins;
 
+            List<DateTime> datetime = new List<DateTime>();
+            // 将料箱的生产日期保存
+            for (int i = 0; i < item.Count; i++)
+            {
+                datetime.Add(item[i].ProductionDate);
+            }
+
             // 循环遍历，一共有多少个需要入库的料箱
             string wbnum = "";
-            string wlnum = "";
             int sumcount = 0;
             for (int i = 0; i < item.Count; i++)
             {
@@ -784,12 +792,10 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                 if (item.Count > 1)
                 {
                     wbnum = workbinnum + "," + wbnum;
-                    wlnum = materienum + "," + wlnum;
                 }
                 else
                 {
                     wbnum = workbinnum;
-                    wlnum = materienum;
                 }
             }
 
@@ -799,7 +805,8 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                                 .AS("EG_WMS_InAndOutBoundDetail")
                                 .SetColumns(it => new EG_WMS_InAndOutBoundDetail
                                 {
-                                    MaterielNum = wlnum,
+                                    // 只会有一种物料
+                                    MaterielNum = item[0].MaterielNum,
                                     WorkBinNum = wbnum,
                                 })
                                 .Where(u => u.InAndOutBoundNum == joinboundnum)
@@ -817,6 +824,23 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                   })
                   .Where(u => u.InAndOutBoundNum == joinboundnum)
                   .ExecuteCommandAsync();
+
+
+            // 修改库位表中的状态为占用
+            await _Storage.AsUpdateable()
+                      .AS("EG_WMS_Storage")
+                      .SetColumns(it => new EG_WMS_Storage
+                      {
+                          // 占用
+                          StorageOccupy = 1,
+                          // 得到日期最大的生产日期
+                          StorageProductionDate = datetime.Max(),
+                      })
+                      .Where(x => x.StorageNum == input.EndPoint)
+                      .ExecuteCommandAsync();
+
+
+
         }
         catch (Exception ex)
         {
@@ -891,10 +915,10 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
             // 1.得到这个库位上所有的数据
 
             List<EG_WMS_InventoryDetail> dataList =
-            _InventoryDetail.AsQueryable()
-            .InnerJoin<EG_WMS_Inventory>((a, b) => a.InventoryNum == b.InventoryNum)
-            .Where((a, b) => a.StorageNum == input.StorageNum && b.OutboundStatus == 0)
-            .ToList();
+                                        _InventoryDetail.AsQueryable()
+                                        .InnerJoin<EG_WMS_Inventory>((a, b) => a.InventoryNum == b.InventoryNum)
+                                        .Where((a, b) => a.StorageNum == input.StorageNum && b.OutboundStatus == 0)
+                                        .ToList();
 
             if (dataList.Count == 0)
             {
@@ -940,7 +964,6 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
             await _InAndOutBoundDetail.InsertAsync(inandoutbounddetail);
 
             string wbnum = "";
-            string wlnum = "";
             for (int i = 0; i < dataList.Count; i++)
             {
                 // 得到库存表中的每个物料和料箱编号
@@ -949,12 +972,10 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                 if (dataList.Count > 1)
                 {
                     wbnum += workbinnum + ",";
-                    wlnum += materienum + ",";
                 }
                 else
                 {
                     wbnum = workbinnum;
-                    wlnum = materienum;
                 }
                 // 得到每一个料箱里面的数量
                 var _incountall = _Inventory.AsQueryable()
@@ -999,12 +1020,24 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                                       .AS("EG_WMS_InAndOutBoundDetail")
                                       .SetColumns(u => new EG_WMS_InAndOutBoundDetail
                                       {
-                                          MaterielNum = wlnum,
+                                          MaterielNum = dataList[0].MaterielNum,
                                           WorkBinNum = wbnum,
 
                                       })
                                       .ExecuteCommandAsync();
+            // 修改库位表中的信息
 
+            await _Storage.AsUpdateable()
+                     .AS("EG_WMS_Storage")
+                     .SetColumns(it => new Entity.EG_WMS_Storage
+                     {
+                         // 未占用
+                         StorageOccupy = 0,
+                         TaskNo = null,
+                         StorageProductionDate = null,
+                     })
+                     .Where(x => x.StorageNum == input.StorageNum)
+                     .ExecuteCommandAsync();
 
         }
         catch (Exception ex)
