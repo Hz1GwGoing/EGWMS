@@ -1,8 +1,4 @@
-﻿using Admin.NET.Application.Service.AGV.V2.Task.DTO;
-using System.Collections.Generic;
-using static SKIT.FlurlHttpClient.Wechat.Api.Models.ComponentTCBDescribeCloudBaseRunEnvironmentsResponse.Types.Environment.Types;
-
-namespace Admin.NET.Application;
+﻿namespace Admin.NET.Application;
 
 /// <summary>
 /// 出入库接口服务（agv、人工）

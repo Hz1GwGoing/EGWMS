@@ -115,13 +115,13 @@ public class EGRegionService : IDynamicApiController, ITransient
     /// <summary>
     /// 删除区域
     /// </summary>
-    /// <param name="input"></param>
+    /// <param name="id">区域id</param>
     /// <returns></returns>
     [HttpPost]
     [ApiDescriptionSettings(Name = "Delete")]
-    public async Task Delete(DeleteEGRegionInput input)
+    public async Task Delete(long id)
     {
-        var entity = await _rep.GetFirstAsync(u => u.Id == input.Id) ?? throw Oops.Oh(ErrorCodeEnum.D1002);
+        var entity = await _rep.GetFirstAsync(u => u.Id == id) ?? throw Oops.Oh(ErrorCodeEnum.D1002);
         await _rep.FakeDeleteAsync(entity);   //假删除
     }
     #endregion
