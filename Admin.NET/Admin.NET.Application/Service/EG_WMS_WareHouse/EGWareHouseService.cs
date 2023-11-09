@@ -1,4 +1,5 @@
-﻿namespace Admin.NET.Application;
+﻿
+namespace Admin.NET.Application.Service.EG_WMS_WareHouse;
 
 
 /// <summary>
@@ -7,10 +8,12 @@
 [ApiDescriptionSettings(ApplicationConst.GroupName, Order = 100)]
 public class EGWareHouseService : IDynamicApiController, ITransient
 {
-    private readonly SqlSugarRepository<EG_WMS_WareHouse> _rep;
-    public EGWareHouseService(SqlSugarRepository<EG_WMS_WareHouse> rep)
+    private readonly SqlSugarRepository<Entity.EG_WMS_WareHouse> _rep;
+    private readonly SqlSugarRepository<Entity.EG_WMS_Region> _region;
+    public EGWareHouseService(SqlSugarRepository<Entity.EG_WMS_WareHouse> rep, SqlSugarRepository<Entity.EG_WMS_Region> region)
     {
         _rep = rep;
+        _region = region;
     }
 
     #region 分页查询仓库
@@ -31,12 +34,6 @@ public class EGWareHouseService : IDynamicApiController, ITransient
                     .WhereIF(input.WHType > 0, u => u.WHType == input.WHType)
                     .WhereIF(!string.IsNullOrWhiteSpace(input.WHAddress), u => u.WHAddress.Contains(input.WHAddress.Trim()))
                     .WhereIF(input.WHStatus > 0, u => u.WHStatus == input.WHStatus)
-                    .WhereIF(input.RegionCount > 0, u => u.RegionCount == input.RegionCount)
-                    .WhereIF(input.StoreroomCount > 0, u => u.StoreroomCount == input.StoreroomCount)
-                    .WhereIF(input.StoreroomUsable > 0, u => u.StoreroomUsable == input.StoreroomUsable)
-                    .WhereIF(!string.IsNullOrWhiteSpace(input.CreateUserName), u => u.CreateUserName.Contains(input.CreateUserName.Trim()))
-                    .WhereIF(!string.IsNullOrWhiteSpace(input.UpdateUserName), u => u.UpdateUserName.Contains(input.UpdateUserName.Trim()))
-                    .WhereIF(!string.IsNullOrWhiteSpace(input.WHRemake), u => u.WHRemake.Contains(input.WHRemake.Trim()))
 
                     // 获取创建日期
                     .WhereIF(input.CreateTime > DateTime.MinValue, u => u.CreateTime >= input.CreateTime)
@@ -48,17 +45,60 @@ public class EGWareHouseService : IDynamicApiController, ITransient
 
     #endregion
 
-    #region MyRegion
-    public async Task a()
+    #region 获得仓库列表包括仓库下面所有的数据
+
+    /// <summary>
+    /// 获得仓库列表包括仓库下面所有的数据
+    /// </summary>
+    /// <param name="page">页码</param>
+    /// <param name="pageSize">每页容量</param>
+    /// <returns></returns>
+
+    [HttpPost]
+    [ApiDescriptionSettings(Name = "GetWareHouseDataAll")]
+    public List<GetWareHouseDataDto> GetWareHouseDataAll(int page = 1, int pageSize = 10)
     {
 
+        return _region.AsQueryable()
+             .RightJoin<Entity.EG_WMS_WareHouse>((a, b) => a.WHNum == b.WHNum)
+             .LeftJoin<Entity.EG_WMS_Storage>((a, b, c) => a.RegionNum == c.RegionNum)
+             .Select((a, b, c) => new GetWareHouseDataDto
+             {
+                 WHNum = b.WHNum,
+                 WHName = b.WHName,
+                 WHType = (int)b.WHType,
+                 WHAddress = b.WHAddress,
+                 WHStatus = (int)b.WHStatus,
 
+                 // 当前仓库下区域总数
+                 CurrentRegionCount = SqlFunc.Subqueryable<Entity.EG_WMS_Region>()
+                                             .Where(x => x.WHNum == b.WHNum)
+                                             .Select(x => SqlFunc.AggregateCount(x.RegionNum)),
+                 // 当前仓库下库位总数
+                 CurrentStorageCount = SqlFunc.Subqueryable<Entity.EG_WMS_Storage>()
+                                              .Where(x => x.RegionNum == (SqlFunc.Subqueryable<Entity.EG_WMS_Region>()
+                                              // 添加GroupBy == 会自动转换成 In
+                                              .Where(x => x.WHNum == b.WHNum).GroupBy(x => x.RegionNum).Select(x => x.RegionNum)))
+                                              .Select(x => SqlFunc.AggregateCount(x.StorageNum)),
+                 // 当前仓库下可用库位总数
+                 CurrentStorageCountUsAble = SqlFunc.Subqueryable<Entity.EG_WMS_Storage>()
+                                              .Where(x => x.StorageOccupy == 0 && x.RegionNum == (SqlFunc.Subqueryable<Entity.EG_WMS_Region>()
+                                              .Where(x => x.WHNum == b.WHNum).GroupBy(x => x.RegionNum).Select(x => x.RegionNum)))
+                                              .Select(x => SqlFunc.AggregateCount(x.StorageNum)),
+                 WHRemake = b.WHRemake,
+                 CreateUserName = b.CreateUserName,
+                 UpdateUserName = b.UpdateUserName,
+
+             })
+             .GroupBy(a => a.WHNum)
+             .Skip((page - 1) * pageSize)
+             .Take(pageSize)
+             .ToList();
 
     }
 
 
     #endregion
-
 
     #region 增加仓库
     /// <summary>
@@ -71,7 +111,7 @@ public class EGWareHouseService : IDynamicApiController, ITransient
     public async Task Add(AddEGWareHouseInput input)
     {
         input.WHNum = "WareHouse" + new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString();
-        var entity = input.Adapt<EG_WMS_WareHouse>();
+        var entity = input.Adapt<Entity.EG_WMS_WareHouse>();
         await _rep.InsertAsync(entity);
     }
 
@@ -81,13 +121,13 @@ public class EGWareHouseService : IDynamicApiController, ITransient
     /// <summary>
     /// 删除仓库（软删除）
     /// </summary>
-    /// <param name="input"></param>
+    /// <param name="id">仓库id</param>
     /// <returns></returns>
     [HttpPost]
     [ApiDescriptionSettings(Name = "Delete")]
-    public async Task Delete(DeleteEGWareHouseInput input)
+    public async Task Delete(int id)
     {
-        var entity = await _rep.GetFirstAsync(u => u.Id == input.Id) ?? throw Oops.Oh(ErrorCodeEnum.D1002);
+        var entity = await _rep.GetFirstAsync(u => u.Id == id) ?? throw Oops.Oh(ErrorCodeEnum.D1002);
         await _rep.FakeDeleteAsync(entity);   //假删除
     }
 
@@ -103,7 +143,7 @@ public class EGWareHouseService : IDynamicApiController, ITransient
     [ApiDescriptionSettings(Name = "Update")]
     public async Task Update(UpdateEGWareHouseInput input)
     {
-        var entity = input.Adapt<EG_WMS_WareHouse>();
+        var entity = input.Adapt<Entity.EG_WMS_WareHouse>();
         await _rep.AsUpdateable(entity).IgnoreColumns(ignoreAllNullColumns: true).ExecuteCommandAsync();
     }
     #endregion
@@ -116,7 +156,7 @@ public class EGWareHouseService : IDynamicApiController, ITransient
     /// <returns></returns>
     [HttpGet]
     [ApiDescriptionSettings(Name = "Detail")]
-    public async Task<EG_WMS_WareHouse> Get([FromQuery] QueryByIdEGWareHouseInput input)
+    public async Task<Entity.EG_WMS_WareHouse> Get([FromQuery] QueryByIdEGWareHouseInput input)
     {
         //return await _rep.GetFirstAsync(u => u.Id == input.Id);
 

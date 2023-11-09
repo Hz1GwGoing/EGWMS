@@ -19,12 +19,6 @@ public class EG_WMS_Region : EntityBase
     public string? RegionName { get; set; }
 
     /// <summary>
-    /// 所属仓库
-    /// </summary>
-    [SugarColumn(ColumnDescription = "所属仓库", Length = 50)]
-    public string? WareHouseName { get; set; }
-
-    /// <summary>
     /// 区域状态 0.正常 1.异常
     /// </summary>
     [SugarColumn(ColumnDescription = "区域状态（0.正常 1.异常）")]

@@ -38,24 +38,6 @@ public class EG_WMS_WareHouse : EntityBase
     public int? WHStatus { get; set; }
 
     /// <summary>
-    /// 区域数量
-    /// </summary>
-    [SugarColumn(ColumnDescription = "区域数量")]
-    public int? RegionCount { get; set; } = null;
-
-    /// <summary>
-    /// 库位总数
-    /// </summary>
-    [SugarColumn(ColumnDescription = "库位总数")]
-    public int? StoreroomCount { get; set; } = null;
-
-    /// <summary>
-    /// 可用库位
-    /// </summary>
-    [SugarColumn(ColumnDescription = "可用库位")]
-    public int? StoreroomUsable { get; set; } = null;
-
-    /// <summary>
     /// 创建者姓名
     /// </summary>
     [SugarColumn(ColumnDescription = "创建者姓名", Length = 20)]

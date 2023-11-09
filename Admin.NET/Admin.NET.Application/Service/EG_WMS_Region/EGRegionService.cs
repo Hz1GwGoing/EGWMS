@@ -37,7 +37,6 @@ public class EGRegionService : IDynamicApiController, ITransient
         var query = _rep.AsQueryable()
                     .WhereIF(!string.IsNullOrWhiteSpace(input.RegionNum), u => u.RegionNum.Contains(input.RegionNum.Trim()))
                     .WhereIF(!string.IsNullOrWhiteSpace(input.RegionName), u => u.RegionName.Contains(input.RegionName.Trim()))
-                    .WhereIF(!string.IsNullOrWhiteSpace(input.WareHouseName), u => u.WareHouseName.Contains(input.WareHouseName.Trim()))
                     .WhereIF(input.RegionStatus > 0, u => u.RegionStatus == input.RegionStatus)
                     .WhereIF(input.StoreroomCount > 0, u => u.StoreroomCount == input.StoreroomCount)
                     .WhereIF(input.StoreroomUsable > 0, u => u.StoreroomUsable == input.StoreroomUsable)
@@ -52,7 +51,6 @@ public class EGRegionService : IDynamicApiController, ITransient
                         Id = u.Id,
                         RegionNum = u.RegionNum,
                         RegionName = u.RegionName,
-                        WareHouseName = u.WareHouseName,
                         RegionStatus = u.RegionStatus,
                         StoreroomCount = u.StoreroomCount,
                         StoreroomUsable = u.StoreroomUsable,

@@ -57,7 +57,7 @@ public class EGStorageService : IDynamicApiController, ITransient
 
         return _region.AsQueryable()
                      .LeftJoin<Entity.EG_WMS_Storage>((a, b) => a.RegionNum == b.RegionNum)
-                     .InnerJoin<EG_WMS_WareHouse>((a, b, c) => a.WHNum == c.WHNum)
+                     .InnerJoin<Entity.EG_WMS_WareHouse>((a, b, c) => a.WHNum == c.WHNum)
                      .GroupBy(a => a.RegionNum)
                      .Select((a, b, c) => new SelectRegionStorageCountDto
                      {
@@ -96,7 +96,7 @@ public class EGStorageService : IDynamicApiController, ITransient
     {
         var query = _rep.AsQueryable()
         .InnerJoin<Entity.EG_WMS_Region>((a, b) => a.RegionNum == b.RegionNum)
-        .InnerJoin<EG_WMS_WareHouse>((a, b, c) => b.WHNum == c.WHNum)
+        .InnerJoin<Entity.EG_WMS_WareHouse>((a, b, c) => b.WHNum == c.WHNum)
         .OrderBy(a => a.StorageNum, OrderByType.Asc)
         .Select((a, b, c) => new StorageRegionAndWhDto
         {
