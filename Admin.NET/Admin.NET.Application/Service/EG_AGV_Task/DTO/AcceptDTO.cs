@@ -12,7 +12,7 @@
         public string orderId { get; set; }
 
         /// <summary>
-        /// 当前车所在的位置，对应任务 下发时下发的点位
+        /// 当前车所在的位置，对应任务下发时下发的点位
         /// </summary>
         public string? qrContent { get; set; }
 

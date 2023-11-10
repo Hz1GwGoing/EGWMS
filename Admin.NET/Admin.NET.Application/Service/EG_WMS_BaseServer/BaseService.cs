@@ -1,6 +1,4 @@
-﻿using Admin.NET.Application.Entity;
-
-namespace Admin.NET.Application.Service.EG_WMS_BaseServer;
+﻿namespace Admin.NET.Application.Service.EG_WMS_BaseServer;
 
 /// <summary>
 /// 基础实用接口
@@ -23,6 +21,7 @@ public class BaseService : IDynamicApiController, ITransient
     private readonly SqlSugarRepository<EG_WMS_InAndOutBoundDetail> _InAndOutBoundDetail = App.GetService<SqlSugarRepository<EG_WMS_InAndOutBoundDetail>>();
     private readonly SqlSugarRepository<Entity.EG_WMS_Region> _Region = App.GetService<SqlSugarRepository<Entity.EG_WMS_Region>>();
     private readonly SqlSugarRepository<Entity.EG_WMS_Storage> _Storage = App.GetService<SqlSugarRepository<Entity.EG_WMS_Storage>>();
+    private readonly SqlSugarRepository<Entity.EG_WMS_WorkBin> _WorkBin = App.GetService<SqlSugarRepository<Entity.EG_WMS_WorkBin>>();
 
     #endregion
 
@@ -271,8 +270,8 @@ public class BaseService : IDynamicApiController, ITransient
     /// <param name="materielNum">物料编号</param>
     /// <returns></returns>
     [HttpPost]
-    [ApiDescriptionSettings(Name = "StrategyReturnRecommEndStorage")]
-    public string StrategyReturnRecommEndStorage(string materielNum)
+    [ApiDescriptionSettings(Name = "AGVStrategyReturnRecommEndStorage")]
+    public string AGVStrategyReturnRecommEndStorage(string materielNum)
     {
         // 根据物料编号，得到这个物料属于那个区域
         var dataRegion = _Region.AsQueryable().Where(x => x.RegionMaterielNum == materielNum).ToList();
@@ -435,8 +434,8 @@ public class BaseService : IDynamicApiController, ITransient
     /// </summary>
     /// <returns></returns>
     [HttpPost]
-    [ApiDescriptionSettings(Name = "StrategyReturnRecommendStorageOutBound")]
-    public string StrategyReturnRecommendStorageOutBound(string materielNum)
+    [ApiDescriptionSettings(Name = "AGVStrategyReturnRecommendStorageOutBound")]
+    public string AGVStrategyReturnRecommendStorageOutBound(string materielNum)
     {
 
         // 根据物料编号，得到这个物料属于那个区域
@@ -529,8 +528,8 @@ public class BaseService : IDynamicApiController, ITransient
     /// </summary>
     /// <returns></returns>
     //[HttpPost]
-    //[ApiDescriptionSettings(Name = "StrategyReturnRecommendStorageOutBound")]
-    //public string StrategyReturnRecommendStorageOutBound(string materielNum)
+    //[ApiDescriptionSettings(Name = "AGVStrategyReturnRecommendStorageOutBound")]
+    //public string AGVStrategyReturnRecommendStorageOutBound(string materielNum)
     //{
     //    // 根据物料编号，得到这个物料属于那个区域
     //    var dataRegion = _Region.AsQueryable().Where(x => x.RegionMaterielNum == materielNum).ToList();
@@ -582,21 +581,21 @@ public class BaseService : IDynamicApiController, ITransient
 
     #endregion
 
-    #region （策略）AGV请求任务点（开发中）
-
+    #region （策略）AGV请求任务点
     /// <summary>
-    /// 开发中
+    /// （策略）（密集库）AGV请求任务点（到达等待点获取）
     /// </summary>
-    /// <param name="orderId"></param>
-    /// <param name="modelProcessCode"></param>
+    /// <param name="orderId">任务id</param>
+    /// <param name="modelProcessCode">模板编号</param>
     /// <returns></returns>
+    [HttpPost]
     [UnifyProvider("easygreat")]
-    public object a(string orderId, string modelProcessCode)
+    [ApiDescriptionSettings(Name = "AGVRequestsTaskPoint")]
+    public object AGVRequestsTaskPoint(string orderId, string modelProcessCode)
     {
-        //ThirdPartyMessage partyMessage = new ThirdPartyMessage();
 
-        // 找到这个任务编号相同的这条数据
-        var taskData = _TaskEntity.GetFirst(x => x.TaskNo == orderId);
+        // 找到这个任务编号相同和模板编号相同的这条数据
+        var taskData = _TaskEntity.GetFirst(x => x.TaskNo == orderId && x.ModelNo == modelProcessCode);
         if (taskData == null)
         {
             throw Oops.Oh("没有找到相同的任务编号");
@@ -613,19 +612,87 @@ public class BaseService : IDynamicApiController, ITransient
             throw Oops.Oh("没有找到这个任务执行时的出入库编号");
         }
 
-        string malnum = StrategyReturnRecommEndStorage(inand.MaterielNum);
+        string malnum = AGVStrategyReturnRecommEndStorage(inand.MaterielNum);
 
+        if (malnum.Length < 8)
+        {
+            throw Oops.Oh("没有合适的库位");
+        }
+
+        #region 根据得到的库位编号去修改入库的库位
+
+        using (TransactionScope scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
+        {
+            try
+            {
+                // 根据入库编号去修改库位
+
+                _InAndOutBound.AsUpdateable()
+                   .AS("EG_WMS_InAndOutBound")
+                   .SetColumns(it => new Entity.EG_WMS_InAndOutBound
+                   {
+                       EndPoint = malnum,
+                   })
+                   .Where(u => u.InAndOutBoundNum == taskData.InAndOutBoundNum)
+                   .ExecuteCommand();
+
+                _InAndOutBoundDetail.AsUpdateable()
+                    .AS("EG_WMS_InAndOutBoundDetail")
+                    .SetColumns(it => new Entity.EG_WMS_InAndOutBoundDetail
+                    {
+                        StorageNum = malnum,
+                    })
+                    .Where(u => u.InAndOutBoundNum == taskData.InAndOutBoundNum)
+                    .ExecuteCommand();
+
+
+                // 根据入库编号得到临时库位表里面的库存编号
+                var dataTemList = _TemInventory.AsQueryable()
+                               .Where(u => u.InAndOutBoundNum == taskData.InAndOutBoundNum)
+                               .Select(x => x.InventoryNum)
+                               .ToList();
+
+                for (int i = 0; i < dataTemList.Count; i++)
+                {
+                    _TemInventoryDetail.AsUpdateable()
+                                    .AS("EG_WMS_Tem_InventoryDetail")
+                                    .SetColumns(it => new Entity.EG_WMS_Tem_InventoryDetail
+                                    {
+                                        StorageNum = malnum,
+                                    })
+                                    .Where(u => u.InventoryNum == dataTemList[i])
+                                    .ExecuteCommand();
+                }
+
+                // 修改料箱的库位信息
+
+                _WorkBin.AsUpdateable()
+                        .SetColumns(x => new EG_WMS_WorkBin
+                        {
+                            StorageNum = malnum,
+                        })
+                        .Where(u => u.InAndOutBoundNum == taskData.InAndOutBoundNum)
+                        .ExecuteCommand();
+
+                // 提交事务
+                scope.Complete();
+            }
+            catch (Exception ex)
+            {
+                // 回滚事务
+                scope.Dispose();
+                throw Oops.Oh("错误：" + ex);
+            }
+
+        }
+
+        #endregion
 
         return new
         {
-            PointName = orderId,
+            PointName = malnum,
         };
-
-
-
-
     }
-
 
     #endregion
 }

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using Admin.NET.Application.Entity;
-
-namespace Admin.NET.Application
+﻿namespace Admin.NET.Application
 {
 
     #region 壹格自有参数

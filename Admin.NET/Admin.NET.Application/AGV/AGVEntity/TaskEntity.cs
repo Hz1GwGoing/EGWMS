@@ -92,9 +92,10 @@ public class TaskEntity : EntityBase
     public string? AddName { get; set; }
 
     /// <summary>
-    /// 是否追加任务
+    /// 是否追加任务（0 - 否 ，1 - 是）
     /// </summary>
-    public int IsAdd { get; set; }
+    [SugarColumn(ColumnDescription = "是否追加任务（0 - 否 ，1 - 是）")]
+    public int IsAdd { get; set; } = 0;
 
     /// <summary>
     /// 出入库编号

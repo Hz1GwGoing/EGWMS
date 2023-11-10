@@ -120,5 +120,9 @@ public class EG_WMS_Storage : EntityBase
     [SugarColumn(ColumnDescription = "此库位料箱生产日期")]
     public DateTime? StorageProductionDate { get; set; }
 
-
+    /// <summary>
+    /// 是否为等待点库位（0 - 否，1 - 是）
+    /// </summary>
+    [SugarColumn(ColumnDescription = "是否为等待点库位（0 - 否，1 - 是）")]
+    public int? StorageHoldingPoint { get; set; }
 }

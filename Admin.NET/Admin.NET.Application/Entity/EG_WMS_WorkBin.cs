@@ -109,4 +109,9 @@ public class EG_WMS_WorkBin : EntityBase
     [SugarColumn(ColumnDescription = "栈板编号", Length = 50)]
     public string? PalletNum { get; set; }
 
+    /// <summary>
+    /// 出入库编号
+    /// </summary>
+    [SugarColumn(ColumnDescription = "出入库编号")]
+    public string? InAndOutBoundNum { get; set; }
 }

@@ -26,6 +26,7 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
         private readonly SqlSugarRepository<EG_WMS_InAndOutBoundDetail> _InAndOutBoundDetail = App.GetService<SqlSugarRepository<EG_WMS_InAndOutBoundDetail>>();
         private readonly SqlSugarRepository<Entity.EG_WMS_Region> _Region = App.GetService<SqlSugarRepository<Entity.EG_WMS_Region>>();
         private readonly SqlSugarRepository<Entity.EG_WMS_Storage> _Storage = App.GetService<SqlSugarRepository<Entity.EG_WMS_Storage>>();
+        private readonly SqlSugarRepository<Entity.EG_WMS_WorkBin> _WorkBin = App.GetService<SqlSugarRepository<Entity.EG_WMS_WorkBin>>();
 
         #endregion
 
@@ -49,9 +50,14 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
 
             // 得到任务点位数
             var positions = taskEntity.TaskPath.Split(',');
-            if (temLogItem.PointNum != positions.Length)
+
+            // 判断是不是需要去等待点再次获取任务点位
+            // 判断点位数量和是否需要去等待点是否同同时满足，同时满足则需要返回错误
+            if (temLogItem.PointNum != positions.Length && temLogItem.HoldingPoint == "0")
             {
-                throw Oops.Oh($"传入的点位数量与模版预设的点位数不符！");
+
+                throw Oops.Oh($"传入的点位数量与模版预设的点位数不符，并且模板不是需要前往等待点！");
+
             }
             #region 本地入库
             if (taskEntity.Id == 0) taskEntity.Id = SnowFlakeSingle.Instance.NextId();
@@ -931,6 +937,15 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
                                  .Where(x => x.TaskNo == acceptDTO.orderId)
                                  .ExecuteCommandAsync();
 
+                        // 修改料箱表里面的出入库编号
+                        await _WorkBin.AsUpdateable()
+                                 .AS("EG_WMS_WorkBin")
+                                 .SetColumns(it => new EG_WMS_WorkBin
+                                 {
+                                     InAndOutBoundNum = null,
+                                 })
+                                 .Where(x => x.InAndOutBoundNum == item.InAndOutBoundNum)
+                                 .ExecuteCommandAsync();
 
                     }
                     catch (Exception ex)

@@ -8,13 +8,19 @@ namespace Admin.NET.Application.Service.EG_WMS_WareHouse;
 [ApiDescriptionSettings(ApplicationConst.GroupName, Order = 100)]
 public class EGWareHouseService : IDynamicApiController, ITransient
 {
+    #region 引用实体
     private readonly SqlSugarRepository<Entity.EG_WMS_WareHouse> _rep;
     private readonly SqlSugarRepository<Entity.EG_WMS_Region> _region;
+    #endregion
+
+    #region 关系注入
     public EGWareHouseService(SqlSugarRepository<Entity.EG_WMS_WareHouse> rep, SqlSugarRepository<Entity.EG_WMS_Region> region)
     {
         _rep = rep;
         _region = region;
     }
+
+    #endregion
 
     #region 分页查询仓库
 

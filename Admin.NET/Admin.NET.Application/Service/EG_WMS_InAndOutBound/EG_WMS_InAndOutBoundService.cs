@@ -1,4 +1,6 @@
-﻿namespace Admin.NET.Application;
+﻿using Admin.NET.Application.Tool;
+
+namespace Admin.NET.Application;
 
 /// <summary>
 /// 出入库接口服务（agv、人工）
@@ -9,6 +11,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
     // agv接口
     TaskService taskService = new TaskService();
     BaseService BaseService = new BaseService();
+    private static readonly TheCurrentTime _TimeStamp = new TheCurrentTime();
 
     #region 关系注入
     private readonly SqlSugarRepository<EG_WMS_InAndOutBound> _rep = App.GetService<SqlSugarRepository<EG_WMS_InAndOutBound>>();
@@ -82,10 +85,296 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
 
     #endregion
 
-    #region AGV入库（两点位）（入库WMS自动推荐库位）
+    #region AGV入库（需要前往等待点）
 
     /// <summary>
-    /// AGV入库（两点位）（入库WMS自动推荐库位）
+    ///  AGV入库（需要前往等待点，到达等待点再获取库位点）
+    /// </summary>
+    /// <param name="input"></param>
+    /// <returns></returns>
+    /// <exception cref="Exception"></exception>
+    [HttpPost]
+    [ApiDescriptionSettings(Name = "AgvJoinBoundTaskGOPoint")]
+    public async Task AgvJoinBoundTaskGOPoint(AgvJoinDto input)
+    {
+        try
+        {
+            // 生成当前时间时间戳
+            string joinboundnum = _TimeStamp.GetTheCurrentTimeTimeStamp("EGRK");
+
+            // 起始点
+            string startpoint = input.StartPoint;
+            if (startpoint == null || input.EndPoint == "")
+            {
+                throw Oops.Oh("起始点不可为空");
+            }
+
+            // 目标点（前往等待点）
+            if (input.EndPoint == null || input.EndPoint == "")
+            {
+                // 前往等待点，到达等待点后rcs自动返回目标库位
+                // 查询得到这个物料属于那个区域（一个区域下只有一个等待点）
+                var regionList = _Region.AsQueryable()
+                        .Where(x => x.RegionMaterielNum == input.materielWorkBins[0].MaterielNum)
+                        .ToList();
+
+                var storageList = _Storage.AsQueryable()
+                         .Where(x => x.RegionNum == regionList[0].RegionNum && x.StorageHoldingPoint == 1)
+                         .Select(x => x.StorageNum)
+                         .ToList();
+
+                if (storageList == null || storageList.Count == 0)
+                {
+                    throw Oops.Oh("此区域未设置等待点");
+                }
+
+                input.EndPoint = storageList[0];
+
+            }
+
+            string endpoint = input.EndPoint;
+
+            // 任务点集
+            var positions = startpoint + "," + endpoint;
+
+            TaskEntity taskEntity = input.Adapt<TaskEntity>();
+            taskEntity.TaskPath = positions;
+            taskEntity.InAndOutBoundNum = joinboundnum;
+
+            // 下达agv任务
+
+            DHMessage item = await taskService.AddAsync(taskEntity);
+
+            // 下达agv任务成功
+            if (item.code == 1000)
+            {
+                using (TransactionScope scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
+                {
+
+                    try
+                    {
+                        // 得到入库的数据
+                        List<MaterielWorkBin> list = input.materielWorkBins;
+
+                        #region 入库操作
+
+                        // 生成入库单
+                        EG_WMS_InAndOutBound joinbound = new EG_WMS_InAndOutBound
+                        {
+                            // 编号
+                            InAndOutBoundNum = joinboundnum,
+                            // 出入库类型（入库还是出库）
+                            InAndOutBoundType = 0,
+                            // 时间
+                            InAndOutBoundTime = DateTime.Now,
+                            // 操作人
+                            InAndOutBoundUser = input.AddName,
+                            // 备注
+                            InAndOutBoundRemake = input.InAndOutBoundRemake,
+                            // 创建时间
+                            CreateTime = DateTime.Now,
+                            // 起始点
+                            StartPoint = input.StartPoint,
+                            // 目标点
+                            EndPoint = "AGV正在前往等待点，存放的库位等AGV到达等待点后自动获取",
+                        };
+
+                        // 查询库位编号所在的区域编号
+
+                        var _storagelistdata = await _Storage.GetFirstAsync(u => u.StorageNum == input.EndPoint);
+
+
+                        if (_storagelistdata == null || string.IsNullOrEmpty(_storagelistdata.RegionNum))
+                        {
+                            throw Oops.Oh("没有查询到这个库位编号所在的区域编号");
+                        }
+
+                        string regionnum = _storagelistdata.RegionNum;
+
+                        // 通过查询出来的区域得到仓库编号
+
+                        var _regionlistdata = await _Region.GetFirstAsync(x => x.RegionNum == regionnum);
+
+                        if (_regionlistdata == null || string.IsNullOrEmpty(_regionlistdata.WHNum))
+                        {
+                            throw Oops.Oh("没有查询到这个仓库");
+                        }
+
+                        // 生成入库详单
+
+                        EG_WMS_InAndOutBoundDetail joinbounddetail = new EG_WMS_InAndOutBoundDetail()
+                        {
+                            // 出入库编号
+                            InAndOutBoundNum = joinboundnum,
+                            CreateTime = DateTime.Now,
+                            // 区域编号
+                            RegionNum = _storagelistdata.RegionNum,
+                            // 目标点就是存储的点位即库位编号
+                            StorageNum = "AGV正在前往等待点，存放的库位等AGV到达等待点后自动获取",
+                        };
+                        #endregion
+
+                        await _rep.InsertAsync(joinbound);
+                        await _InAndOutBoundDetail.InsertAsync(joinbounddetail);
+
+
+                        string wbnum = "";
+                        int sumcount = 0;
+                        for (int i = 0; i < list.Count; i++)
+                        {
+                            // 库存编号（主表和详细表）
+                            string inventorynum = $"{i}" + _TimeStamp.GetTheCurrentTimeTimeStamp("EGRK");
+                            // 料箱编号（详细表、料箱表）
+                            string workbinnum = list[i].WorkBinNum;
+                            // 物料编号（主表）
+                            string materienum = list[i].MaterielNum;
+                            // 物料的数量（主表、料箱表）
+                            int productcount = list[i].ProductCount;
+                            // 生产日期（料箱表）
+                            DateTime productiondate = list[i].ProductionDate;
+                            // 生产批次（详细表、料箱表）
+                            string productionlot = list[i].ProductionLot;
+
+                            // 总数
+                            sumcount += productcount;
+
+                            // 将得到的数据，保存在临时的库存主表和详细表中
+
+                            // 临时库存主表
+                            EG_WMS_Tem_Inventory addInventory = new EG_WMS_Tem_Inventory()
+                            {
+                                // 库存编号
+                                InventoryNum = inventorynum,
+                                // 物料编号
+                                MaterielNum = materienum,
+                                // 库存总数
+                                ICountAll = productcount,
+                                // 创建时间
+                                CreateTime = DateTime.Now,
+                                // 入库编号
+                                InAndOutBoundNum = joinboundnum,
+                                // 是否删除
+                                IsDelete = false,
+                                // 是否出库
+                                OutboundStatus = 0,
+                            };
+
+                            // 临时详细表
+                            EG_WMS_Tem_InventoryDetail addInventoryDetail = new EG_WMS_Tem_InventoryDetail()
+                            {
+                                // 库存编号
+                                InventoryNum = inventorynum,
+                                // 料箱编号
+                                WorkBinNum = workbinnum,
+                                // 生产批次
+                                ProductionLot = productionlot,
+                                // 创建时间
+                                CreateTime = DateTime.Now,
+                                // 库位编号
+                                StorageNum = "AGV正在前往等待点，存放的库位等AGV到达等待点后自动获取",
+                                // 区域编号
+                                RegionNum = _storagelistdata.RegionNum,
+                                // 仓库编号
+                                WHNum = _regionlistdata.WHNum,
+                                // 是否删除
+                                IsDelete = false,
+
+                            };
+
+                            // 料箱表 将料箱内容保存到料箱表中
+                            EG_WMS_WorkBin addWorkBin = new EG_WMS_WorkBin()
+                            {
+                                // 编号
+                                WorkBinNum = workbinnum,
+                                // 产品数量
+                                ProductCount = productcount,
+                                // 生产批次
+                                ProductionLot = productionlot,
+                                CreateTime = DateTime.Now,
+                                // 生产日期
+                                ProductionDate = productiondate,
+                                WorkBinStatus = 0,
+                                MaterielNum = materienum,
+                                // 库位编号
+                                StorageNum = "AGV正在前往等待点，存放的库位等AGV到达等待点后自动获取",
+                                // 出入库编号
+                                InAndOutBoundNum = joinboundnum,
+                            };
+
+                            // 将数据保存到临时表中
+                            await _InventoryTem.InsertAsync(addInventory);
+                            await _InventoryDetailTem.InsertAsync(addInventoryDetail);
+                            await _workbin.InsertOrUpdateAsync(addWorkBin);
+
+
+                            // 得到每个料箱编号
+                            if (list.Count > 1)
+                            {
+                                wbnum = workbinnum + "," + wbnum;
+                            }
+                            else
+                            {
+                                wbnum = workbinnum;
+                            }
+                        }
+                        // 修改入库详情表里面的料箱编号和物料编号
+
+                        await _InAndOutBoundDetail.AsUpdateable()
+                                             .AS("EG_WMS_InAndOutBoundDetail")
+                                             .SetColumns(it => new EG_WMS_InAndOutBoundDetail
+                                             {
+                                                 WHNum = _regionlistdata.WHNum,
+                                                 WorkBinNum = wbnum,
+                                                 // 只会有一种物料
+                                                 MaterielNum = list[0].MaterielNum,
+                                             })
+                                             .Where(u => u.InAndOutBoundNum == joinboundnum)
+                                             .ExecuteCommandAsync();
+
+                        // 改变入库状态
+                        await _rep.AsUpdateable()
+                             .AS("EG_WMS_InAndOutBound")
+                             .SetColumns(it => new EG_WMS_InAndOutBound
+                             {
+                                 InAndOutBoundCount = sumcount,
+                                 // 入库中
+                                 InAndOutBoundStatus = 4,
+                             })
+                             .Where(u => u.InAndOutBoundNum == joinboundnum)
+                             .ExecuteCommandAsync();
+
+                        // 提交事务
+                        scope.Complete();
+                    }
+                    catch (Exception ex)
+                    {
+                        // 回滚事务
+                        scope.Dispose();
+                        throw new Exception(ex.Message);
+                    }
+                }
+
+            }
+            else
+            {
+                throw new Exception("下达AGV任务失败");
+
+            }
+        }
+        catch (Exception ex)
+        {
+
+            throw new Exception(ex.Message);
+        }
+    }
+
+
+    #endregion
+
+    #region AGV入库（入库WMS自动推荐库位）
+
+    /// <summary>
+    /// AGV入库（入库WMS自动推荐库位）
     /// </summary>
     /// <param name="input"></param>
     /// <returns></returns>
@@ -93,12 +382,20 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
     [ApiDescriptionSettings(Name = "AgvJoinBoundTask", Order = 50)]
     public async Task AgvJoinBoundTask(AgvJoinDto input)
     {
-        // 生成当前时间时间戳
-        string timesstamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString();
-        string joinboundnum = "EGRK" + timesstamp;
-
         try
         {
+            //// 根据模板编号去查询是否需要前往等待点
+            //var temLogicModel = await _TemLogicEntity.GetFirstAsync(x => x.TemLogicNo == input.ModelNo);
+            //if (temLogicModel != null && temLogicModel.HoldingPoint == "1")
+            //{
+
+            //    await AgvJoinBoundTaskGOPoint(input);
+
+            //}
+
+            // 生成当前时间时间戳
+            string timesstamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString();
+            string joinboundnum = "EGRK" + timesstamp;
             // 起始点
             string startpoint = input.StartPoint;
             if (startpoint == null || input.EndPoint == "")
@@ -109,17 +406,8 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
             // 目标点
             if (input.EndPoint == null || input.EndPoint == "")
             {
-                // 根据模板编号去查询是否需要前往等待点
-                var temLogicModel = await _TemLogicEntity.GetFirstAsync(x => x.TemLogicNo == input.ModelNo);
-                if (temLogicModel != null && temLogicModel.HoldingPoint == "")
-                {
-
-
-
-                }
-
                 // 根据策略推荐
-                input.EndPoint = BaseService.StrategyReturnRecommEndStorage(input.materielWorkBins[0].MaterielNum);
+                input.EndPoint = BaseService.AGVStrategyReturnRecommEndStorage(input.materielWorkBins[0].MaterielNum);
 
             }
 
@@ -318,6 +606,8 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                                 MaterielNum = materienum,
                                 // 库位编号
                                 StorageNum = input.EndPoint,
+                                // 出入库编号
+                                InAndOutBoundNum = joinboundnum,
                             };
 
                             // 将数据保存到临时表中
@@ -412,7 +702,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
             if (input.StartPoint == null || input.StartPoint == "")
             {
                 // 根据策略推荐
-                input.StartPoint = BaseService.StrategyReturnRecommendStorageOutBound(input.MaterielNum);
+                input.StartPoint = BaseService.AGVStrategyReturnRecommendStorageOutBound(input.MaterielNum);
 
             }
             string startpoint = input.StartPoint;
@@ -1128,56 +1418,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
     }
     #endregion
 
-    //-------------------------------------//-------------------------------------//
-
-    #region AddDTO
-    //AddDTO addDTO = new AddDTO()
-    //{
-    //    // 任务编号
-    //    //TaskNo = taskno,
-    //    // 任务名称
-    //    TaskName = input.TaskName,
-    //    // 优先级
-    //    Priority = input.Priority,
-    //    // 来源
-    //    Source = input.Source,
-    //    // 模板编号
-    //    ModelNo = input.ModelNo,
-    //    // 任务下达人
-    //    AddName = input.AddName,
-    //    // 是否追加任务
-    //    IsAdd = input.IsAdd,
-
-    //    TaskDetail = new List<TaskDetailDTO> { new TaskDetailDTO()
-    //    {
-    //        // 任务点集
-    //        Positions = positions
-    //    }}
-    //};
-    #endregion
-
-    #region MyRegion
-    //list<egworkbin> data = new list<egworkbin>();
-
-    //foreach (var workbindetail in input.workbindetaildto)
-    //{
-    //    // 这边应该是有多个料箱信息，需要foreach循环，得到每一条数据
-    //    string workbinnum = "eglx" + timesstamp;
-
-    //    list<egworkbin> workbin = (list<egworkbin>)input.workbindetaildto.select(workbin => new egworkbin
-    //    {
-    //        workbinnum = workbinnum,
-    //        materielnum = input.materielnum,
-    //        productcount = workbin.productcount,
-    //        productiondate = datetime.now,
-    //        productionlot = workbin.productionlot,
-
-    //    });
-
-    //    data.add(workbin); // 将每个料箱添加到 data 列表中
-
-    //}
-    #endregion
+    //-------------------------------------//-------------------------------------// 
 
     #region 添加入库信息（agv）
 

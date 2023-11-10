@@ -32,7 +32,7 @@ namespace Admin.NET.Application.Util
         /// <summary>
         /// 任务下发
         /// </summary>
-        /// <param name="taskEntity">V2版本内的任务主表实体类</param>
+        /// <param name="taskEntity">V3版本内的任务主表实体类</param>
         public async System.Threading.Tasks.Task<DHMessage> AddTaskAsync(TaskEntity taskEntity)
         {
             DHMessage dHMessage = new DHMessage();
