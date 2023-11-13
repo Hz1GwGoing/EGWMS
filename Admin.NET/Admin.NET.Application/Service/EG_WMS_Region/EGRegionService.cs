@@ -7,7 +7,7 @@
 [ApiDescriptionSettings(ApplicationConst.GroupName, Order = 100)]
 public class EGRegionService : IDynamicApiController, ITransient
 {
-    private static readonly TheCurrentTime _TimeStamp = new TheCurrentTime();
+    private static readonly ToolTheCurrentTime _TimeStamp = new ToolTheCurrentTime();
 
 
     #region 实体引入

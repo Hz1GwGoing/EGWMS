@@ -1,4 +1,6 @@
-﻿namespace Admin.NET.Application;
+﻿using Admin.NET.Application.Service.EG_WMS_InAndOutBound;
+
+namespace Admin.NET.Application;
 
 /// <summary>
 /// 出入库接口服务（agv、人工）
@@ -9,7 +11,9 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
     // agv接口
     private static readonly TaskService taskService = new TaskService();
     private static readonly BaseService BaseService = new BaseService();
-    private static readonly TheCurrentTime _TimeStamp = new TheCurrentTime();
+    private static readonly ToolTheCurrentTime _TimeStamp = new ToolTheCurrentTime();
+    EG_WMS_InAndOutBoundMessage InAndOutBoundMessage;
+
 
     #region 关系注入
     private readonly SqlSugarRepository<EG_WMS_InAndOutBound> _rep = App.GetService<SqlSugarRepository<EG_WMS_InAndOutBound>>();
@@ -651,6 +655,70 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                     }
                 }
 
+            }
+            else
+            {
+                throw new Exception("下达AGV任务失败");
+
+            }
+        }
+        catch (Exception ex)
+        {
+
+            throw new Exception(ex.Message);
+        }
+
+    }
+
+    #endregion
+
+    #region AGV入库（入库WMS自动推荐库位）（封装）
+
+    /// <summary>
+    /// AGV入库（入库WMS自动推荐库位）
+    /// </summary>
+    /// <param name="input"></param>
+    /// <returns></returns>
+    [HttpPost]
+    [ApiDescriptionSettings(Name = "AgvJoinBoundTask", Order = 50)]
+    public async Task AgvJoinBoundTasks(AgvJoinDto input)
+    {
+        try
+        {
+            // 生成当前时间时间戳
+            string joinboundnum = _TimeStamp.GetTheCurrentTimeTimeStamp("EGRK");
+            // 起始点
+            string startpoint = input.StartPoint;
+            if (startpoint == null || input.EndPoint == "")
+            {
+                throw Oops.Oh("起始点不可为空");
+            }
+
+            // 目标点
+            if (input.EndPoint == null || input.EndPoint == "")
+            {
+                // 根据策略推荐
+                input.EndPoint = BaseService.AGVStrategyReturnRecommEndStorage(input.materielWorkBins[0].MaterielNum);
+
+            }
+
+            string endpoint = input.EndPoint;
+
+            // 任务点集
+            var positions = startpoint + "," + endpoint;
+
+            TaskEntity taskEntity = input.Adapt<TaskEntity>();
+            taskEntity.TaskPath = positions;
+            taskEntity.InAndOutBoundNum = joinboundnum;
+
+            // 下达agv任务
+
+            DHMessage item = await taskService.AddAsync(taskEntity);
+
+            // 下达agv任务成功
+            if (item.code == 1000)
+            {
+                await InAndOutBoundMessage.ProcessInbound(input, joinboundnum);
             }
             else
             {

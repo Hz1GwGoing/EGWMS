@@ -6,7 +6,7 @@
 [ApiDescriptionSettings(ApplicationConst.GroupName, Order = 100)]
 public class EGRelocationService : IDynamicApiController, ITransient
 {
-    private static readonly TheCurrentTime currentTime = new TheCurrentTime();
+    private static readonly ToolTheCurrentTime currentTime = new ToolTheCurrentTime();
 
     #region 引用实体
     private readonly SqlSugarRepository<EG_WMS_Relocation> _Relocation;

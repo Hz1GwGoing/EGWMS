@@ -6,7 +6,7 @@
 [ApiDescriptionSettings(ApplicationConst.GroupName, Order = 100)]
 public class EGWareHouseService : IDynamicApiController, ITransient
 {
-    private static readonly TheCurrentTime _TimeStamp = new TheCurrentTime();
+    private static readonly ToolTheCurrentTime _TimeStamp = new ToolTheCurrentTime();
 
     #region 引用实体
     private readonly SqlSugarRepository<Entity.EG_WMS_WareHouse> _rep;

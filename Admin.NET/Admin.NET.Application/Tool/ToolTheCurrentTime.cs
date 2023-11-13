@@ -3,7 +3,7 @@
 /// <summary>
 /// 时间有关函数
 /// </summary>
-internal class TheCurrentTime
+internal class ToolTheCurrentTime
 {
     /// <summary>
     /// 获得当前特定状态时间戳

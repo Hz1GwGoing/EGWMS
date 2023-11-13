@@ -6,7 +6,7 @@
 [ApiDescriptionSettings(ApplicationConst.GroupName, Order = 100)]
 public class EGTakeStockService : IDynamicApiController, ITransient
 {
-    private static readonly TheCurrentTime currentTime = new TheCurrentTime();
+    private static readonly ToolTheCurrentTime currentTime = new ToolTheCurrentTime();
 
     #region 引用实体
     private readonly SqlSugarRepository<EG_WMS_TakeStock> _rep;
@@ -209,7 +209,7 @@ public class EGTakeStockService : IDynamicApiController, ITransient
                  {
                      // 盘点数量（料箱）
                      SumTakeStockCount = countData.Count,
-
+                     MaterielNum = countData[0].MaterielNum,
                  })
                  .ExecuteCommandAsync();
 
@@ -297,13 +297,15 @@ public class EGTakeStockService : IDynamicApiController, ITransient
     /// <summary>
     /// （根据库位盘点）替换原库存中的数据
     /// </summary>
+    /// <param name="inventorynum">库存编号</param>
     /// <param name="workbinnum">料箱编号</param>
     /// <param name="materielnum">物料编号</param>
     /// <returns></returns>
     /// <exception cref="Exception"></exception>
+
     [HttpPost]
     [ApiDescriptionSettings(Name = "ReplaceaInventoryData", Order = 97)]
-    public async Task ReplaceaInventoryData(string workbinnum, string materielnum)
+    public async Task ReplaceaInventoryData(string inventorynum, string workbinnum, string materielnum)
     {
         try
         {
@@ -326,18 +328,12 @@ public class EGTakeStockService : IDynamicApiController, ITransient
             string invdworkbinnum = listData.WorkBinNum;
 
             // 得到符合条件的库存表里面的数据
-            var listItem = _model.AsQueryable()
-                                 .InnerJoin<EG_WMS_InventoryDetail>((a, b) => a.InventoryNum == b.InventoryNum)
-                                 .Where((a, b) => a.MaterielNum == materielnum && b.WorkBinNum == workbinnum)
-                                 .ToList();
+            var listItem = _model.GetFirstAsync(a => a.InventoryNum == inventorynum);
 
-            if (listItem.Count == 0)
+            if (listItem == null)
             {
                 throw Oops.Oh("没有在库存中找到有类似的库存信息");
             }
-
-            // 得到库存编号
-            string invNum = listItem[0].InventoryNum;
 
             using (TransactionScope scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
             {
@@ -352,7 +348,7 @@ public class EGTakeStockService : IDynamicApiController, ITransient
                                  UpdateTime = DateTime.Now,
                                  InventoryRemake = $"此库存已被盘点修改，盘点编号为：{listData.TakeStockNum}"
                              })
-                             .Where(x => x.InventoryNum == invNum)
+                             .Where(x => x.InventoryNum == inventorynum)
                              .ExecuteCommandAsync();
 
                     // 修改详细表
@@ -365,10 +361,20 @@ public class EGTakeStockService : IDynamicApiController, ITransient
                                               WorkBinNum = invdworkbinnum,
                                               UpdateTime = DateTime.Now,
                                           })
-                                          .Where(x => x.InventoryNum == invNum)
+                                          .Where(x => x.InventoryNum == inventorynum)
                                           .ExecuteCommandAsync();
 
                     // 修改盘点记录
+                    await _rep.AsUpdateable()
+                         .SetColumns(it => new EG_WMS_TakeStock
+                         {
+                             TakeStockTime = DateTime.Now,
+                             TakeStockCount = listData.ICountAll,
+                             TakeStockDiffCount = (int)(listItem.Result.ICountAll - listData.ICountAll),
+                             TakeStockStatus = 1,
+                         })
+                         .Where(x => x.TakeStockNum == listData.TakeStockNum)
+                         .ExecuteCommandAsync();
 
                     // 提交事务
                     scope.Complete();
@@ -674,6 +680,106 @@ public class EGTakeStockService : IDynamicApiController, ITransient
     #endregion
 
     //-------------------------------------//-------------------------------------//
+
+    #region （根据库位盘点）替换原库存中的数据
+
+    /// <summary>
+    /// （根据库位盘点）替换原库存中的数据
+    /// </summary>
+    /// <param name="workbinnum">料箱编号</param>
+    /// <param name="materielnum">物料编号</param>
+    /// <returns></returns>
+    /// <exception cref="Exception"></exception>
+    //[HttpPost]
+    //[ApiDescriptionSettings(Name = "ReplaceaInventoryData", Order = 97)]
+    //public async Task ReplaceaInventoryData(string workbinnum, string materielnum)
+    //{
+    //    try
+    //    {
+    //        // 得到扫描的料箱数据
+    //        var listData = await _TakeStockData.GetFirstAsync(x => x.WorkBinNum == workbinnum && x.MaterielNum == materielnum);
+    //        //var taskStockData = await _rep.GetFirstAsync(x => x.TakeStockNum == listData.TakeStockNum);
+
+    //        if (listData == null)
+    //        {
+    //            throw Oops.Oh("找不到扫描的料箱数据");
+    //        }
+    //        //else if (taskStockData.TakeStockStatus == 1)
+    //        //{
+    //        //    throw Oops.Oh("")
+    //        //}
+
+    //        string invmaterienum = listData.MaterielNum;
+    //        int invicountall = listData.ICountAll;
+    //        string invdproductionlot = listData.ProductionLot;
+    //        string invdworkbinnum = listData.WorkBinNum;
+
+    //        // 得到符合条件的库存表里面的数据
+    //        var listItem = _model.AsQueryable()
+    //                             .InnerJoin<EG_WMS_InventoryDetail>((a, b) => a.InventoryNum == b.InventoryNum)
+    //                             .Where((a, b) => a.MaterielNum == materielnum && b.WorkBinNum == workbinnum)
+    //                             .ToList();
+
+    //        if (listItem.Count == 0)
+    //        {
+    //            throw Oops.Oh("没有在库存中找到有类似的库存信息");
+    //        }
+
+    //        // 得到库存编号
+    //        string invNum = listItem[0].InventoryNum;
+
+    //        using (TransactionScope scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
+    //        {
+    //            try
+    //            {
+    //                // 修改主表
+    //                await _model.AsUpdateable()
+    //                         .SetColumns(it => new EG_WMS_Inventory
+    //                         {
+    //                             MaterielNum = invmaterienum,
+    //                             ICountAll = invicountall,
+    //                             UpdateTime = DateTime.Now,
+    //                             InventoryRemake = $"此库存已被盘点修改，盘点编号为：{listData.TakeStockNum}"
+    //                         })
+    //                         .Where(x => x.InventoryNum == invNum)
+    //                         .ExecuteCommandAsync();
+
+    //                // 修改详细表
+
+    //                await _InventoryDetail.AsUpdateable()
+    //                                      .SetColumns(it => new EG_WMS_InventoryDetail
+    //                                      {
+    //                                          // 生产批次
+    //                                          ProductionLot = invdproductionlot,
+    //                                          WorkBinNum = invdworkbinnum,
+    //                                          UpdateTime = DateTime.Now,
+    //                                      })
+    //                                      .Where(x => x.InventoryNum == invNum)
+    //                                      .ExecuteCommandAsync();
+
+    //                // 修改盘点记录
+
+    //                // 提交事务
+    //                scope.Complete();
+    //            }
+    //            catch (Exception ex)
+    //            {
+    //                // 发生异常回滚事务
+    //                scope.Dispose();
+    //                throw new Exception(ex.Message);
+    //            }
+    //        }
+
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        throw new Exception(ex.Message);
+    //    }
+
+
+    //}
+
+    #endregion
 
     #region 增加盘点信息
     /// <summary>
