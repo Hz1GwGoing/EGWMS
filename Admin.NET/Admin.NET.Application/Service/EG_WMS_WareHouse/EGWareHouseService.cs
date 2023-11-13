@@ -1,6 +1,4 @@
-﻿
-namespace Admin.NET.Application.Service.EG_WMS_WareHouse;
-
+﻿namespace Admin.NET.Application.Service.EG_WMS_WareHouse;
 
 /// <summary>
 /// 仓库管理接口
@@ -8,6 +6,8 @@ namespace Admin.NET.Application.Service.EG_WMS_WareHouse;
 [ApiDescriptionSettings(ApplicationConst.GroupName, Order = 100)]
 public class EGWareHouseService : IDynamicApiController, ITransient
 {
+    private static readonly TheCurrentTime _TimeStamp = new TheCurrentTime();
+
     #region 引用实体
     private readonly SqlSugarRepository<Entity.EG_WMS_WareHouse> _rep;
     private readonly SqlSugarRepository<Entity.EG_WMS_Region> _region;
@@ -116,7 +116,7 @@ public class EGWareHouseService : IDynamicApiController, ITransient
     [ApiDescriptionSettings(Name = "Add")]
     public async Task Add(AddEGWareHouseInput input)
     {
-        input.WHNum = "WareHouse" + new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString();
+        input.WHNum = _TimeStamp.GetTheCurrentTimeTimeStamp("WH");
         var entity = input.Adapt<Entity.EG_WMS_WareHouse>();
         await _rep.InsertAsync(entity);
     }

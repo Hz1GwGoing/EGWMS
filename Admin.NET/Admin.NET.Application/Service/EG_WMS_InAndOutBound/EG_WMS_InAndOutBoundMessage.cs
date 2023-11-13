@@ -1,6 +1,4 @@
-﻿using Admin.NET.Application.Tool;
-
-namespace Admin.NET.Application.Service.EG_WMS_InAndOutBound;
+﻿namespace Admin.NET.Application.Service.EG_WMS_InAndOutBound;
 
 /// <summary>
 /// AGV出入库接口

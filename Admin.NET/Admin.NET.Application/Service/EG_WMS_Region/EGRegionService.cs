@@ -7,6 +7,9 @@
 [ApiDescriptionSettings(ApplicationConst.GroupName, Order = 100)]
 public class EGRegionService : IDynamicApiController, ITransient
 {
+    private static readonly TheCurrentTime _TimeStamp = new TheCurrentTime();
+
+
     #region 实体引入
     private readonly SqlSugarRepository<EG_WMS_Region> _rep;
     private readonly SqlSugarRepository<EG_WMS_Storage> _Storage;
@@ -103,7 +106,7 @@ public class EGRegionService : IDynamicApiController, ITransient
     [ApiDescriptionSettings(Name = "Add")]
     public async Task Add(AddEGRegionInput input)
     {
-        input.RegionNum = "Region" + new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString();
+        input.RegionNum = _TimeStamp.GetTheCurrentTimeTimeStamp("Region");
         var entity = input.Adapt<EG_WMS_Region>();
         await _rep.InsertAsync(entity);
     }

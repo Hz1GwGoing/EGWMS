@@ -1,4 +1,6 @@
-﻿namespace Admin.NET.Application.Service.EG_WMS_BaseServer;
+﻿using static SKIT.FlurlHttpClient.Wechat.Api.Models.ComponentTCBDescribeCloudBaseRunEnvironmentsResponse.Types.Environment.Types;
+
+namespace Admin.NET.Application.Service.EG_WMS_BaseServer;
 
 /// <summary>
 /// 基础实用接口
@@ -614,7 +616,7 @@ public class BaseService : IDynamicApiController, ITransient
 
         string malnum = AGVStrategyReturnRecommEndStorage(inand.MaterielNum);
 
-        if (malnum.Length < 8)
+        if (malnum.Length.ToInt() != 8)
         {
             throw Oops.Oh("没有合适的库位");
         }
@@ -625,6 +627,36 @@ public class BaseService : IDynamicApiController, ITransient
         {
             try
             {
+                // 得到入库料箱的数据
+
+                var workbinDate = _WorkBin.AsQueryable()
+                         .Where(x => x.InAndOutBoundNum == taskData.InAndOutBoundNum)
+                         .Select(x => new
+                         {
+                             x.ProductionDate
+                         })
+                         .ToList();
+
+                List<DateTime?> workbinTime = new List<DateTime?>();
+                for (int i = 0; i < workbinDate.Count; i++)
+                {
+                    workbinTime.Add(workbinDate[i].ProductionDate);
+                }
+
+                // 修改库位表中的状态为占用
+                _Storage.AsUpdateable()
+                         .AS("EG_WMS_Storage")
+                         .SetColumns(it => new Entity.EG_WMS_Storage
+                         {
+                             // 预占用
+                             StorageOccupy = 2,
+                             TaskNo = taskData.TaskNo,
+                             // 得到日期最大的生产日期
+                             StorageProductionDate = workbinTime.Max(),
+                         })
+                         .Where(x => x.StorageNum == malnum)
+                         .ExecuteCommand();
+
                 // 根据入库编号去修改库位
 
                 _InAndOutBound.AsUpdateable()

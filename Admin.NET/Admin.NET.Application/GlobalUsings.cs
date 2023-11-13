@@ -8,6 +8,7 @@ global using System.Transactions;
 global using System.Threading.Tasks;
 global using Microsoft.AspNetCore.Mvc;
 global using Furion.FriendlyException;
+global using Admin.NET.Application.Tool;
 global using Furion.DependencyInjection;
 global using System.Collections.Generic;
 global using Admin.NET.Application.Const;

@@ -6,6 +6,7 @@
 [ApiDescriptionSettings(ApplicationConst.GroupName, Order = 100)]
 public class EGRelocationService : IDynamicApiController, ITransient
 {
+    private static readonly TheCurrentTime currentTime = new TheCurrentTime();
 
     #region 引用实体
     private readonly SqlSugarRepository<EG_WMS_Relocation> _Relocation;
@@ -49,8 +50,7 @@ public class EGRelocationService : IDynamicApiController, ITransient
     public async Task PDARelocation(RelocationDto input)
     {
         // 生成当前时间时间戳
-        string timesstamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString();
-        string relacationnum = "EGYK" + timesstamp;
+        string relacationnum = currentTime.GetTheCurrentTimeTimeStamp("EGYK");
 
         try
         {

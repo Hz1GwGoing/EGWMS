@@ -6,6 +6,8 @@
 [ApiDescriptionSettings(ApplicationConst.GroupName, Order = 100)]
 public class EGTakeStockService : IDynamicApiController, ITransient
 {
+    private static readonly TheCurrentTime currentTime = new TheCurrentTime();
+
     #region 引用实体
     private readonly SqlSugarRepository<EG_WMS_TakeStock> _rep;
     private readonly SqlSugarRepository<EG_WMS_Inventory> _model;
@@ -126,8 +128,6 @@ public class EGTakeStockService : IDynamicApiController, ITransient
 
     #endregion
 
-    // 新案
-
     // 根据库位盘点
     #region （根据库位盘点）查找料箱（记录下来）
 
@@ -143,9 +143,7 @@ public class EGTakeStockService : IDynamicApiController, ITransient
         try
         {
             // 自动生成盘点编号（时间戳）
-            string timesStamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString();
-            string takestocknum = "EGPD" + timesStamp;
-
+            string takestocknum = currentTime.GetTheCurrentTimeTimeStamp("EGPD");
             // 先扫描库位得到库位的编号
             // 根据这个库位编号去查找区域编号和仓库编号
             var _storageListData = await _Storage.GetFirstAsync(x => x.StorageNum == input.StorageNum);
@@ -309,8 +307,6 @@ public class EGTakeStockService : IDynamicApiController, ITransient
     {
         try
         {
-
-
             // 得到扫描的料箱数据
             var listData = await _TakeStockData.GetFirstAsync(x => x.WorkBinNum == workbinnum && x.MaterielNum == materielnum);
             //var taskStockData = await _rep.GetFirstAsync(x => x.TakeStockNum == listData.TakeStockNum);
@@ -421,17 +417,21 @@ public class EGTakeStockService : IDynamicApiController, ITransient
                })
                .ToList();
 
+        if (data == null || data.Count == 0)
+        {
+            throw Oops.Oh("没有此条物料的库存记录");
+        }
+
         // 生成盘点任务
 
         for (int i = 0; i < data.Count; i++)
         {
             // 自动生成盘点编号（时间戳）
 
-            string timesStamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString();
-            string takestocknum = "EGPD" + timesStamp;
+            string takestocknum = currentTime.GetTheCurrentTimeTimeStamp("EDPD");
             string storagenum = data[i].StorageNum;
 
-            if (storagenum == data[i - 1].StorageNum && i > 1)
+            if (i > 1 && storagenum == data[i - 1].StorageNum)
             {
                 break;
             }
@@ -439,12 +439,13 @@ public class EGTakeStockService : IDynamicApiController, ITransient
             EG_WMS_TakeStock takedata = new EG_WMS_TakeStock()
             {
                 TakeStockNum = takestocknum,
-                // 根据库位盘点
-                TakeStockType = 1,
+                // 根据物料盘点
+                TakeStockType = 0,
                 // 盘点库位编号
                 TakeStockStorageNum = data[i].StorageNum,
                 CreateTime = DateTime.Now,
                 TakeStockStatus = 0,
+                MaterielNum = input.MaterielNum,
                 TakeStockRemake = input.TakeStockRemake,
             };
 

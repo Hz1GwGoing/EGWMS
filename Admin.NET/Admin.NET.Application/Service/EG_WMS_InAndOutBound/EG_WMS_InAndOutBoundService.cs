@@ -1,6 +1,4 @@
-﻿using Admin.NET.Application.Tool;
-
-namespace Admin.NET.Application;
+﻿namespace Admin.NET.Application;
 
 /// <summary>
 /// 出入库接口服务（agv、人工）
@@ -9,8 +7,8 @@ namespace Admin.NET.Application;
 public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
 {
     // agv接口
-    TaskService taskService = new TaskService();
-    BaseService BaseService = new BaseService();
+    private static readonly TaskService taskService = new TaskService();
+    private static readonly BaseService BaseService = new BaseService();
     private static readonly TheCurrentTime _TimeStamp = new TheCurrentTime();
 
     #region 关系注入
@@ -223,7 +221,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                         for (int i = 0; i < list.Count; i++)
                         {
                             // 库存编号（主表和详细表）
-                            string inventorynum = $"{i}" + _TimeStamp.GetTheCurrentTimeTimeStamp("EGRK");
+                            string inventorynum = $"{i}EGKC" + _TimeStamp.GetTheCurrentTimeTimeStamp();
                             // 料箱编号（详细表、料箱表）
                             string workbinnum = list[i].WorkBinNum;
                             // 物料编号（主表）
@@ -384,18 +382,8 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
     {
         try
         {
-            //// 根据模板编号去查询是否需要前往等待点
-            //var temLogicModel = await _TemLogicEntity.GetFirstAsync(x => x.TemLogicNo == input.ModelNo);
-            //if (temLogicModel != null && temLogicModel.HoldingPoint == "1")
-            //{
-
-            //    await AgvJoinBoundTaskGOPoint(input);
-
-            //}
-
             // 生成当前时间时间戳
-            string timesstamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString();
-            string joinboundnum = "EGRK" + timesstamp;
+            string joinboundnum = _TimeStamp.GetTheCurrentTimeTimeStamp("EGRK");
             // 起始点
             string startpoint = input.StartPoint;
             if (startpoint == null || input.EndPoint == "")
@@ -528,7 +516,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                         for (int i = 0; i < list.Count; i++)
                         {
                             // 库存编号（主表和详细表）
-                            string inventorynum = $"{i}EGKC" + timesstamp;
+                            string inventorynum = $"{i}EGKC" + _TimeStamp.GetTheCurrentTimeTimeStamp();
                             // 料箱编号（详细表、料箱表）
                             string workbinnum = list[i].WorkBinNum;
                             // 物料编号（主表）
@@ -693,8 +681,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
     public async Task AgvOutBoundTask(AgvBoundDto input)
     {
         // 生成当前时间时间戳
-        string timesstamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString();
-        string outboundnum = "EGCK" + timesstamp;
+        string outboundnum = _TimeStamp.GetTheCurrentTimeTimeStamp("EGCK");
 
         try
         {
@@ -895,9 +882,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
     public async Task ArtificialJoinBoundAdd(EGInBoundDto input)
     {
         // 生成当前时间时间戳
-        string timesstamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString();
-        // 自动生成入库编号
-        string joinboundnum = "EGRK" + timesstamp;
+        string joinboundnum = _TimeStamp.GetTheCurrentTimeTimeStamp("EGRK");
 
         try
         {
@@ -992,7 +977,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                 var idone = SnowFlakeSingle.instance.NextId();
                 var idtwo = SnowFlakeSingle.instance.NextId();
                 // 库存编号（主表和详细表）
-                string inventorynum = $"{i}EGKC" + timesstamp;
+                string inventorynum = $"{i}EGKC" + _TimeStamp.GetTheCurrentTimeTimeStamp();
                 // 料箱编号（详细表）
                 string workbinnum = item[i].WorkBinNum;
                 // 物料编号（主表）
@@ -1154,9 +1139,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
     {
 
         // 生成当前时间时间戳
-        string timesstamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString();
-        // 自动生成出库编号
-        string Outboundnum = "EGCK" + timesstamp;
+        string outboundnum = _TimeStamp.GetTheCurrentTimeTimeStamp("EGCK");
 
         try
         {
@@ -1220,7 +1203,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
             EG_WMS_InAndOutBound inandoutbound = new EG_WMS_InAndOutBound
             {
                 // 出库编号
-                InAndOutBoundNum = Outboundnum,
+                InAndOutBoundNum = outboundnum,
                 // 类型
                 InAndOutBoundType = 1,
                 // 时间
@@ -1234,7 +1217,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
             EG_WMS_InAndOutBoundDetail inandoutbounddetail = new EG_WMS_InAndOutBoundDetail
             {
                 // 出库编号
-                InAndOutBoundNum = Outboundnum,
+                InAndOutBoundNum = outboundnum,
                 // 库位编号
                 StorageNum = input.StorageNum,
                 // 区域编号
@@ -1297,7 +1280,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                      InAndOutBoundCount = sumcount,
 
                  })
-                 .Where(it => it.InAndOutBoundNum == Outboundnum)
+                 .Where(it => it.InAndOutBoundNum == outboundnum)
                  .ExecuteCommandAsync();
 
 
