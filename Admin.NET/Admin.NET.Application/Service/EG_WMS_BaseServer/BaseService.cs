@@ -1,6 +1,4 @@
-﻿using static SKIT.FlurlHttpClient.Wechat.Api.Models.ComponentTCBDescribeCloudBaseRunEnvironmentsResponse.Types.Environment.Types;
-
-namespace Admin.NET.Application.Service.EG_WMS_BaseServer;
+﻿namespace Admin.NET.Application.Service.EG_WMS_BaseServer;
 
 /// <summary>
 /// 基础实用接口

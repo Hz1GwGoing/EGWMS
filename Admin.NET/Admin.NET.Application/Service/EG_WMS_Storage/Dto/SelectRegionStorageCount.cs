@@ -2,6 +2,8 @@
 
 public class SelectRegionStorageCountDto
 {
+    public long id { get; set; }
+
     public string RegionNum { get; set; }
     public string RegionName { get; set; }
 

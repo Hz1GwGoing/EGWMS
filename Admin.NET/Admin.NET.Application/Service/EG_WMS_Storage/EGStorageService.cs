@@ -61,6 +61,7 @@ public class EGStorageService : IDynamicApiController, ITransient
                      .GroupBy(a => a.RegionNum)
                      .Select((a, b, c) => new SelectRegionStorageCountDto
                      {
+                         id = a.Id,
                          RegionNum = a.RegionNum,
                          RegionName = a.RegionName,
                          WHNum = c.WHNum,

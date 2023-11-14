@@ -12,7 +12,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
     private static readonly TaskService taskService = new TaskService();
     private static readonly BaseService BaseService = new BaseService();
     private static readonly ToolTheCurrentTime _TimeStamp = new ToolTheCurrentTime();
-    EG_WMS_InAndOutBoundMessage InAndOutBoundMessage;
+    EG_WMS_InAndOutBoundMessage InAndOutBoundMessage = new EG_WMS_InAndOutBoundMessage();
 
 
     #region 关系注入
@@ -680,7 +680,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
     /// <param name="input"></param>
     /// <returns></returns>
     [HttpPost]
-    [ApiDescriptionSettings(Name = "AgvJoinBoundTask", Order = 50)]
+    [ApiDescriptionSettings(Name = "AgvJoinBoundTasks", Order = 50)]
     public async Task AgvJoinBoundTasks(AgvJoinDto input)
     {
         try

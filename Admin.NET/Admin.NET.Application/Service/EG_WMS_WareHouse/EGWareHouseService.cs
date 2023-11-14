@@ -131,7 +131,7 @@ public class EGWareHouseService : IDynamicApiController, ITransient
     /// <returns></returns>
     [HttpPost]
     [ApiDescriptionSettings(Name = "Delete")]
-    public async Task Delete(int id)
+    public async Task Delete(long id)
     {
         var entity = await _rep.GetFirstAsync(u => u.Id == id) ?? throw Oops.Oh(ErrorCodeEnum.D1002);
         await _rep.FakeDeleteAsync(entity);   //假删除

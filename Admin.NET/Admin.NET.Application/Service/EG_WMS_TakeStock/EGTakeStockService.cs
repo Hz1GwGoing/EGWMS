@@ -434,7 +434,7 @@ public class EGTakeStockService : IDynamicApiController, ITransient
         {
             // 自动生成盘点编号（时间戳）
 
-            string takestocknum = currentTime.GetTheCurrentTimeTimeStamp("EDPD");
+            string takestocknum = i + currentTime.GetTheCurrentTimeTimeStamp("EDPD");
             string storagenum = data[i].StorageNum;
 
             if (i > 1 && storagenum == data[i - 1].StorageNum)

@@ -225,6 +225,20 @@ public class EGRelocationService : IDynamicApiController, ITransient
     }
     #endregion
 
+    #region 返回总数（总条数）
+
+    /// <summary>
+    /// 返回总数（总条数）
+    /// </summary>
+    /// <returns></returns>
+    public int RelocationAllCount()
+    {
+        return _Relocation.AsQueryable().Count();
+    }
+
+    #endregion
+
+
     #region 分页查询移库信息
     /// <summary>
     /// 分页查询移库信息
