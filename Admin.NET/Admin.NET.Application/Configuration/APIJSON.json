@@ -7,7 +7,7 @@
         "RoleName": "Role1", // 权限名称 唯一
         "Select": { // 查询
           "Table": [ "*" ], // 可操作的表
-          "Column": [ "tb.*" ], // 可操作的字段
+          "Column": [ "*" ], // 可操作的字段
           "Filter": []
         },
         "Insert": { // 添加

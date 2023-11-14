@@ -39,32 +39,9 @@ public class EG_WMS_InAndOutBoundMessage
 
             try
             {
-                // 得到入库的数据
-                List<MaterielWorkBin> list = input.materielWorkBins;
-                // 根据入库编号查询任务编号
-                var datatask = await _TaskEntity.GetFirstAsync(x => x.InAndOutBoundNum == joinboundnum);
 
-                List<DateTime> datetime = new List<DateTime>();
-                // 将料箱的生产日期保存
-                for (int i = 0; i < list.Count; i++)
-                {
-                    datetime.Add(list[i].ProductionDate);
-                }
-
-                // 修改库位表中的状态为占用
-                await _Storage.AsUpdateable()
-                          .AS("EG_WMS_Storage")
-                          .SetColumns(it => new Entity.EG_WMS_Storage
-                          {
-                              // 预占用
-                              StorageOccupy = 2,
-                              TaskNo = datatask.TaskNo,
-                              // 得到日期最大的生产日期
-                              StorageProductionDate = datetime.Max(),
-                          })
-                          .Where(x => x.StorageNum == input.EndPoint)
-                          .ExecuteCommandAsync();
-
+                // 修改库位表
+                await ModifyInventoryLocationOccupancy(input, joinboundnum);
 
                 // 入库操作
                 await WarehousingOperationTask(input, joinboundnum);
@@ -86,6 +63,42 @@ public class EG_WMS_InAndOutBoundMessage
             }
         }
 
+    }
+
+
+    /// <summary>
+    /// 修改库位表占用
+    /// </summary>
+    /// <param name="input"></param>
+    /// <param name="joinboundnum"></param>
+    /// <returns></returns>
+    public async Task ModifyInventoryLocationOccupancy(AgvJoinDto input, string joinboundnum)
+    {
+        // 得到入库的数据
+        List<MaterielWorkBin> list = input.materielWorkBins;
+        // 根据入库编号查询任务编号
+        var datatask = await _TaskEntity.GetFirstAsync(x => x.InAndOutBoundNum == joinboundnum);
+
+        List<DateTime> datetime = new List<DateTime>();
+        // 将料箱的生产日期保存
+        for (int i = 0; i < list.Count; i++)
+        {
+            datetime.Add(list[i].ProductionDate);
+        }
+
+        // 修改库位表中的状态为占用
+        await _Storage.AsUpdateable()
+                  .AS("EG_WMS_Storage")
+                  .SetColumns(it => new Entity.EG_WMS_Storage
+                  {
+                      // 预占用
+                      StorageOccupy = 2,
+                      TaskNo = datatask.TaskNo,
+                      // 得到日期最大的生产日期
+                      StorageProductionDate = datetime.Max(),
+                  })
+                  .Where(x => x.StorageNum == input.EndPoint)
+                  .ExecuteCommandAsync();
     }
 
     /// <summary>

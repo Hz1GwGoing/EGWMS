@@ -2,7 +2,7 @@
   "$schema": "https://gitee.com/dotnetchina/Furion/raw/v4/schemas/v4/furion-schema.json",
 
   "RCS": {
-    "Host": "192.168.1.2",
+    "Host": "127.0.0.1",
     "Port": "8001",
     "Area": 1
   },
