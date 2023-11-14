@@ -625,6 +625,30 @@ public class BaseService : IDynamicApiController, ITransient
         {
             try
             {
+                // 修改agv任务表里面的库位点（需要测试）
+                var _taskdata = _TaskEntity.GetFirst(x => x.TaskNo == orderId);
+
+                string path = _taskdata.TaskPath;
+                string[] result = path.Split(',');
+                string taskpath = string.Join(",", result[0], result[1], malnum);
+
+                _TaskEntity.AsUpdateable()
+                           .SetColumns(it => new TaskEntity
+                           {
+                               TaskPath = taskpath,
+                           })
+                           .Where(x => x.TaskNo == orderId)
+                           .ExecuteCommand();
+
+                // 添加agv详情表里面的库位点
+                TaskDetailEntity entity = new TaskDetailEntity();
+                entity.TaskID = orderId.ToLong();
+                entity.TaskPath = malnum;
+                entity.CreateTime = DateTime.Now;
+
+                _TaskDetailEntity.Insert(entity);
+
+
                 // 得到入库料箱的数据
 
                 var workbinDate = _WorkBin.AsQueryable()
@@ -668,7 +692,7 @@ public class BaseService : IDynamicApiController, ITransient
 
                 _InAndOutBoundDetail.AsUpdateable()
                     .AS("EG_WMS_InAndOutBoundDetail")
-                    .SetColumns(it => new Entity.EG_WMS_InAndOutBoundDetail
+                    .SetColumns(it => new EG_WMS_InAndOutBoundDetail
                     {
                         StorageNum = malnum,
                     })
