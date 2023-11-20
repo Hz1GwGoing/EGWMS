@@ -27,6 +27,7 @@ public class EG_WMS_InAndOutBoundDetail : EntityBase
     /// <summary>
     /// 区域编号
     /// </summary>
+    [SugarColumn(ColumnDescription = "区域编号", Length = 50)]
     public string? RegionNum { get; set; }
 
     /// <summary>

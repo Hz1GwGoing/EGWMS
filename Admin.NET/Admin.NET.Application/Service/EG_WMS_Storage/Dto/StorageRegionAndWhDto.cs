@@ -24,6 +24,17 @@ public class StorageRegionAndWhDto
     public string WHName { get; set; }
 
     /// <summary>
+    /// 仓库编号
+    /// </summary>
+    public string WHNum { get; set; }
+
+    /// <summary>
+    /// 区域编号
+    /// </summary>
+    public string RegionNum { get; set; }
+
+
+    /// <summary>
     /// 所属区域
     /// </summary>
     public string RegionName { get; set; }

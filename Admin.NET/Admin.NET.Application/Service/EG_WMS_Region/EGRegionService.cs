@@ -96,6 +96,39 @@ public class EGRegionService : IDynamicApiController, ITransient
 
     #endregion
 
+    #region 得到这个区域下有多少个库位
+
+    /// <summary>
+    /// 得到这个区域下有多少个库位
+    /// </summary>
+    /// <returns></returns>
+    [HttpPost]
+    [ApiDescriptionSettings(Name = "GetRegionStorageCount")]
+    public List<GetRegionStorageCountDto> GetRegionStorageCount(int page, int pageSize)
+    {
+
+        return _Storage.AsQueryable()
+                       .InnerJoin<EG_WMS_Region>((a, b) => a.RegionNum == b.RegionNum)
+                       .GroupBy(a => a.RegionNum)
+                       .Where((a, b) => a.RegionNum == b.RegionNum)
+                       .Select((a, b) => new GetRegionStorageCountDto
+                       {
+                           RegionNum = b.RegionNum,
+                           RegionName = b.RegionName,
+                           RegionStatus = (int)b.RegionStatus,
+                           StorageCount = SqlFunc.AggregateCount(a.StorageNum)
+
+                       })
+                      .Skip((page - 1) * pageSize)
+                      .Take(pageSize)
+                      .ToList();
+    }
+
+
+
+
+    #endregion
+
     #region 增加区域
     /// <summary>
     /// 增加区域

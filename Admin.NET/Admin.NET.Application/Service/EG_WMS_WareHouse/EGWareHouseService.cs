@@ -78,7 +78,7 @@ public class EGWareHouseService : IDynamicApiController, ITransient
 
                  // 当前仓库下区域总数
                  CurrentRegionCount = SqlFunc.Subqueryable<Entity.EG_WMS_Region>()
-                                             .Where(x => x.WHNum == b.WHNum)
+                                             .Where(x => x.WHNum == b.WHNum && x.IsDelete == false)
                                              .Select(x => SqlFunc.AggregateCount(x.RegionNum)),
                  // 当前仓库下库位总数
                  CurrentStorageCount = SqlFunc.Subqueryable<Entity.EG_WMS_Storage>()

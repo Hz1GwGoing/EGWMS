@@ -50,4 +50,9 @@ public class GetAllInAndBoundDetailData
     /// 库位名称
     /// </summary>
     public string StorageName { get; set; }
+
+    /// <summary>
+    /// 出入库人员
+    /// </summary>
+    public string InAndOutBoundUser { get; set; }
 }

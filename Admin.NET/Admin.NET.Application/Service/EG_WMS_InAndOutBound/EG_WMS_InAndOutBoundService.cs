@@ -8,14 +8,12 @@ namespace Admin.NET.Application;
 [ApiDescriptionSettings(ApplicationConst.GroupName, Order = 100)]
 public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
 {
+    #region 关系注入
     // agv接口
     private static readonly TaskService taskService = new TaskService();
     private static readonly BaseService BaseService = new BaseService();
     private static readonly ToolTheCurrentTime _TimeStamp = new ToolTheCurrentTime();
     EG_WMS_InAndOutBoundMessage InAndOutBoundMessage = new EG_WMS_InAndOutBoundMessage();
-
-
-    #region 关系注入
     private readonly SqlSugarRepository<EG_WMS_InAndOutBound> _rep = App.GetService<SqlSugarRepository<EG_WMS_InAndOutBound>>();
     private readonly SqlSugarRepository<EG_WMS_InAndOutBoundDetail> _InAndOutBoundDetail = App.GetService<SqlSugarRepository<EG_WMS_InAndOutBoundDetail>>();
     private readonly SqlSugarRepository<EG_WMS_Inventory> _Inventory = App.GetService<SqlSugarRepository<EG_WMS_Inventory>>();
@@ -400,6 +398,12 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
             {
                 // 根据策略推荐
                 input.EndPoint = BaseService.AGVStrategyReturnRecommEndStorage(input.materielWorkBins[0].MaterielNum);
+                // 添加暂存任务
+                if (input.EndPoint == "没有合适的库位")
+                {
+                    await InAndOutBoundMessage.NotStorageAddStagingTask(input, joinboundnum);
+                    return;
+                }
 
             }
 
@@ -722,14 +726,14 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
             }
             else
             {
-                throw new Exception("下达AGV任务失败");
+                throw Oops.Oh("下达AGV任务失败");
 
             }
         }
         catch (Exception ex)
         {
 
-            throw new Exception(ex.Message);
+            throw Oops.Oh(ex.Message);
         }
 
     }
@@ -824,6 +828,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                     EndPoint = endpoint,
                 };
 
+                #region 得到区域编号和仓库编号
                 // 查询库位编号所在的区域编号
                 var _storagelistdata = await _Storage.GetFirstAsync(u => u.StorageNum == input.EndPoint);
 
@@ -844,6 +849,8 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                 {
                     throw Oops.Oh("没有查询到这个仓库");
                 }
+                #endregion
+
 
                 // 生成出库详单
 
@@ -864,7 +871,8 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                 // 得到这个库位上的库存信息（先修改临时表里面的信息）
 
                 var tem_InventoryDetails = _InventoryDetailTem.AsQueryable()
-                                    .Where(it => it.StorageNum == startpoint)
+                                    .InnerJoin<EG_WMS_Tem_Inventory>((a, b) => a.InventoryNum == b.InventoryNum)
+                                    .Where((a, b) => a.StorageNum == startpoint && b.OutboundStatus == 0 && a.IsDelete == false && b.IsDelete == false)
                                     .ToList();
 
                 string wbnum = "";
@@ -1405,7 +1413,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                         .WhereIF(input.InAndOutBoundStatus > 0, (a, b) => a.InAndOutBoundStatus == input.InAndOutBoundStatus)
                         .WhereIF(!string.IsNullOrWhiteSpace(input.InAndOutBoundUser), (a, b) => a.InAndOutBoundUser.Contains(input.InAndOutBoundUser.Trim()))
                     // 倒序
-                    .Where(a => a.InAndOutBoundType == input.InAndOutBoundType)
+                    .Where(a => a.InAndOutBoundType == input.InAndOutBoundType && a.IsDelete == false)
                     .OrderBy(a => a.CreateTime, OrderByType.Desc)
                     .Select<EG_WMS_InAndOutBoundOutput>();
 

@@ -100,6 +100,7 @@ public class BaseService : IDynamicApiController, ITransient
 
     /// <summary>
     /// 得到所有的库存信息以及关联关系（分页查询）
+    /// 修改
     /// </summary>
     /// <param name="page">分页页数</param>
     /// <param name="pageSize">每页容量</param>
@@ -150,23 +151,65 @@ public class BaseService : IDynamicApiController, ITransient
     /// 查询得到出入库详情表
     /// </summary>
     /// <param name="inandoutbound">出入库编号</param>
-    /// <param name="type">出入库（0 - 入库（默认） 1 - 出库 ）</param>
     /// <returns></returns>
     [HttpPost]
     [ApiDescriptionSettings(Name = "GetAllInAndBoundDetailMessage")]
-    public List<GetAllInAndBoundDetailData> GetAllInAndBoundDetailMessage(string inandoutbound, int type = 0)
+    public List<GetAllInAndBoundDetailData> GetAllInAndBoundDetailMessage(string inandoutbound)
     {
 
         List<GetAllInAndBoundDetailData> data = _InAndOutBound.AsQueryable()
                       .InnerJoin<EG_WMS_InAndOutBoundDetail>((a, b) => a.InAndOutBoundNum == b.InAndOutBoundNum)
-                      .InnerJoin<EG_WMS_Inventory>((a, b, c) => c.InAndOutBoundNum == b.InAndOutBoundNum)
+                      .InnerJoin<EG_WMS_Tem_Inventory>((a, b, c) => c.InAndOutBoundNum == b.InAndOutBoundNum)
                       .InnerJoin<EG_WMS_Materiel>((a, b, c, d) => d.MaterielNum == c.MaterielNum)
-                      .InnerJoin<EG_WMS_InventoryDetail>((a, b, c, d, e) => e.InventoryNum == c.InventoryNum)
+                      .InnerJoin<EG_WMS_Tem_InventoryDetail>((a, b, c, d, e) => e.InventoryNum == c.InventoryNum)
                       .InnerJoin<EG_WMS_WorkBin>((a, b, c, d, e, f) => e.WorkBinNum == f.WorkBinNum)
                       .InnerJoin<Entity.EG_WMS_Region>((a, b, c, d, e, f, g) => g.RegionNum == e.RegionNum)
                       .InnerJoin<Entity.EG_WMS_WareHouse>((a, b, c, d, e, f, g, h) => h.WHNum == e.WHNum)
                       .InnerJoin<Entity.EG_WMS_Storage>((a, b, c, d, e, f, g, h, i) => i.StorageNum == e.StorageNum)
-                      .Where((a, b, c, d, e, f, g, h, i) => a.InAndOutBoundType == type && a.InAndOutBoundNum == inandoutbound)
+                      .Where((a, b, c, d, e, f, g, h, i) => a.InAndOutBoundNum == inandoutbound)
+                      .Select((a, b, c, d, e, f, g, h, i) => new GetAllInAndBoundDetailData
+                      {
+                          MaterielNum = d.MaterielNum,
+                          MaterielName = d.MaterielName,
+                          MaterieSpecs = d.MaterielSpecs,
+                          ICountAll = (int)c.ICountAll,
+                          WorkBinNum = f.WorkBinNum,
+                          WorkBinName = f.WorkBinName,
+                          WHName = h.WHName,
+                          RegionName = g.RegionName,
+                          StorageName = i.StorageName,
+                          InAndOutBoundUser = a.InAndOutBoundUser,
+                      })
+                      .ToList();
+
+
+        return data;
+
+    }
+
+    #endregion
+
+    #region 查询得到出入库详情表
+
+    /// <summary>
+    /// 查询得到出入库详情表
+    /// 修改
+    /// </summary>
+    /// <returns></returns>
+    [HttpPost]
+    [ApiDescriptionSettings(Name = "GetAllInAndBoundDetailMessage")]
+    public List<GetAllInAndBoundDetailData> GetAllInAndBoundDetailMessage()
+    {
+
+        List<GetAllInAndBoundDetailData> data = _InAndOutBound.AsQueryable()
+                      .InnerJoin<EG_WMS_InAndOutBoundDetail>((a, b) => a.InAndOutBoundNum == b.InAndOutBoundNum)
+                      .InnerJoin<EG_WMS_Tem_Inventory>((a, b, c) => c.InAndOutBoundNum == b.InAndOutBoundNum)
+                      .InnerJoin<EG_WMS_Materiel>((a, b, c, d) => d.MaterielNum == c.MaterielNum)
+                      .InnerJoin<EG_WMS_Tem_InventoryDetail>((a, b, c, d, e) => e.InventoryNum == c.InventoryNum)
+                      .InnerJoin<EG_WMS_WorkBin>((a, b, c, d, e, f) => e.WorkBinNum == f.WorkBinNum)
+                      .InnerJoin<Entity.EG_WMS_Region>((a, b, c, d, e, f, g) => g.RegionNum == e.RegionNum)
+                      .InnerJoin<Entity.EG_WMS_WareHouse>((a, b, c, d, e, f, g, h) => h.WHNum == e.WHNum)
+                      .InnerJoin<Entity.EG_WMS_Storage>((a, b, c, d, e, f, g, h, i) => i.StorageNum == e.StorageNum)
                       .OrderBy(a => a.Id)
                       .Select((a, b, c, d, e, f, g, h, i) => new GetAllInAndBoundDetailData
                       {
@@ -179,6 +222,7 @@ public class BaseService : IDynamicApiController, ITransient
                           WHName = h.WHName,
                           RegionName = g.RegionName,
                           StorageName = i.StorageName,
+                          InAndOutBoundUser = a.InAndOutBoundUser,
                       })
                       .ToList();
 
@@ -259,6 +303,17 @@ public class BaseService : IDynamicApiController, ITransient
 
     #endregion
 
+    #region 暂存任务（检索暂存任务表、查询是否有暂存的任务）
+
+    public async Task a()
+    {
+
+
+    }
+
+
+
+    #endregion
 
     //-------------------------------------/策略/-------------------------------------//
 
@@ -417,12 +472,15 @@ public class BaseService : IDynamicApiController, ITransient
             }
             else
             {
-                throw Oops.Oh("没有合适的库位");
+                //throw Oops.Oh("没有合适的库位");
+                return "没有合适的库位";
+
             }
         }
         // 如果没有则返回错误
+        return "没有合适的库位";
 
-        throw Oops.Oh("没有合适的库位");
+        //throw Oops.Oh("没有合适的库位");
     }
 
     #endregion
@@ -434,8 +492,8 @@ public class BaseService : IDynamicApiController, ITransient
     /// </summary>
     /// <returns></returns>
     [HttpPost]
-    [ApiDescriptionSettings(Name = "AGVStrategyReturnRecommendStorageOutBound")]
-    public string AGVStrategyReturnRecommendStorageOutBound(string materielNum)
+    [ApiDescriptionSettings(Name = "AGVStrategyReturnRecommendStorageOutBoundJudgeTime")]
+    public string AGVStrategyReturnRecommendStorageOutBoundJudgeTime(string materielNum)
     {
 
         // 根据物料编号，得到这个物料属于那个区域
@@ -527,56 +585,56 @@ public class BaseService : IDynamicApiController, ITransient
     /// （策略）（密集库）AGV出库WMS自动推荐的库位（不判断生产日期）
     /// </summary>
     /// <returns></returns>
-    //[HttpPost]
-    //[ApiDescriptionSettings(Name = "AGVStrategyReturnRecommendStorageOutBound")]
-    //public string AGVStrategyReturnRecommendStorageOutBound(string materielNum)
-    //{
-    //    // 根据物料编号，得到这个物料属于那个区域
-    //    var dataRegion = _Region.AsQueryable().Where(x => x.RegionMaterielNum == materielNum).ToList();
-    //    if (dataRegion == null || dataRegion.Count == 0)
-    //    {
-    //        throw Oops.Oh("区域未绑定物料");
-    //    }
+    [HttpPost]
+    [ApiDescriptionSettings(Name = "AGVStrategyReturnRecommendStorageOutBound")]
+    public string AGVStrategyReturnRecommendStorageOutBound(string materielNum)
+    {
+        // 根据物料编号，得到这个物料属于那个区域
+        var dataRegion = _Region.AsQueryable().Where(x => x.RegionMaterielNum == materielNum).ToList();
+        if (dataRegion == null || dataRegion.Count == 0)
+        {
+            throw Oops.Oh("区域未绑定物料");
+        }
 
-    //    // 查询是否有正在进行中的任务库位的组别
+        // 查询是否有正在进行中的任务库位的组别
 
-    //    var dataStorageGroup = _Storage.AsQueryable()
-    //               .Where(a => a.TaskNo != null && a.RegionNum == dataRegion[0].RegionNum)
-    //               .Distinct()
-    //               .Select(a => new
-    //               {
-    //                   a.StorageGroup,
-    //               })
-    //               .ToList();
+        var dataStorageGroup = _Storage.AsQueryable()
+                   .Where(a => a.TaskNo != null && a.RegionNum == dataRegion[0].RegionNum)
+                   .Distinct()
+                   .Select(a => new
+                   {
+                       a.StorageGroup,
+                   })
+                   .ToList();
 
-    //    // 将有任务的组别保存
-    //    string[] strings = new string[dataStorageGroup.Count];
-    //    for (int i = 0; i < dataStorageGroup.Count; i++)
-    //    {
-    //        strings[i] = dataStorageGroup[i].StorageGroup;
-    //    }
+        // 将有任务的组别保存
+        string[] strings = new string[dataStorageGroup.Count];
+        for (int i = 0; i < dataStorageGroup.Count; i++)
+        {
+            strings[i] = dataStorageGroup[i].StorageGroup;
+        }
 
-    //    // 查询库位并且排除不符合条件的组别和库位
+        // 查询库位并且排除不符合条件的组别和库位
 
-    //    var getStorage = _Storage.AsQueryable()
-    //             .Where(a => a.StorageStatus == 0 && a.StorageGroup != null
-    //             && a.StorageOccupy == 1 && a.RegionNum == dataRegion[0].RegionNum && !strings.Contains(a.StorageGroup))
-    //             .OrderBy(a => a.StorageNum, OrderByType.Asc)
-    //             .Select(a => new
-    //             {
-    //                 a.StorageNum,
-    //                 a.StorageGroup,
-    //             })
-    //             .ToList();
+        var getStorage = _Storage.AsQueryable()
+                 .Where(a => a.StorageStatus == 0 && a.StorageGroup != null
+                 && a.StorageOccupy == 1 && a.RegionNum == dataRegion[0].RegionNum && !strings.Contains(a.StorageGroup))
+                 .OrderBy(a => a.StorageNum, OrderByType.Asc)
+                 .Select(a => new
+                 {
+                     a.StorageNum,
+                     a.StorageGroup,
+                 })
+                 .ToList();
 
-    //    if (getStorage == null || getStorage.Count == 0)
-    //    {
-    //        throw Oops.Oh("没有合适的库位");
-    //    }
+        if (getStorage == null || getStorage.Count == 0)
+        {
+            throw Oops.Oh("没有合适的库位");
+        }
 
-    //    return getStorage[0].StorageNum;
+        return getStorage[0].StorageNum;
 
-    //}
+    }
 
 
     #endregion
