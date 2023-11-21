@@ -62,10 +62,10 @@ public class EGWareHouseService : IDynamicApiController, ITransient
 
     [HttpPost]
     [ApiDescriptionSettings(Name = "GetWareHouseDataAll")]
-    public List<GetWareHouseDataDto> GetWareHouseDataAll(int page = 1, int pageSize = 10)
+    public async Task<SqlSugarPagedList<GetWareHouseDataDto>> GetWareHouseDataAll(int page = 1, int pageSize = 10)
     {
 
-        return _region.AsQueryable()
+        var data = _region.AsQueryable()
              .RightJoin<Entity.EG_WMS_WareHouse>((a, b) => a.WHNum == b.WHNum)
              .LeftJoin<Entity.EG_WMS_Storage>((a, b, c) => a.RegionNum == c.RegionNum)
              .Select((a, b, c) => new GetWareHouseDataDto
@@ -96,10 +96,10 @@ public class EGWareHouseService : IDynamicApiController, ITransient
                  UpdateUserName = b.UpdateUserName,
 
              })
-             .GroupBy(a => a.WHNum)
-             .Skip((page - 1) * pageSize)
-             .Take(pageSize)
-             .ToList();
+             .GroupBy(a => a.WHNum);
+
+        return await data.ToPagedListAsync(page, pageSize);
+
 
     }
 

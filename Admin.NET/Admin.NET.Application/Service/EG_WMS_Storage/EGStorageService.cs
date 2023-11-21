@@ -1,4 +1,7 @@
-﻿namespace Admin.NET.Application.Service.EG_WMS_Storage;
+﻿using Admin.NET.Core;
+using System.Formats.Asn1;
+
+namespace Admin.NET.Application.Service.EG_WMS_Storage;
 
 /// <summary>
 /// 库位管理接口
@@ -52,32 +55,32 @@ public class EGStorageService : IDynamicApiController, ITransient
 
     [HttpGet]
     [ApiDescriptionSettings(Name = "SelectRegionStorageCount")]
-    public List<SelectRegionStorageCountDto> SelectRegionStorageCount(int page, int pageSize)
+    public async Task<SqlSugarPagedList<SelectRegionStorageCountDto>> SelectRegionStorageCount(int page, int pageSize)
     {
 
-        return _region.AsQueryable()
-                     .LeftJoin<Entity.EG_WMS_Storage>((a, b) => a.RegionNum == b.RegionNum)
-                     .InnerJoin<Entity.EG_WMS_WareHouse>((a, b, c) => a.WHNum == c.WHNum)
-                     .GroupBy(a => a.RegionNum)
-                     .Select((a, b, c) => new SelectRegionStorageCountDto
-                     {
-                         id = a.Id,
-                         RegionNum = a.RegionNum,
-                         RegionName = a.RegionName,
-                         WHNum = c.WHNum,
-                         WHName = c.WHName,
-                         TotalStorage = SqlFunc.AggregateCount(b.StorageNum),
-                         EnabledStorage = SqlFunc.AggregateCount(b.StorageStatus == 0),
-                         UsedStorage = SqlFunc.AggregateSum(SqlFunc.IIF(b.StorageOccupy == 1, 1, 0)),
-                         Remake = b.StorageRemake,
-                         CreateUserName = a.CreateUserName,
-                         UpdateUserName = a.UpdateUserName,
-                         // 区域绑定物料
-                         RegionMaterielNum = a.RegionMaterielNum,
-                     })
-                     .Skip((page - 1) * pageSize)
-                     .Take(pageSize)
-                     .ToList();
+        var data = _region.AsQueryable()
+                       .LeftJoin<Entity.EG_WMS_Storage>((a, b) => a.RegionNum == b.RegionNum)
+                       .InnerJoin<Entity.EG_WMS_WareHouse>((a, b, c) => a.WHNum == c.WHNum)
+                       .GroupBy(a => a.RegionNum)
+                       .Select((a, b, c) => new SelectRegionStorageCountDto
+                       {
+                           id = a.Id,
+                           RegionNum = a.RegionNum,
+                           RegionName = a.RegionName,
+                           WHNum = c.WHNum,
+                           WHName = c.WHName,
+                           TotalStorage = SqlFunc.AggregateCount(b.StorageNum),
+                           EnabledStorage = SqlFunc.AggregateCount(b.StorageStatus == 0),
+                           UsedStorage = SqlFunc.AggregateSum(SqlFunc.IIF(b.StorageOccupy == 1, 1, 0)),
+                           Remake = b.StorageRemake,
+                           CreateUserName = a.CreateUserName,
+                           UpdateUserName = a.UpdateUserName,
+                           // 区域绑定物料
+                           RegionMaterielNum = a.RegionMaterielNum,
+                       });
+
+        return await data.ToPagedListAsync(page, pageSize);
+
     }
 
 
@@ -93,40 +96,38 @@ public class EGStorageService : IDynamicApiController, ITransient
     /// <returns></returns>
     [HttpPost]
     [ApiDescriptionSettings(Name = "GetStorageRegionAndWH")]
-    public List<StorageRegionAndWhDto> GetStorageRegionAndWH(int page, int pageSize)
+    public async Task<SqlSugarPagedList<StorageRegionAndWhDto>> GetStorageRegionAndWH(int page, int pageSize)
     {
         var query = _rep.AsQueryable()
-        .InnerJoin<Entity.EG_WMS_Region>((a, b) => a.RegionNum == b.RegionNum)
-        .InnerJoin<Entity.EG_WMS_WareHouse>((a, b, c) => b.WHNum == c.WHNum)
-        .OrderBy(a => a.StorageNum, OrderByType.Asc)
-        .Select((a, b, c) => new StorageRegionAndWhDto
-        {
-            // 库位id
-            ID = a.Id,
-            StorageNum = a.StorageNum,
-            StorageName = a.StorageName,
-            StorageStatus = (int)a.StorageStatus,
-            WHNum = c.WHNum,
-            WHName = c.WHName,
-            RegionNum = b.RegionNum,
-            RegionName = b.RegionName,
-            StorageType = a.StorageType,
-            RoadwayNum = (int)a.RoadwayNum,
-            ShelfNum = (int)a.ShelfNum,
-            FloorNumber = (int)a.FloorNumber,
-            StorageOccupy = (int)a.StorageOccupy,
-            StorageRemake = a.StorageRemake,
-            CreateUserName = a.CreateUserName,
-            CreateTime = (DateTime)a.CreateTime,
-            StorageGroup = a.StorageGroup,
-        });
+                        .InnerJoin<Entity.EG_WMS_Region>((a, b) => a.RegionNum == b.RegionNum)
+                        .InnerJoin<Entity.EG_WMS_WareHouse>((a, b, c) => b.WHNum == c.WHNum)
+                        .OrderBy(a => a.StorageNum, OrderByType.Asc)
+                        .Select((a, b, c) => new StorageRegionAndWhDto
+                        {
+                            // 库位id
+                            ID = a.Id,
+                            StorageNum = a.StorageNum,
+                            StorageName = a.StorageName,
+                            StorageStatus = (int)a.StorageStatus,
+                            WHNum = c.WHNum,
+                            WHName = c.WHName,
+                            RegionNum = b.RegionNum,
+                            RegionName = b.RegionName,
+                            StorageType = a.StorageType,
+                            RoadwayNum = (int)a.RoadwayNum,
+                            ShelfNum = (int)a.ShelfNum,
+                            FloorNumber = (int)a.FloorNumber,
+                            StorageOccupy = (int)a.StorageOccupy,
+                            StorageRemake = a.StorageRemake,
+                            CreateUserName = a.CreateUserName,
+                            CreateTime = (DateTime)a.CreateTime,
+                            StorageGroup = a.StorageGroup,
+                        });
 
-        int totalCount = query.Count();
-        List<StorageRegionAndWhDto> result = query.Skip((page - 1) * pageSize).Take(pageSize).ToList();
-        result.Insert(0, new StorageRegionAndWhDto { TotalCount = totalCount });
-        return result;
+
+        return await query.ToPagedListAsync(page, pageSize);
+
     }
-
 
     #endregion
 

@@ -164,29 +164,28 @@ public class EGRelocationService : IDynamicApiController, ITransient
     /// <returns></returns>
     [HttpPost]
     [ApiDescriptionSettings(Name = "GetAllRelocationsAndStorageTime")]
-    public List<class1> GetAllRelocationsAndStorageTime([FromBody] PagingTimeFrameBO input)
+    public async Task<SqlSugarPagedList<class1>> GetAllRelocationsAndStorageTime([FromBody] PagingTimeFrameBO input)
     {
 
-        return _Relocation.AsQueryable()
-                     .InnerJoin<EG_WMS_Materiel>((a, b) => a.MaterielNum == b.MaterielNum)
-                     .WhereIF(input.dateTimes != null, a => a.RelocationTime > input.dateTimes[0] && a.RelocationTime < input.dateTimes[1])
-                     .WhereIF(!string.IsNullOrWhiteSpace(input.materielName), (a, b) => b.MaterielName.Contains(input.materielName.Trim()))
-                     .WhereIF(!string.IsNullOrWhiteSpace(input.materielSpecs), (a, b) => b.MaterielSpecs.Contains(input.materielSpecs.Trim()))
-                     .Select((a, b) => new class1
-                     {
-                         id = a.Id,
-                         RelocatioNum = a.RelocatioNum,
-                         RelocationCount = (int)a.RelocationCount,
-                         WorkBinNum = a.WorkBinNum,
-                         RelocationTime = (DateTime)a.RelocationTime,
-                         MaterielName = b.MaterielName,
-                         MaterielSpecs = b.MaterielSpecs,
-                         OldStorage = SqlFunc.Subqueryable<EG_WMS_Storage>().Where(s => s.StorageNum == a.OldStorageNum).Select(a => a.StorageName).ToString(),
-                         NewStorage = SqlFunc.Subqueryable<EG_WMS_Storage>().Where(s => s.StorageNum == a.NewStorageNum).Select(a => a.StorageName).ToString()
-                     })
-                     .Skip((input.page - 1) * input.pageSize)
-                     .Take(input.pageSize)
-                     .ToList();
+        var data = _Relocation.AsQueryable()
+                      .InnerJoin<EG_WMS_Materiel>((a, b) => a.MaterielNum == b.MaterielNum)
+                      .WhereIF(input.dateTimes != null, a => a.RelocationTime > input.dateTimes[0] && a.RelocationTime < input.dateTimes[1])
+                      .WhereIF(!string.IsNullOrWhiteSpace(input.materielName), (a, b) => b.MaterielName.Contains(input.materielName.Trim()))
+                      .WhereIF(!string.IsNullOrWhiteSpace(input.materielSpecs), (a, b) => b.MaterielSpecs.Contains(input.materielSpecs.Trim()))
+                      .Select((a, b) => new class1
+                      {
+                          id = a.Id,
+                          RelocatioNum = a.RelocatioNum,
+                          RelocationCount = (int)a.RelocationCount,
+                          WorkBinNum = a.WorkBinNum,
+                          RelocationTime = (DateTime)a.RelocationTime,
+                          MaterielName = b.MaterielName,
+                          MaterielSpecs = b.MaterielSpecs,
+                          OldStorage = SqlFunc.Subqueryable<EG_WMS_Storage>().Where(s => s.StorageNum == a.OldStorageNum).Select(a => a.StorageName).ToString(),
+                          NewStorage = SqlFunc.Subqueryable<EG_WMS_Storage>().Where(s => s.StorageNum == a.NewStorageNum).Select(a => a.StorageName).ToString()
+                      });
+
+        return await data.ToPagedListAsync(input.page, input.pageSize);
 
     }
     #endregion

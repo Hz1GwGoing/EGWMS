@@ -108,9 +108,9 @@ public class BaseService : IDynamicApiController, ITransient
 
     [HttpPost]
     [ApiDescriptionSettings(Name = "GetAllInventoryMessage")]
-    public List<GetAllInventoryData> GetAllInventoryMessage(int page, int pageSize)
+    public async Task<SqlSugarPagedList<GetAllInventoryData>> GetAllInventoryMessage(int page, int pageSize)
     {
-        List<GetAllInventoryData> datas = _Inventory.AsQueryable()
+        var data = _Inventory.AsQueryable()
                     .InnerJoin<EG_WMS_InventoryDetail>((o, cus) => o.InventoryNum == cus.InventoryNum)
                     .InnerJoin<EG_WMS_Materiel>((o, cus, ml) => ml.MaterielNum == o.MaterielNum)
                     .InnerJoin<Entity.EG_WMS_Storage>((o, cus, ml, age) => cus.StorageNum == age.StorageNum)
@@ -134,13 +134,10 @@ public class BaseService : IDynamicApiController, ITransient
                         WorkBinName = wb.WorkBinName,
                         RegionName = ion.RegionName,
                         OutboundStatus = o.OutboundStatus
-                    })
-                    .Skip((page - 1) * pageSize)
-                    .Take(pageSize)
-                    .ToList();
+                    });
 
+        return await data.ToPagedListAsync(page, pageSize);
 
-        return datas;
     }
 
     #endregion
@@ -243,9 +240,9 @@ public class BaseService : IDynamicApiController, ITransient
 
     [HttpPost]
     [ApiDescriptionSettings(Name = "MaterialAccorDingSumCount")]
-    public List<MaterielDataSumDto> MaterialAccorDingSumCount(MaterialSelectSumCountBO input)
+    public async Task<SqlSugarPagedList<MaterielDataSumDto>> MaterialAccorDingSumCount(MaterialSelectSumCountBO input)
     {
-        List<MaterielDataSumDto> data = _Inventory.AsQueryable()
+        var data = _Inventory.AsQueryable()
                    .InnerJoin<EG_WMS_Materiel>((inv, mat) => inv.MaterielNum == mat.MaterielNum)
                    .WhereIF(!string.IsNullOrEmpty(input.materielNum), (inv, mat) => mat.MaterielNum.Contains(input.materielNum.Trim()))
                    .WhereIF(!string.IsNullOrEmpty(input.materielName), (inv, mat) => mat.MaterielName.Contains(input.materielName.Trim()))
@@ -262,16 +259,11 @@ public class BaseService : IDynamicApiController, ITransient
                        MaterielMainUnit = mat.MaterielMainUnit,
                        MaterielAssistUnit = mat.MaterielAssistUnit,
                        SumCount = (int)SqlFunc.AggregateSum(inv.ICountAll)
-                   })
-                    .Skip((input.page - 1) * input.pageSize)
-                    .Take(input.pageSize)
-                    .ToList();
+                   });
 
-        return data;
+        return await data.ToPagedListAsync(input.page, input.pageSize);
 
     }
-
-
     #endregion 
 
     #region 根据物料编号得到这条物料编号所有的库存记录
@@ -285,7 +277,7 @@ public class BaseService : IDynamicApiController, ITransient
     /// <returns></returns>
     [HttpPost]
     [ApiDescriptionSettings(Name = "GetMaterileNumAllInventoryRecords")]
-    public List<GetMaterielNumDataList> GetMaterileNumAllInventoryRecords(string MaterielNum, int page, int pageSize)
+    public async Task<SqlSugarPagedList<GetMaterielNumDataList>> GetMaterileNumAllInventoryRecords(string MaterielNum, int page, int pageSize)
     {
         var data = _Inventory.AsQueryable()
                    .InnerJoin<EG_WMS_InventoryDetail>((inv, invd) => inv.InventoryNum == invd.InventoryNum)
@@ -293,12 +285,9 @@ public class BaseService : IDynamicApiController, ITransient
                    .InnerJoin<Entity.EG_WMS_Region>((inv, invd, ma, re) => invd.RegionNum == re.RegionNum)
                    .InnerJoin<Entity.EG_WMS_WareHouse>((inv, invd, ma, re, wh) => invd.WHNum == wh.WHNum)
                    .Where((inv, invd) => inv.MaterielNum == MaterielNum && inv.OutboundStatus == 0 && inv.IsDelete == false)
-                   .Select<GetMaterielNumDataList>()
-                   .Skip((page - 1) * pageSize)
-                   .Take(pageSize)
-                   .ToList();
+                   .Select<GetMaterielNumDataList>();
 
-        return data;
+        return await data.ToPagedListAsync(page, pageSize);
 
     }
 
@@ -799,3 +788,40 @@ public class BaseService : IDynamicApiController, ITransient
 
     #endregion
 }
+
+
+//-------------------------------------/归档/-------------------------------------//
+
+#region 根据物料筛选条件查询物料的总数
+
+//[HttpPost]
+//[ApiDescriptionSettings(Name = "MaterialAccorDingSumCount")]
+//public List<MaterielDataSumDto> MaterialAccorDingSumCount(MaterialSelectSumCountBO input)
+//{
+//    List<MaterielDataSumDto> data = _Inventory.AsQueryable()
+//               .InnerJoin<EG_WMS_Materiel>((inv, mat) => inv.MaterielNum == mat.MaterielNum)
+//               .WhereIF(!string.IsNullOrEmpty(input.materielNum), (inv, mat) => mat.MaterielNum.Contains(input.materielNum.Trim()))
+//               .WhereIF(!string.IsNullOrEmpty(input.materielName), (inv, mat) => mat.MaterielName.Contains(input.materielName.Trim()))
+//               .WhereIF(!string.IsNullOrEmpty(input.materielType), (inv, mat) => mat.MaterielType.Contains(input.materielType.Trim()))
+//               .WhereIF(!string.IsNullOrEmpty(input.materielSpecs), (inv, mat) => mat.MaterielSpecs.Contains(input.materielSpecs.Trim()))
+//               .Where((inv, mat) => inv.OutboundStatus == 0 && inv.IsDelete == false)
+//               .GroupBy((inv, mat) => inv.MaterielNum)
+//               .Select((inv, mat) => new MaterielDataSumDto
+//               {
+//                   MaterielNum = inv.MaterielNum,
+//                   MaterielName = mat.MaterielName,
+//                   MaterielType = mat.MaterielType,
+//                   MaterielSpecs = mat.MaterielSpecs,
+//                   MaterielMainUnit = mat.MaterielMainUnit,
+//                   MaterielAssistUnit = mat.MaterielAssistUnit,
+//                   SumCount = (int)SqlFunc.AggregateSum(inv.ICountAll)
+//               })
+//                .Skip((input.page - 1) * input.pageSize)
+//                .Take(input.pageSize)
+//                .ToList();
+
+//    return data;
+
+//}
+
+#endregion

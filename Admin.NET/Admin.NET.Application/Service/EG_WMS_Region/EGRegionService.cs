@@ -1,4 +1,6 @@
-﻿namespace Admin.NET.Application;
+﻿using Admin.NET.Core;
+
+namespace Admin.NET.Application;
 
 
 /// <summary>
@@ -104,10 +106,10 @@ public class EGRegionService : IDynamicApiController, ITransient
     /// <returns></returns>
     [HttpPost]
     [ApiDescriptionSettings(Name = "GetRegionStorageCount")]
-    public List<GetRegionStorageCountDto> GetRegionStorageCount(int page, int pageSize)
+    public async Task<SqlSugarPagedList<GetRegionStorageCountDto>> GetRegionStorageCount(int page, int pageSize)
     {
 
-        return _Storage.AsQueryable()
+        var data = _Storage.AsQueryable()
                        .InnerJoin<EG_WMS_Region>((a, b) => a.RegionNum == b.RegionNum)
                        .GroupBy(a => a.RegionNum)
                        .Where((a, b) => a.RegionNum == b.RegionNum)
@@ -118,10 +120,10 @@ public class EGRegionService : IDynamicApiController, ITransient
                            RegionStatus = (int)b.RegionStatus,
                            StorageCount = SqlFunc.AggregateCount(a.StorageNum)
 
-                       })
-                      .Skip((page - 1) * pageSize)
-                      .Take(pageSize)
-                      .ToList();
+                       });
+
+        return await data.ToPagedListAsync(page, pageSize);
+
     }
 
 
