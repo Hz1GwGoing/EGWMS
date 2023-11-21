@@ -67,14 +67,11 @@ public class EGTakeStockService : IDynamicApiController, ITransient
     {
         var query = _rep.AsQueryable()
                     .WhereIF(!string.IsNullOrWhiteSpace(input.TakeStockNum), u => u.TakeStockNum.Contains(input.TakeStockNum.Trim()))
-                    .WhereIF(input.TakeStockStatus > 0, u => u.TakeStockStatus == input.TakeStockStatus)
-                    // 盘点数量
-                    .WhereIF(input.TakeStockCount > 0, u => u.TakeStockCount == input.TakeStockCount)
-                    // 差值数量
-                    .WhereIF(input.TakeStockDiffCount > 0, u => u.TakeStockDiffCount == input.TakeStockDiffCount)
+                    .WhereIF(input.TakeStockStatus == 0 || input.TakeStockStatus == 1, u => u.TakeStockStatus == input.TakeStockStatus)
                     .WhereIF(!string.IsNullOrWhiteSpace(input.TakeStockUser), u => u.TakeStockUser.Contains(input.TakeStockUser.Trim()))
                     .WhereIF(!string.IsNullOrWhiteSpace(input.TakeStockRemake), u => u.TakeStockRemake.Contains(input.TakeStockRemake.Trim()))
                     .WhereIF(!string.IsNullOrWhiteSpace(input.MaterielNum), u => u.MaterielNum.Contains(input.MaterielNum.Trim()))
+                    .WhereIF(input.TakeStockType != null, u => u.TakeStockType == input.TakeStockType)
                     // 获取创建日期
                     .WhereIF(input.CreateTime > DateTime.MinValue, u => u.CreateTime >= input.CreateTime)
                     .Select<EGTakeStockOutput>()

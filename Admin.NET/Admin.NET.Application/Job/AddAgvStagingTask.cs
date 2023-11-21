@@ -105,6 +105,8 @@ public class AddAgvStagingTask : IJob
                           .Where(x => x.InAndOutBoundNum == taskstaging.Result.InAndOutBoundNum)
                           .ExecuteCommandAsync();
 
+
+
                     // 提交事务
                     scope.Complete();
                 }

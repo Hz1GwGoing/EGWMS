@@ -11,7 +11,7 @@ public class EGTakeStockBaseInput
     public virtual string? TakeStockNum { get; set; }
 
     /// <summary>
-    /// 盘点状态
+    /// 盘点状态（0.待盘点 1.已盘点）
     /// </summary>
     public virtual int? TakeStockStatus { get; set; } = 0;
 
@@ -63,24 +63,14 @@ public class EGTakeStockInput : BasePageInput
     public string? TakeStockNum { get; set; }
 
     /// <summary>
-    /// 盘点状态
+    /// 盘点状态（0.待盘点 1.已盘点）
     /// </summary>
-    public int? TakeStockStatus { get; set; } = 0;
+    public int? TakeStockStatus { get; set; }
 
     /// <summary>
     /// 盘点类别（0.根据物料盘点 1.根据库位盘点）
     /// </summary>
     public int? TakeStockType { get; set; }
-
-    /// <summary>
-    /// 盘点数量
-    /// </summary>
-    public int? TakeStockCount { get; set; } = null;
-
-    /// <summary>
-    /// 差值数量
-    /// </summary>
-    public int? TakeStockDiffCount { get; set; } = null;
 
     /// <summary>
     /// 盘点时间
@@ -105,7 +95,6 @@ public class EGTakeStockInput : BasePageInput
     /// 物料编号
     /// </summary>
     public string? MaterielNum { get; set; }
-
 
     /// <summary>
     /// 创建时间

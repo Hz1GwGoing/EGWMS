@@ -233,21 +233,24 @@ public class BaseService : IDynamicApiController, ITransient
 
     #endregion
 
-    #region 根据物料编号查询物料的总数
+    #region 根据物料筛选条件查询物料的总数
 
     /// <summary>
-    /// 根据物料编号查询物料的总数
+    /// 根据物料筛选条件查询物料的总数
     /// </summary>
-    /// <param name="page">页数</param>
-    /// <param name="pageSize">每页容量</param>
+    /// <param name="input">查询条件</param>
     /// <returns></returns>
 
     [HttpPost]
     [ApiDescriptionSettings(Name = "MaterialAccorDingSumCount")]
-    public List<MaterielDataSumDto> MaterialAccorDingSumCount(int page, int pageSize)
+    public List<MaterielDataSumDto> MaterialAccorDingSumCount(MaterialSelectSumCountBO input)
     {
         List<MaterielDataSumDto> data = _Inventory.AsQueryable()
                    .InnerJoin<EG_WMS_Materiel>((inv, mat) => inv.MaterielNum == mat.MaterielNum)
+                   .WhereIF(!string.IsNullOrEmpty(input.materielNum), (inv, mat) => mat.MaterielNum.Contains(input.materielNum.Trim()))
+                   .WhereIF(!string.IsNullOrEmpty(input.materielName), (inv, mat) => mat.MaterielName.Contains(input.materielName.Trim()))
+                   .WhereIF(!string.IsNullOrEmpty(input.materielType), (inv, mat) => mat.MaterielType.Contains(input.materielType.Trim()))
+                   .WhereIF(!string.IsNullOrEmpty(input.materielSpecs), (inv, mat) => mat.MaterielSpecs.Contains(input.materielSpecs.Trim()))
                    .Where((inv, mat) => inv.OutboundStatus == 0 && inv.IsDelete == false)
                    .GroupBy((inv, mat) => inv.MaterielNum)
                    .Select((inv, mat) => new MaterielDataSumDto
@@ -260,8 +263,8 @@ public class BaseService : IDynamicApiController, ITransient
                        MaterielAssistUnit = mat.MaterielAssistUnit,
                        SumCount = (int)SqlFunc.AggregateSum(inv.ICountAll)
                    })
-                    .Skip((page - 1) * pageSize)
-                    .Take(pageSize)
+                    .Skip((input.page - 1) * input.pageSize)
+                    .Take(input.pageSize)
                     .ToList();
 
         return data;
@@ -296,18 +299,6 @@ public class BaseService : IDynamicApiController, ITransient
                    .ToList();
 
         return data;
-
-    }
-
-
-
-    #endregion
-
-    #region 暂存任务（检索暂存任务表、查询是否有暂存的任务）
-
-    public async Task a()
-    {
-
 
     }
 

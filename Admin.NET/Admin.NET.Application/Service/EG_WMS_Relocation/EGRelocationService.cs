@@ -155,42 +155,6 @@ public class EGRelocationService : IDynamicApiController, ITransient
     }
     #endregion
 
-    #region 得到移库表关联库位关系（分页查询）
-
-    /// <summary>
-    /// 得到移库表关联库位关系（分页查询）
-    /// </summary>
-    /// <param name="page">页数</param>
-    /// <param name="pageSize">每页记录数</param>
-    /// <returns></returns>
-
-    [HttpPost]
-    [ApiDescriptionSettings(Name = "GetAllRelocationsAndStorage")]
-    public List<class1> GetAllRelocationsAndStorage(int page, int pageSize)
-    {
-
-        return _Relocation.AsQueryable()
-                     .InnerJoin<EG_WMS_Materiel>((a, b) => a.MaterielNum == b.MaterielNum)
-                     .Select((a, b) => new class1
-                     {
-                         id = a.Id,
-                         RelocatioNum = a.RelocatioNum,
-                         RelocationCount = (int)a.RelocationCount,
-                         WorkBinNum = a.WorkBinNum,
-                         RelocationTime = (DateTime)a.RelocationTime,
-                         MaterielName = b.MaterielName,
-                         MaterielSpecs = b.MaterielSpecs,
-                         OldStorage = SqlFunc.Subqueryable<EG_WMS_Storage>().Where(s => s.StorageNum == a.OldStorageNum).Select(a => a.StorageName).ToString(),
-                         NewStorage = SqlFunc.Subqueryable<EG_WMS_Storage>().Where(s => s.StorageNum == a.NewStorageNum).Select(a => a.StorageName).ToString()
-                     })
-                     .Skip((page - 1) * pageSize)
-                     .Take(pageSize)
-                     .ToList();
-
-    }
-
-    #endregion
-
     #region 得到移库表关联库位关系（分页查询）（时间范围）
 
     /// <summary>
@@ -205,6 +169,9 @@ public class EGRelocationService : IDynamicApiController, ITransient
 
         return _Relocation.AsQueryable()
                      .InnerJoin<EG_WMS_Materiel>((a, b) => a.MaterielNum == b.MaterielNum)
+                     .WhereIF(input.dateTimes != null, a => a.RelocationTime > input.dateTimes[0] && a.RelocationTime < input.dateTimes[1])
+                     .WhereIF(!string.IsNullOrWhiteSpace(input.materielName), (a, b) => b.MaterielName.Contains(input.materielName.Trim()))
+                     .WhereIF(!string.IsNullOrWhiteSpace(input.materielSpecs), (a, b) => b.MaterielSpecs.Contains(input.materielSpecs.Trim()))
                      .Select((a, b) => new class1
                      {
                          id = a.Id,
@@ -217,7 +184,6 @@ public class EGRelocationService : IDynamicApiController, ITransient
                          OldStorage = SqlFunc.Subqueryable<EG_WMS_Storage>().Where(s => s.StorageNum == a.OldStorageNum).Select(a => a.StorageName).ToString(),
                          NewStorage = SqlFunc.Subqueryable<EG_WMS_Storage>().Where(s => s.StorageNum == a.NewStorageNum).Select(a => a.StorageName).ToString()
                      })
-                     .Where(a => a.RelocationTime > input.dateTimes[0] && a.RelocationTime < input.dateTimes[1])
                      .Skip((input.page - 1) * input.pageSize)
                      .Take(input.pageSize)
                      .ToList();
@@ -379,7 +345,9 @@ public class EGRelocationService : IDynamicApiController, ITransient
     {
         public int page { get; set; }
         public int pageSize { get; set; }
-        public DateTime[] dateTimes { get; set; }
+        public string? materielName { get; set; }
+        public string? materielSpecs { get; set; }
+        public DateTime[]? dateTimes { get; set; }
     }
 
 
