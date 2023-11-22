@@ -45,7 +45,7 @@ public class EG_WMS_WorkBin : EntityBase
     /// <summary>
     /// 生产批次
     /// </summary>
-    [SugarColumn(ColumnDescription = "生产批次", Length = 10)]
+    [SugarColumn(ColumnDescription = "生产批次", Length = 50)]
     public string? ProductionLot { get; set; }
 
     /// <summary>

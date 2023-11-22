@@ -1,21 +1,17 @@
-﻿using Admin.NET.Application.Service.EG_WMS_InAndOutBound;
-using Furion.Schedule;
-using System.Threading;
-
-namespace Admin.NET.Application.Job;
+﻿namespace Admin.NET.Application.Job;
 
 /// <summary>
-/// 再次请求AGV任务
+/// 再次请求AGV暂存任务
 /// </summary>
-[JobDetail("repeat_AgvTaskJob", Description = "再次请求AGV任务", GroupName = "AGVTask", Concurrent = false)]
-[Daily(TriggerId = "trigger_repeatAgvTaskJob", Description = "再次请求AGV任务")]
+[JobDetail("repeat_AgvTaskJob", Description = "再次请求AGV暂存任务", GroupName = "AGVTask", Concurrent = false)]
+[Daily(TriggerId = "trigger_repeatAgvTaskJob", Description = "再次请求AGV暂存任务")]
 public class AddAgvStagingTask : IJob
 {
     #region 关系注入
     private readonly IServiceProvider _serviceProvider;
     private static readonly TaskService taskService = new TaskService();
     private readonly BaseService baseService = new BaseService();
-    private readonly EG_WMS_InAndOutBoundMessage inoutboundMessage;
+    private readonly EG_WMS_InAndOutBoundMessage inoutboundMessage = new EG_WMS_InAndOutBoundMessage();
     private readonly SqlSugarRepository<Entity.EG_WMS_InAndOutBound> _InAndOutBound = App.GetService<SqlSugarRepository<Entity.EG_WMS_InAndOutBound>>();
     private readonly SqlSugarRepository<Entity.EG_WMS_InAndOutBoundDetail> _InAndOutBoundDetail = App.GetService<SqlSugarRepository<Entity.EG_WMS_InAndOutBoundDetail>>();
     private readonly SqlSugarRepository<EG_WMS_Tem_Inventory> _TemInventory = App.GetService<SqlSugarRepository<EG_WMS_Tem_Inventory>>();
@@ -38,7 +34,7 @@ public class AddAgvStagingTask : IJob
         using var serviceScope = _serviceProvider.CreateScope();
 
         // 检索暂存任务表里面有没有没有下发未完成的任务
-        var taskstaging = _TaskStagingEntity.GetFirstAsync(x => x.StagingStatus == 0);
+        var taskstaging = _TaskStagingEntity.GetFirst(x => x.StagingStatus == 0);
 
         if (taskstaging == null)
         {
@@ -49,7 +45,7 @@ public class AddAgvStagingTask : IJob
         // 得到临时库存表里面这次入库的物料编号
         // 因为一次入库里面的物料只能是一种（前提）
         var teminvData = _TemInventory.AsQueryable()
-                      .Where(x => x.InAndOutBoundNum == taskstaging.Result.InAndOutBoundNum)
+                      .Where(x => x.InAndOutBoundNum == taskstaging.InAndOutBoundNum)
                       .ToList();
 
         // 重新获取库位编号
@@ -62,8 +58,9 @@ public class AddAgvStagingTask : IJob
 
         // 重新下发AGV任务
 
-        TaskEntity taskEntity = taskstaging.Result.Adapt<TaskEntity>();
-        taskstaging.Result.TaskPath += endStorage;
+        TaskEntity taskEntity = taskstaging.Adapt<TaskEntity>();
+        taskEntity.TaskPath = taskstaging.TaskPath += endStorage;
+
         DHMessage item = await taskService.AddAsync(taskEntity);
         if (item.code == 1000)
         {
@@ -72,7 +69,7 @@ public class AddAgvStagingTask : IJob
                 try
                 {
                     // 修改库位状态
-                    await inoutboundMessage.ModifyInventoryLocationOccupancy(taskstaging.Result.InAndOutBoundNum, endStorage);
+                    await inoutboundMessage.ModifyInventoryLocationOccupancy(taskstaging.InAndOutBoundNum, endStorage);
 
                     // 根据库位编号得到区域、仓库编号
                     var _storageRegionNum = inoutboundMessage.GetStorageWhereRegion(endStorage);
@@ -86,7 +83,7 @@ public class AddAgvStagingTask : IJob
                                        // 现在任务下发才是入库中的状态
                                        InAndOutBoundStatus = 4,
                                    })
-                                   .Where(x => x.InAndOutBoundNum == taskstaging.Result.InAndOutBoundNum)
+                                   .Where(x => x.InAndOutBoundNum == taskstaging.InAndOutBoundNum)
                                    .ExecuteCommandAsync();
 
                     await _InAndOutBoundDetail.AsUpdateable()
@@ -96,7 +93,7 @@ public class AddAgvStagingTask : IJob
                                                   WHNum = _regionWHNum,
                                                   RegionNum = _storageRegionNum,
                                               })
-                                              .Where(x => x.InAndOutBoundNum == taskstaging.Result.InAndOutBoundNum)
+                                              .Where(x => x.InAndOutBoundNum == taskstaging.InAndOutBoundNum)
                                               .ExecuteCommandAsync();
 
                     await _WorkBin.AsUpdateable()
@@ -104,7 +101,7 @@ public class AddAgvStagingTask : IJob
                           {
                               StorageNum = endStorage
                           })
-                          .Where(x => x.InAndOutBoundNum == taskstaging.Result.InAndOutBoundNum)
+                          .Where(x => x.InAndOutBoundNum == taskstaging.InAndOutBoundNum)
                           .ExecuteCommandAsync();
 
                     // 修改暂存任务
@@ -114,8 +111,34 @@ public class AddAgvStagingTask : IJob
                                        {
                                            StagingStatus = 1,
                                        })
-                                       .Where(x => x.InAndOutBoundNum == taskstaging.Result.InAndOutBoundNum)
+                                       .Where(x => x.InAndOutBoundNum == taskstaging.InAndOutBoundNum)
                                        .ExecuteCommandAsync();
+
+
+                    // 查询临时库存主表里面的库存编号
+
+                    var datas = _TemInventory.AsQueryable()
+                                   .Where(x => x.InAndOutBoundNum == taskstaging.InAndOutBoundNum)
+                                   .Select(x => new
+                                   {
+                                       x.InventoryNum
+                                   })
+                                   .ToList();
+
+                    for (int i = 0; i < datas.Count; i++)
+                    {
+                        // 修改临时库存明细表里面的库位信息
+
+                        await _TemInventoryDetail.AsUpdateable()
+                                                 .SetColumns(it => new EG_WMS_Tem_InventoryDetail
+                                                 {
+                                                     StorageNum = endStorage,
+                                                     WHNum = _regionWHNum,
+                                                     RegionNum = _storageRegionNum,
+                                                 })
+                                                 .Where(x => x.InventoryNum == datas[i].InventoryNum)
+                                                 .ExecuteCommandAsync();
+                    }
 
                     // 提交事务
                     scope.Complete();
