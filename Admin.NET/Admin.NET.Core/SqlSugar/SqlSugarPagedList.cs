@@ -123,7 +123,7 @@ public static class SqlSugarPagedExtensions
     /// <param name="pageIndex">当前页码，从1开始</param>
     /// <param name="pageSize">页码容量</param>
     /// <returns></returns>
-    public static SqlSugarPagedList<TEntity> ToPagedList<TEntity>(this IEnumerable<TEntity> list, int pageIndex, int pageSize)
+    public static SqlSugarPagedList<TEntity> ToPagedListAsync<TEntity>(this IEnumerable<TEntity> list, int pageIndex, int pageSize)
     {
         var total = list.Count();
         var items = list.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToList();

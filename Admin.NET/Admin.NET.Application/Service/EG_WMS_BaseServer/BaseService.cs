@@ -792,36 +792,4 @@ public class BaseService : IDynamicApiController, ITransient
 
 //-------------------------------------/归档/-------------------------------------//
 
-#region 根据物料筛选条件查询物料的总数
 
-//[HttpPost]
-//[ApiDescriptionSettings(Name = "MaterialAccorDingSumCount")]
-//public List<MaterielDataSumDto> MaterialAccorDingSumCount(MaterialSelectSumCountBO input)
-//{
-//    List<MaterielDataSumDto> data = _Inventory.AsQueryable()
-//               .InnerJoin<EG_WMS_Materiel>((inv, mat) => inv.MaterielNum == mat.MaterielNum)
-//               .WhereIF(!string.IsNullOrEmpty(input.materielNum), (inv, mat) => mat.MaterielNum.Contains(input.materielNum.Trim()))
-//               .WhereIF(!string.IsNullOrEmpty(input.materielName), (inv, mat) => mat.MaterielName.Contains(input.materielName.Trim()))
-//               .WhereIF(!string.IsNullOrEmpty(input.materielType), (inv, mat) => mat.MaterielType.Contains(input.materielType.Trim()))
-//               .WhereIF(!string.IsNullOrEmpty(input.materielSpecs), (inv, mat) => mat.MaterielSpecs.Contains(input.materielSpecs.Trim()))
-//               .Where((inv, mat) => inv.OutboundStatus == 0 && inv.IsDelete == false)
-//               .GroupBy((inv, mat) => inv.MaterielNum)
-//               .Select((inv, mat) => new MaterielDataSumDto
-//               {
-//                   MaterielNum = inv.MaterielNum,
-//                   MaterielName = mat.MaterielName,
-//                   MaterielType = mat.MaterielType,
-//                   MaterielSpecs = mat.MaterielSpecs,
-//                   MaterielMainUnit = mat.MaterielMainUnit,
-//                   MaterielAssistUnit = mat.MaterielAssistUnit,
-//                   SumCount = (int)SqlFunc.AggregateSum(inv.ICountAll)
-//               })
-//                .Skip((input.page - 1) * input.pageSize)
-//                .Take(input.pageSize)
-//                .ToList();
-
-//    return data;
-
-//}
-
-#endregion

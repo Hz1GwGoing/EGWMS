@@ -1,7 +1,4 @@
-﻿using Admin.NET.Core;
-using System.Formats.Asn1;
-
-namespace Admin.NET.Application.Service.EG_WMS_Storage;
+﻿namespace Admin.NET.Application.Service.EG_WMS_Storage;
 
 /// <summary>
 /// 库位管理接口
@@ -17,6 +14,29 @@ public class EGStorageService : IDynamicApiController, ITransient
         _rep = rep;
         _region = region;
     }
+
+    #region 根据类别得到库位编号
+
+    /// <summary>
+    /// 根据类别得到库位编号
+    /// </summary>
+    /// <param name="type">类别</param>
+    /// <param name="page">页数</param>
+    /// <param name="pageSize">每页容量</param>
+    /// <returns></returns>
+    public async Task<SqlSugarPagedList<Entity.EG_WMS_Storage>> ScreeningRepositoryLocation(string type, int page, int pageSize)
+    {
+        var data = _rep.AsQueryable()
+             .Where(x => x.StorageType == type);
+
+        return await data.ToPagedListAsync(page, pageSize);
+
+
+    }
+
+
+
+    #endregion
 
     #region 查询区域下库位总数
 

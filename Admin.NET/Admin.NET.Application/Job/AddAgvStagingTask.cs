@@ -14,7 +14,7 @@ public class AddAgvStagingTask : IJob
     #region 关系注入
     private readonly IServiceProvider _serviceProvider;
     private static readonly TaskService taskService = new TaskService();
-    private readonly BaseService baseService;
+    private readonly BaseService baseService = new BaseService();
     private readonly EG_WMS_InAndOutBoundMessage inoutboundMessage;
     private readonly SqlSugarRepository<Entity.EG_WMS_InAndOutBound> _InAndOutBound = App.GetService<SqlSugarRepository<Entity.EG_WMS_InAndOutBound>>();
     private readonly SqlSugarRepository<Entity.EG_WMS_InAndOutBoundDetail> _InAndOutBoundDetail = App.GetService<SqlSugarRepository<Entity.EG_WMS_InAndOutBoundDetail>>();
@@ -35,6 +35,8 @@ public class AddAgvStagingTask : IJob
 
     public async Task ExecuteAsync(JobExecutingContext context, CancellationToken stoppingToken)
     {
+        using var serviceScope = _serviceProvider.CreateScope();
+
         // 检索暂存任务表里面有没有没有下发未完成的任务
         var taskstaging = _TaskStagingEntity.GetFirstAsync(x => x.StagingStatus == 0);
 
@@ -60,7 +62,7 @@ public class AddAgvStagingTask : IJob
 
         // 重新下发AGV任务
 
-        TaskEntity taskEntity = taskstaging.Adapt<TaskEntity>();
+        TaskEntity taskEntity = taskstaging.Result.Adapt<TaskEntity>();
         taskstaging.Result.TaskPath += endStorage;
         DHMessage item = await taskService.AddAsync(taskEntity);
         if (item.code == 1000)
@@ -105,7 +107,15 @@ public class AddAgvStagingTask : IJob
                           .Where(x => x.InAndOutBoundNum == taskstaging.Result.InAndOutBoundNum)
                           .ExecuteCommandAsync();
 
+                    // 修改暂存任务
 
+                    await _TaskStagingEntity.AsUpdateable()
+                                       .SetColumns(it => new TaskStagingEntity
+                                       {
+                                           StagingStatus = 1,
+                                       })
+                                       .Where(x => x.InAndOutBoundNum == taskstaging.Result.InAndOutBoundNum)
+                                       .ExecuteCommandAsync();
 
                     // 提交事务
                     scope.Complete();

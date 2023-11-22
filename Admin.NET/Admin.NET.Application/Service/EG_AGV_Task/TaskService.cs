@@ -607,7 +607,7 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
 
         #endregion
 
-        #region RCS上报信息
+        #region 接受RCS上报信息
 
         /// <summary>
         ///  接受RCS上报信息
@@ -618,7 +618,7 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
         [HttpPost("/AGV/Task/AcceptAsync")]
         [AllowAnonymous]
         [UnifyProvider("easygreat")]
-        public async Task<int> AcceptAsuncNew(AcceptDTO acceptDTO)
+        public async Task<string> AcceptAsyncNew(AcceptDTO acceptDTO)
         {
             try
             {
@@ -974,7 +974,7 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
                 await _TaskEntity.InsertOrUpdateAsync(item);
                 //}
 
-                return AgvStatus;
+                return "上报成功";
             }
             catch (Exception ex)
             {
