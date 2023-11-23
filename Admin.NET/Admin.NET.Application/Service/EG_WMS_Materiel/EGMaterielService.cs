@@ -115,13 +115,13 @@ public class EGMaterielService : IDynamicApiController, ITransient
     /// 根据物料编号名称类别筛选物料（模糊查询）（分页查询）
     /// 没有传递条件时返回所有物料信息
     /// </summary>
-    /// <param name="input">编号、名称、类别</param>
+    /// <param name="input">编号、名称、类别、规格</param>
     /// <returns></returns>
     [HttpPost]
     [ApiDescriptionSettings(Name = "GetMaterielsDataAndNumNameSpecs")]
     public List<EG_WMS_Materiel> GetMaterielsDataAndNumNameSpecs(EGMaterielDto input)
     {
-        if (input.MaterielNum == null && input.MaterielName == null && input.MaterielType == null)
+        if (input.MaterielNum == null && input.MaterielName == null && input.MaterielType == null && input.MaterielSpecs == null)
         {
             List<EG_WMS_Materiel> dataone = _rep.AsQueryable()
              .Skip((input.page - 1) * input.pageSize)
@@ -132,7 +132,7 @@ public class EGMaterielService : IDynamicApiController, ITransient
         }
 
         List<EG_WMS_Materiel> datatwo = _rep.AsQueryable()
-         .Where(x => x.MaterielNum.Contains(input.MaterielNum) || x.MaterielName.Contains(input.MaterielName) || x.MaterielType.Contains(input.MaterielType))
+         .Where(x => x.MaterielNum.Contains(input.MaterielNum) || x.MaterielName.Contains(input.MaterielName) || x.MaterielType.Contains(input.MaterielType) || x.MaterielSpecs.Contains(input.MaterielSpecs))
          .Skip((input.page - 1) * input.pageSize)
          .Take(input.pageSize)
          .ToList();

@@ -21,6 +21,10 @@ public class EGMaterielDto
     public string? MaterielType { get; set; }
 
     /// <summary>
+    /// 物料规格
+    /// </summary>
+    public string? MaterielSpecs { get; set; }
+    /// <summary>
     /// 页数
     /// </summary>
     public int page { get; set; }
