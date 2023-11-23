@@ -126,7 +126,7 @@ namespace Admin.NET.Application.Util
                     Dictionary<string, string> dic = new Dictionary<string, string>();
                     if (string.IsNullOrEmpty(cancelDTO.TaskNo))
                     {
-                        throw new Exception("必须传入任务ID！");
+                        throw Oops.Oh("必须传入任务ID！");
                     }
                     dic.Add("orderId", cancelDTO.TaskNo);
                     dic.Add("destPosition", cancelDTO.DestPosition);

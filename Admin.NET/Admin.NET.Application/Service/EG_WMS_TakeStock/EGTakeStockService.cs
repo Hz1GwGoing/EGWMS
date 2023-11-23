@@ -214,7 +214,7 @@ public class EGTakeStockService : IDynamicApiController, ITransient
         catch (Exception ex)
         {
 
-            throw new Exception(ex.Message);
+            throw Oops.Oh(ex.Message);
         }
 
     }
@@ -380,14 +380,14 @@ public class EGTakeStockService : IDynamicApiController, ITransient
                 {
                     // 发生异常回滚事务
                     scope.Dispose();
-                    throw new Exception(ex.Message);
+                    throw Oops.Oh(ex.Message);
                 }
             }
 
         }
         catch (Exception ex)
         {
-            throw new Exception(ex.Message);
+            throw Oops.Oh(ex.Message);
         }
 
 
@@ -597,14 +597,14 @@ public class EGTakeStockService : IDynamicApiController, ITransient
                 {
                     // 发生异常回滚事务
                     scope.Dispose();
-                    throw new Exception(ex.Message);
+                    throw Oops.Oh(ex.Message);
                 }
             }
         }
         catch (Exception ex)
         {
 
-            throw new Exception(ex.Message);
+            throw Oops.Oh(ex.Message);
         }
 
     }

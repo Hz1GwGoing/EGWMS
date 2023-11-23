@@ -37,7 +37,7 @@ public class IInandoutbound : IDynamicApiController, ITransient
             }
             else
             {
-                await _inandoutboundservics.AgvJoinBoundTask(input);
+                await _inandoutboundservics.AgvJoinBoundTasks(input);
             }
         }
         catch (Exception ex)

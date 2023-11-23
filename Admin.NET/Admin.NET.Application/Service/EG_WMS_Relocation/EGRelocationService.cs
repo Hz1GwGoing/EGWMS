@@ -69,7 +69,7 @@ public class EGRelocationService : IDynamicApiController, ITransient
                                            .ToList();
             if (listData.Count == 0)
             {
-                throw new Exception("没有找到这条料箱");
+                throw Oops.Oh("没有找到这条料箱");
             }
 
 
@@ -78,7 +78,7 @@ public class EGRelocationService : IDynamicApiController, ITransient
 
             if (oldStorageNum == input.GOStorageNum)
             {
-                throw new Exception("移动的库位不能和当前库位相同");
+                throw Oops.Oh("移动的库位不能和当前库位相同");
             }
 
             // 生成一条移库记录
@@ -147,7 +147,7 @@ public class EGRelocationService : IDynamicApiController, ITransient
         catch (Exception ex)
         {
 
-            throw new Exception(ex.Message);
+            throw Oops.Oh(ex.Message);
         }
 
 

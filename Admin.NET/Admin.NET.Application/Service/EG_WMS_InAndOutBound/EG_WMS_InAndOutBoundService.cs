@@ -348,21 +348,21 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                     {
                         // 回滚事务
                         scope.Dispose();
-                        throw new Exception(ex.Message);
+                        throw Oops.Oh("错误：" + ex.Message);
                     }
                 }
 
             }
             else
             {
-                throw new Exception("下达AGV任务失败");
+                throw Oops.Oh("下达AGV任务失败");
 
             }
         }
         catch (Exception ex)
         {
 
-            throw new Exception(ex.Message);
+            throw Oops.Oh("错误：" + ex.Message);
         }
     }
 
@@ -653,21 +653,21 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                     {
                         // 回滚事务
                         scope.Dispose();
-                        throw new Exception(ex.Message);
+                        throw Oops.Oh(ex.Message);
                     }
                 }
 
             }
             else
             {
-                throw new Exception("下达AGV任务失败");
+                throw Oops.Oh("下达AGV任务失败");
 
             }
         }
         catch (Exception ex)
         {
 
-            throw new Exception(ex.Message);
+            throw Oops.Oh(ex.Message);
         }
 
     }
@@ -677,7 +677,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
     #region AGV入库（入库WMS自动推荐库位）（封装）
 
     /// <summary>
-    /// AGV入库（入库WMS自动推荐库位）
+    /// AGV入库（入库WMS自动推荐库位）（封装）
     /// </summary>
     /// <param name="input"></param>
     /// <returns></returns>
@@ -938,12 +938,12 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
             }
             else
             {
-                throw new Exception("下达agv任务失败");
+                throw Oops.Oh("下达agv任务失败");
             }
         }
         catch (Exception ex)
         {
-            throw new Exception(ex.Message);
+            throw Oops.Oh(ex.Message);
         }
     }
 
@@ -1194,7 +1194,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
         }
         catch (Exception ex)
         {
-            throw new Exception(ex.Message);
+            throw Oops.Oh(ex.Message);
         }
 
     }
@@ -1390,7 +1390,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
         }
         catch (Exception ex)
         {
-            throw new Exception(ex.Message);
+            throw Oops.Oh(ex.Message);
         }
 
     }

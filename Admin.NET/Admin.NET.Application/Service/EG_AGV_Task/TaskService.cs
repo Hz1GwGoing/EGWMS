@@ -185,7 +185,7 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
             catch (Exception ex)
             {
                 //_ = FileUtil.DebugTxt(ex.Message, MessageTypeEnum.记录, para, ex.StackTrace, "新增任务Error");
-                throw new Exception(ex.Message);
+                throw Oops.Oh(ex.Message);
             }
         }
         #endregion
@@ -208,12 +208,12 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
                 }
                 if (string.IsNullOrEmpty(updateTaskPointDto.PointPath))
                 {
-                    throw new Exception("必须传入点位信息！");
+                    throw Oops.Oh("必须传入点位信息！");
                 }
                 var taskItem = _TaskEntity.GetFirst(p => p.TaskNo == updateTaskPointDto.TaskNo);
                 if (taskItem == null || string.IsNullOrEmpty(taskItem.TaskNo))
                 {
-                    throw new Exception($"未找到{updateTaskPointDto.TaskNo}的任务单！");
+                    throw Oops.Oh($"未找到{updateTaskPointDto.TaskNo}的任务单！");
                 }
                 var taskDetalList = _TaskDetailEntity.GetList(p => p.TaskID == taskItem.Id);
                 if (taskDetalList != null && taskDetalList.Any())
@@ -234,7 +234,7 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
                 //_ = FileUtil.DebugTxt("DH返回信息", MessageTypeEnum.记录, JsonConvert.SerializeObject(dHMessage), DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"), "V2.0任务变更请求记录");
                 if (dHMessage.code == 500)
                 {
-                    throw new Exception(dHMessage.desc);
+                    throw Oops.Oh(dHMessage.desc);
                 }
                 #endregion
 
@@ -245,7 +245,7 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
             catch (Exception ex)
             {
                 //_ = FileUtil.DebugTxt(ex.Message, MessageTypeEnum.错误, para, ex.StackTrace, "V2.0任务变更错误记录");
-                throw new Exception(ex.Message);
+                throw Oops.Oh(ex.Message);
             }
         }
         #endregion
@@ -352,7 +352,7 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
             catch (Exception ex)
             {
                 //_ = FileUtil.DebugTxt(ex.Message, MessageTypeEnum.错误, para, ex.StackTrace, "获取任务列表Error");
-                throw new Exception($"{ex.Message}");
+                throw Oops.Oh($"{ex.Message}");
             }
         }
 
@@ -587,7 +587,7 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
                 //_ = FileUtil.DebugTxt("DH返回信息", MessageTypeEnum.记录, goOnAsyncDTO.taskNo, JsonConvert.SerializeObject(dHMessage), "继续任务记录");
                 if (dHMessage.code == 500)
                 {
-                    throw new Exception(dHMessage.desc);
+                    throw Oops.Oh(dHMessage.desc);
                 }
                 var taskList = _TaskEntity.GetList(p => p.TaskNo == goOnAsyncDTO.taskNo);
                 foreach (var item in taskList)
@@ -662,7 +662,7 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
 
                 if (item == null)
                 {
-                    throw new Exception($"未找到有对应{acceptDTO.orderId}编号的AGV任务");
+                    throw Oops.Oh($"未找到有对应{acceptDTO.orderId}编号的AGV任务");
                 }
                 // 任务执行的状态
                 int AgvStatus = 0;
@@ -772,8 +772,7 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
                         }
                         catch (Exception ex)
                         {
-
-                            throw Oops.Oh(ex);
+                            throw Oops.Oh("错误：" + ex.Message);
                         }
                     }
 
@@ -810,8 +809,7 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
                         }
                         catch (Exception ex)
                         {
-
-                            throw Oops.Oh(ex);
+                            throw Oops.Oh("错误：" + ex.Message);
                         }
                     }
                 }
@@ -855,30 +853,11 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
                                  .Where(x => x.TaskNo == acceptDTO.orderId)
                                  .ExecuteCommandAsync();
 
-                        #region 归档
-                        //for (int i = 0; i < listTemInvData.Count; i++)
-                        //{
-                        //    // 得到临时库存主表和临时库存详细表的关系
-                        //    var listTemInvDetailData = _TemInventoryDetail.AsQueryable()
-                        //                        .Where(x => x.InventoryNum == listTemInvData[i].InventoryNum)
-                        //                        .Select(x => x)
-                        //                        .ToList();
-
-                        //    // 关系转换注入
-                        //    EG_WMS_Inventory invData = listTemInvData[i].Adapt<EG_WMS_Inventory>();
-                        //    EG_WMS_InventoryDetail invdData = listTemInvDetailData[i].Adapt<EG_WMS_InventoryDetail>();
-
-                        //    await _Inventory.InsertAsync(invData);
-                        //    await _InventoryDetail.InsertAsync(invdData);
-
-                        //}
-                        #endregion
-
                     }
                     catch (Exception ex)
                     {
 
-                        throw new Exception(ex.Message);
+                        throw Oops.Oh("错误：" + ex.Message);
                     }
 
                     // 修改入库状态
@@ -932,6 +911,7 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
                                      // 未占用
                                      StorageOccupy = 0,
                                      TaskNo = null,
+                                     // 料箱生产时间
                                      StorageProductionDate = null,
                                  })
                                  .Where(x => x.TaskNo == acceptDTO.orderId)
@@ -950,8 +930,7 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
                     }
                     catch (Exception ex)
                     {
-
-                        throw new Exception(ex.Message);
+                        throw Oops.Oh("错误：" + ex.Message);
                     }
 
                     // 修改出库状态
@@ -979,7 +958,7 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
             catch (Exception ex)
             {
                 // 错误信息
-                throw new Exception(ex.Message);
+                throw Oops.Oh("错误：" + ex.Message);
             }
         }
 

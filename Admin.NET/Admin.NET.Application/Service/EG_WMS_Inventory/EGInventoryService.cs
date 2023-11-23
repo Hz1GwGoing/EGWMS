@@ -139,12 +139,12 @@ public class EGInventoryService : IDynamicApiController, ITransient
             }
             else
             {
-                throw new Exception("查询不到记录");
+                throw Oops.Oh("查询不到记录");
             }
         }
         catch (Exception ex)
         {
-            throw new Exception(ex.Message);
+            throw Oops.Oh(ex.Message);
         }
         return EGInventoryAndMaterielData;
     }

@@ -62,24 +62,9 @@ public class EGRegionInput : BasePageInput
     public string? RegionName { get; set; }
 
     /// <summary>
-    /// 所属仓库
-    /// </summary>
-    public string? WareHouseName { get; set; }
-
-    /// <summary>
     /// 区域状态
     /// </summary>
     public int? RegionStatus { get; set; }
-
-    /// <summary>
-    /// 库位总数
-    /// </summary>
-    public int? StoreroomCount { get; set; } = 0;
-
-    /// <summary>
-    /// 可用库位
-    /// </summary>
-    public int? StoreroomUsable { get; set; } = 0;
 
     /// <summary>
     /// 创建者姓名
