@@ -1,4 +1,6 @@
-﻿namespace Admin.NET.Application.Service.EG_WMS_BaseServer;
+﻿using Microsoft.AspNetCore.Http;
+
+namespace Admin.NET.Application.Service.EG_WMS_BaseServer;
 
 /// <summary>
 /// 基础实用接口
@@ -311,152 +313,157 @@ public class BaseService : IDynamicApiController, ITransient
         // 根据物料编号，得到这个物料属于那个区域
         var dataRegion = _Region.AsQueryable().Where(x => x.RegionMaterielNum == materielNum).ToList();
 
-        if (dataRegion == null || dataRegion.Count == 0)
+        for (int k = 0; k < dataRegion.Count; k++)
         {
-            throw Oops.Oh("区域未绑定物料");
-        }
 
-        #region 用于新区域时，第一次入库推荐使用（可能需要修改）
+            if (dataRegion == null || dataRegion.Count == 0)
+            {
+                throw Oops.Oh("区域未绑定物料");
+            }
 
-        // 一开始初始化数据，第一个开始
-        var data = _Storage.AsQueryable()
-                 .Where(x => x.RegionNum == dataRegion[0].RegionNum && x.StorageOccupy == 0 && x.StorageStatus == 0)
-                 .Select(x => new
-                 {
-                     x.StorageNum
-                 })
-                 .ToList();
+            #region 用于新区域时，第一次入库推荐使用（可能需要修改）
 
-        // 区域库位总数
-        int datacount = _Storage.AsQueryable()
-                    .Where(x => x.RegionNum == dataRegion[0].RegionNum)
-                    .Count();
+            // 一开始初始化数据，第一个开始
+            var data = _Storage.AsQueryable()
+                     .Where(x => x.RegionNum == dataRegion[k].RegionNum && x.StorageOccupy == 0 && x.StorageStatus == 0)
+                     .Select(x => new
+                     {
+                         x.StorageNum
+                     })
+                     .ToList();
 
-        if (data.Count == datacount)
-        {
-            return data[0].StorageNum.ToString();
-        }
+            // 区域库位总数
+            int datacount = _Storage.AsQueryable()
+                        .Where(x => x.RegionNum == dataRegion[k].RegionNum)
+                        .Count();
 
-        #endregion
+            if (data.Count == datacount)
+            {
+                return data[0].StorageNum.ToString();
+            }
 
-
-        // 查询是否有正在进行中的任务库位的组别
-
-        var dataStorageGroup = _Storage.AsQueryable()
-                   .Where(a => a.TaskNo != null && a.RegionNum == dataRegion[0].RegionNum)
-                   .Distinct()
-                   .Select(a => new
-                   {
-                       a.StorageGroup,
-                   })
-                   .ToList();
-
-        // 将有任务的组别保存
-        string[] strings = new string[dataStorageGroup.Count];
-
-        for (int i = 0; i < dataStorageGroup.Count; i++)
-        {
-            strings[i] = dataStorageGroup[i].StorageGroup;
-        }
-
-        // 查询库位并且排除不符合条件的组别和库位
-
-        var getStorage = _Storage.AsQueryable()
-                 .Where(a => a.StorageStatus == 0 && a.StorageGroup != null
-                 && a.StorageOccupy == 0 && a.RegionNum == dataRegion[0].RegionNum && !strings.Contains(a.StorageGroup))
-                 .OrderBy(a => a.StorageNum, OrderByType.Desc)
-                 .Select(a => new
-                 {
-                     a.StorageNum,
-                     a.StorageGroup,
-                 })
-                 .ToList();
+            #endregion
 
 
-        // 得到组别
-        var getStorageGroup = _Storage.AsQueryable()
-                             .Where(a => a.StorageStatus == 0 && a.StorageGroup != null
-                             && a.StorageOccupy == 0 && a.RegionNum == dataRegion[0].RegionNum && !strings.Contains(a.StorageGroup))
+            // 查询是否有正在进行中的任务库位的组别
+
+            var dataStorageGroup = _Storage.AsQueryable()
+                       .Where(a => a.TaskNo != null && a.RegionNum == dataRegion[k].RegionNum)
+                       .Distinct()
+                       .Select(a => new
+                       {
+                           a.StorageGroup,
+                       })
+                       .ToList();
+
+            // 将有任务的组别保存
+            string[] strings = new string[dataStorageGroup.Count];
+
+            for (int i = 0; i < dataStorageGroup.Count; i++)
+            {
+                strings[i] = dataStorageGroup[i].StorageGroup;
+            }
+
+            // 查询库位并且排除不符合条件的组别和库位
+
+            var getStorage = _Storage.AsQueryable()
+                     .Where(a => a.StorageStatus == 0 && a.StorageGroup != null
+                     && a.StorageOccupy == 0 && a.RegionNum == dataRegion[k].RegionNum && !strings.Contains(a.StorageGroup))
+                     .OrderBy(a => a.StorageNum, OrderByType.Desc)
+                     .Select(a => new
+                     {
+                         a.StorageNum,
+                         a.StorageGroup,
+                     })
+                     .ToList();
+
+
+            // 得到组别
+            var getStorageGroup = _Storage.AsQueryable()
+                                 .Where(a => a.StorageStatus == 0 && a.StorageGroup != null
+                                 && a.StorageOccupy == 0 && a.RegionNum == dataRegion[k].RegionNum && !strings.Contains(a.StorageGroup))
+                                 .OrderBy(a => a.StorageNum, OrderByType.Desc)
+                                 .Distinct()
+                                 .Select(a => new
+                                 {
+                                     a.StorageGroup,
+                                 })
+                                 .ToList();
+
+
+            for (int i = 0; i < getStorageGroup.Count; i++)
+            {
+                // 查询得到当前组已经占用的库位
+
+                var AlreadyOccupied = _Storage.AsQueryable()
+                         .Where(x => x.StorageGroup == getStorageGroup[i].StorageGroup && x.StorageOccupy == 1)
+                         .Select(it => new
+                         {
+                             it.StorageNum,
+                         })
+                         .ToList();
+
+                // 如果当前组没有占用的库位
+
+                if (AlreadyOccupied.Count == 0)
+                {
+                    var datalist = _Storage.AsQueryable()
+                         .Where(x => x.StorageGroup == getStorageGroup[i].StorageGroup && x.StorageStatus == 0)
+                         .Select(it => new
+                         {
+                             it.StorageNum,
+                         })
+                         .ToList();
+
+                    return datalist[0].StorageNum;
+                }
+
+                // 如果在确实有占用的库位
+                if (AlreadyOccupied.Count != 0)
+                {
+                    // 查询得到当前组别下最末尾一个有占用的库位
+                    var allStorageOccupy = _Storage.AsQueryable()
+                             .Where(x => x.StorageOccupy == 1 && x.StorageGroup == getStorageGroup[i].StorageGroup)
                              .OrderBy(a => a.StorageNum, OrderByType.Desc)
-                             .Distinct()
                              .Select(a => new
                              {
+                                 a.StorageNum,
                                  a.StorageGroup,
                              })
-                             .ToList();
+                             .ToList()
+                             .Last();
 
+                    // 得到这个组别下所有的未占用库位
+                    var GetGroupOccupyNot = _Storage.AsQueryable()
+                                  .Where(x => x.StorageOccupy == 0 && x.StorageStatus == 0 &&
+                                         x.StorageGroup == allStorageOccupy.StorageGroup)
+                                  .Select(it => new
+                                  {
+                                      it.StorageNum,
+                                  })
+                                  .ToList();
 
-        for (int i = 0; i < getStorageGroup.Count; i++)
-        {
-            // 查询得到当前组已经占用的库位
+                    // 依次判断符合条件的数据
+                    // 当前组别最后一个被占用的库位编号
+                    int lastOccupyNum = allStorageOccupy.StorageNum.ToInt();
 
-            var AlreadyOccupied = _Storage.AsQueryable()
-                     .Where(x => x.StorageGroup == getStorageGroup[i].StorageGroup && x.StorageOccupy == 1)
-                     .Select(it => new
-                     {
-                         it.StorageNum,
-                     })
-                     .ToList();
-
-            // 如果当前组没有占用的库位
-
-            if (AlreadyOccupied.Count == 0)
-            {
-                var datalist = _Storage.AsQueryable()
-                     .Where(x => x.StorageGroup == getStorageGroup[i].StorageGroup && x.StorageStatus == 0)
-                     .Select(it => new
-                     {
-                         it.StorageNum,
-                     })
-                     .ToList();
-
-                return datalist[0].StorageNum;
-            }
-
-            // 如果在确实有占用的库位
-            if (AlreadyOccupied.Count != 0)
-            {
-                // 查询得到当前组别下最末尾一个有占用的库位
-                var allStorageOccupy = _Storage.AsQueryable()
-                         .Where(x => x.StorageOccupy == 1 && x.StorageGroup == getStorageGroup[i].StorageGroup)
-                         .OrderBy(a => a.StorageNum, OrderByType.Desc)
-                         .Select(a => new
-                         {
-                             a.StorageNum,
-                             a.StorageGroup,
-                         })
-                         .ToList()
-                         .Last();
-
-                // 得到这个组别下所有的未占用库位
-                var GetGroupOccupyNot = _Storage.AsQueryable()
-                              .Where(x => x.StorageOccupy == 0 && x.StorageStatus == 0 &&
-                                     x.StorageGroup == allStorageOccupy.StorageGroup)
-                              .Select(it => new
-                              {
-                                  it.StorageNum,
-                              })
-                              .ToList();
-
-                // 依次判断符合条件的数据
-                // 当前组别最后一个被占用的库位编号
-                int lastOccupyNum = allStorageOccupy.StorageNum.ToInt();
-
-                for (int j = 0; j < GetGroupOccupyNot.Count; j++)
-                {
-                    if (GetGroupOccupyNot[j].StorageNum.ToInt() < lastOccupyNum)
+                    for (int j = 0; j < GetGroupOccupyNot.Count; j++)
                     {
-                        return GetGroupOccupyNot[j].StorageNum;
+                        if (GetGroupOccupyNot[j].StorageNum.ToInt() < lastOccupyNum)
+                        {
+                            return GetGroupOccupyNot[j].StorageNum;
+                        }
                     }
                 }
-            }
-            else
-            {
-                //throw Oops.Oh("没有合适的库位");
-                return "没有合适的库位";
+                else
+                {
+                    //throw Oops.Oh("没有合适的库位");
+                    return "没有合适的库位";
 
+                }
             }
         }
+
         // 如果没有则返回错误
         return "没有合适的库位";
 
@@ -478,81 +485,99 @@ public class BaseService : IDynamicApiController, ITransient
 
         // 根据物料编号，得到这个物料属于那个区域
         var dataRegion = _Region.AsQueryable().Where(x => x.RegionMaterielNum == materielNum).ToList();
-        if (dataRegion == null || dataRegion.Count == 0)
+        // 用于保存每个区域里面的数据
+        List<string> datastring = new List<string>();
+
+        for (int k = 0; k < dataRegion.Count; k++)
         {
-            throw Oops.Oh("区域未绑定物料");
-        }
 
-        // 查询是否有正在进行中的任务库位的组别
-
-        var dataStorageGroup = _Storage.AsQueryable()
-                   .Where(a => a.TaskNo != null && a.RegionNum == dataRegion[0].RegionNum)
-                   .Distinct()
-                   .Select(a => new
-                   {
-                       a.StorageGroup,
-                   })
-                   .ToList();
-
-        // 将有任务的组别保存
-        string[] strings = new string[dataStorageGroup.Count];
-        for (int i = 0; i < dataStorageGroup.Count; i++)
-        {
-            strings[i] = dataStorageGroup[i].StorageGroup;
-        }
-
-        // 查询所有的组别（排除不符合条件的组别）
-        var getGroup = _Storage.AsQueryable()
-                        .Where(x => !strings.Contains(x.StorageGroup))
-                        .Distinct()
-                        .Select(x => new
-                        {
-                            x.StorageGroup
-                        })
-                        .ToList();
-
-        // 如果这一组的最后一个的时间还没有达到，则这一组都用不了
-        string[] stringss = new string[getGroup.Count];
-        for (int i = 0; i < getGroup.Count; i++)
-        {
-            var notStorageGroup = _Storage.AsQueryable()
-                                 .Where(x => x.StorageGroup == getGroup[i].StorageGroup)
-                                 .OrderBy(x => x.StorageGroup, OrderByType.Asc)
-                                 .ToList()
-                                 .Last();
-
-            // 这个组的最后一条数据不符合条件，把这个组别保存下来
-            if (notStorageGroup.StorageProductionDate.ToDateTime().AddHours(48) > DateTime.Now)
+            if (dataRegion == null || dataRegion.Count == 0)
             {
-                stringss[i] = notStorageGroup.StorageGroup.ToString();
+                throw Oops.Oh("区域未绑定物料");
+            }
+
+            // 查询是否有正在进行中的任务库位的组别
+
+            var dataStorageGroup = _Storage.AsQueryable()
+                       .Where(a => a.TaskNo != null && a.RegionNum == dataRegion[k].RegionNum)
+                       .Distinct()
+                       .Select(a => new
+                       {
+                           a.StorageGroup,
+                       })
+                       .ToList();
+
+            // 将有任务的组别保存
+            string[] strings = new string[dataStorageGroup.Count];
+            for (int i = 0; i < dataStorageGroup.Count; i++)
+            {
+                strings[i] = dataStorageGroup[i].StorageGroup;
+            }
+
+            // 查询所有的组别（排除不符合条件的组别）
+            var getGroup = _Storage.AsQueryable()
+                            .Where(x => !strings.Contains(x.StorageGroup))
+                            .Distinct()
+                            .Select(x => new
+                            {
+                                x.StorageGroup
+                            })
+                            .ToList();
+
+            // 如果这一组的最后一个的时间还没有达到，则这一组都用不了
+            string[] stringss = new string[getGroup.Count];
+            for (int i = 0; i < getGroup.Count; i++)
+            {
+                var notStorageGroup = _Storage.AsQueryable()
+                                     .Where(x => x.StorageGroup == getGroup[i].StorageGroup)
+                                     .OrderBy(x => x.StorageGroup, OrderByType.Asc)
+                                     .ToList()
+                                     .Last();
+
+                // 这个组的最后一条数据不符合条件，把这个组别保存下来
+                if (notStorageGroup.StorageProductionDate.ToDateTime().AddHours(48) > DateTime.Now)
+                {
+                    stringss[i] = notStorageGroup.StorageGroup.ToString();
+                }
+
+            }
+
+            // 查询库位并且排除不符合条件的组别和库位
+
+            var getStorage = _Storage.AsQueryable()
+                     .Where(a => a.StorageStatus == 0 && a.StorageGroup != null
+                     && a.StorageOccupy == 1 && a.RegionNum == dataRegion[k].RegionNum &&
+                     !strings.Contains(a.StorageGroup) && !stringss.Contains(a.StorageGroup) &&
+                     a.StorageProductionDate.ToDateTime().AddHours(48) < DateTime.Now)
+                     .OrderBy(a => a.StorageNum, OrderByType.Asc)
+                     .Select(a => new
+                     {
+                         a.StorageNum,
+                         a.StorageGroup,
+                     })
+                     .ToList();
+
+            // 将每个区域里面符合条件的库位保存
+            foreach (var item in getStorage)
+            {
+                datastring.Add(item.StorageNum);
             }
 
         }
 
-        // 查询库位并且排除不符合条件的组别和库位
-
-        var getStorage = _Storage.AsQueryable()
-                 .Where(a => a.StorageStatus == 0 && a.StorageGroup != null
-                 && a.StorageOccupy == 1 && a.RegionNum == dataRegion[0].RegionNum &&
-                 !strings.Contains(a.StorageGroup) && !stringss.Contains(a.StorageGroup) &&
-                 a.StorageProductionDate.ToDateTime().AddHours(48) < DateTime.Now)
-                 .OrderBy(a => a.StorageNum, OrderByType.Asc)
-                 .Select(a => new
-                 {
-                     a.StorageNum,
-                     a.StorageGroup,
-                 })
-                 .ToList();
-
-        // 得到符合条件的组别
-
-
-        if (getStorage == null || getStorage.Count == 0)
+        // 将得到的库位重新进行排序，让最小编号的库位在前面
+        List<int> dataInt = new List<int>();
+        foreach (string s in datastring)
+        {
+            dataInt.Add(int.Parse(s));
+        }
+        dataInt.Sort();
+        if (dataInt == null || dataInt.Count == 0)
         {
             throw Oops.Oh("没有合适的库位");
         }
 
-        return getStorage[0].StorageNum;
+        return dataInt[0].ToString();
 
     }
 
@@ -571,49 +596,67 @@ public class BaseService : IDynamicApiController, ITransient
     {
         // 根据物料编号，得到这个物料属于那个区域
         var dataRegion = _Region.AsQueryable().Where(x => x.RegionMaterielNum == materielNum).ToList();
-        if (dataRegion == null || dataRegion.Count == 0)
+        // 用于保存每个区域里面的数据
+        List<string> datastring = new List<string>();
+
+        for (int k = 0; k < dataRegion.Count; k++)
         {
-            throw Oops.Oh("区域未绑定物料");
+            if (dataRegion == null || dataRegion.Count == 0)
+            {
+                throw Oops.Oh("区域未绑定物料");
+            }
+
+            // 查询是否有正在进行中的任务库位的组别
+
+            var dataStorageGroup = _Storage.AsQueryable()
+                       .Where(a => a.TaskNo != null && a.RegionNum == dataRegion[k].RegionNum)
+                       .Distinct()
+                       .Select(a => new
+                       {
+                           a.StorageGroup,
+                       })
+                       .ToList();
+
+            // 将有任务的组别保存
+            string[] strings = new string[dataStorageGroup.Count];
+            for (int i = 0; i < dataStorageGroup.Count; i++)
+            {
+                strings[i] = dataStorageGroup[i].StorageGroup;
+            }
+
+            // 查询库位并且排除不符合条件的组别和库位
+
+            var getStorage = _Storage.AsQueryable()
+                     .Where(a => a.StorageStatus == 0 && a.StorageGroup != null
+                     && a.StorageOccupy == 1 && a.RegionNum == dataRegion[k].RegionNum && !strings.Contains(a.StorageGroup))
+                     .OrderBy(a => a.StorageNum, OrderByType.Asc)
+                     .Select(a => new
+                     {
+                         a.StorageNum,
+                     })
+                     .ToList();
+
+            // 将每个区域里面符合条件的库位保存
+
+            foreach (var item in getStorage)
+            {
+                datastring.Add(item.StorageNum);
+            }
         }
+        // 将得到的库位重新进行排序，让最小编号的库位在前面
 
-        // 查询是否有正在进行中的任务库位的组别
-
-        var dataStorageGroup = _Storage.AsQueryable()
-                   .Where(a => a.TaskNo != null && a.RegionNum == dataRegion[0].RegionNum)
-                   .Distinct()
-                   .Select(a => new
-                   {
-                       a.StorageGroup,
-                   })
-                   .ToList();
-
-        // 将有任务的组别保存
-        string[] strings = new string[dataStorageGroup.Count];
-        for (int i = 0; i < dataStorageGroup.Count; i++)
+        List<int> dataInt = new List<int>();
+        foreach (string s in datastring)
         {
-            strings[i] = dataStorageGroup[i].StorageGroup;
+            dataInt.Add(int.Parse(s));
         }
+        dataInt.Sort();
 
-        // 查询库位并且排除不符合条件的组别和库位
-
-        var getStorage = _Storage.AsQueryable()
-                 .Where(a => a.StorageStatus == 0 && a.StorageGroup != null
-                 && a.StorageOccupy == 1 && a.RegionNum == dataRegion[0].RegionNum && !strings.Contains(a.StorageGroup))
-                 .OrderBy(a => a.StorageNum, OrderByType.Asc)
-                 .Select(a => new
-                 {
-                     a.StorageNum,
-                     a.StorageGroup,
-                 })
-                 .ToList();
-
-        if (getStorage == null || getStorage.Count == 0)
+        if (dataInt == null || dataInt.Count == 0)
         {
             throw Oops.Oh("没有合适的库位");
         }
-
-        return getStorage[0].StorageNum;
-
+        return dataInt[0].ToString();
     }
 
 
@@ -787,6 +830,14 @@ public class BaseService : IDynamicApiController, ITransient
     }
 
     #endregion
+
+    #region （策略）（独立库位）
+
+
+
+    #endregion
+
+
 }
 
 
