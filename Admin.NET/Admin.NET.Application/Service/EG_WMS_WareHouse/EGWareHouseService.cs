@@ -70,6 +70,7 @@ public class EGWareHouseService : IDynamicApiController, ITransient
              .LeftJoin<Entity.EG_WMS_Storage>((a, b, c) => a.RegionNum == c.RegionNum)
              .Select((a, b, c) => new GetWareHouseDataDto
              {
+                 Id = b.Id,
                  WHNum = b.WHNum,
                  WHName = b.WHName,
                  WHType = (int)b.WHType,

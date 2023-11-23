@@ -5,9 +5,8 @@
 /// </summary>
 public class GetWareHouseDataDto
 {
-
+    public long Id { get; set; }
     public string WHNum { get; set; }
-
     public string WHName { get; set; }
 
     public int WHType { get; set; }
