@@ -369,10 +369,10 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
 
     #endregion
 
-    #region AGV入库（入库WMS自动推荐库位）
+    #region AGV入库（入库WMS自动推荐库位）（用于测试）
 
     /// <summary>
-    /// AGV入库（入库WMS自动推荐库位）
+    /// AGV入库（入库WMS自动推荐库位）（用于测试）
     /// </summary>
     /// <param name="input"></param>
     /// <returns></returns>
@@ -701,7 +701,12 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
             {
                 // 根据策略推荐
                 input.EndPoint = BaseService.AGVStrategyReturnRecommEndStorage(input.materielWorkBins[0].MaterielNum);
-
+                // 添加暂存任务
+                if (input.EndPoint == "没有合适的库位")
+                {
+                    await InAndOutBoundMessage.NotStorageAddStagingTask(input, joinboundnum);
+                    return;
+                }
             }
 
             string endpoint = input.EndPoint;

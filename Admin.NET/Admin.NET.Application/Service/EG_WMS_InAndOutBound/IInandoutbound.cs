@@ -50,5 +50,8 @@ public class IInandoutbound : IDynamicApiController, ITransient
 
     #endregion
 
+    #region AGV出库接口
+
+    #endregion
 
 }

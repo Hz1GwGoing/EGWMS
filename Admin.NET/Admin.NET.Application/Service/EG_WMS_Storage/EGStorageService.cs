@@ -15,10 +15,10 @@ public class EGStorageService : IDynamicApiController, ITransient
         _region = region;
     }
 
-    #region 根据类别得到库位编号
+    #region 根据类别得到库位编号（开发中。。。）
 
     /// <summary>
-    /// 根据类别得到库位编号
+    /// 根据类别得到库位编号（开发中。。。）
     /// </summary>
     /// <param name="type">类别</param>
     /// <param name="page">页数</param>
@@ -27,7 +27,9 @@ public class EGStorageService : IDynamicApiController, ITransient
     public async Task<SqlSugarPagedList<Entity.EG_WMS_Storage>> ScreeningRepositoryLocation(string type, int page, int pageSize)
     {
         var data = _rep.AsQueryable()
-             .Where(x => x.StorageType == type);
+                       .InnerJoin<Entity.EG_WMS_Region>((a, b) => a.RegionNum == b.RegionNum)
+                       .RightJoin<Entity.EG_WMS_WareHouse>((a, b, c) => b.WHNum == c.WHNum)
+                       .Where(x => x.StorageType == type);
 
         return await data.ToPagedListAsync(page, pageSize);
 
