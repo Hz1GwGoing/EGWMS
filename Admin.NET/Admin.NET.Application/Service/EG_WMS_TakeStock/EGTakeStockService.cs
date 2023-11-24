@@ -7,6 +7,7 @@
 public class EGTakeStockService : IDynamicApiController, ITransient
 {
     private static readonly ToolTheCurrentTime currentTime = new ToolTheCurrentTime();
+    private static readonly EG_WMS_InAndOutBoundMessage boundMessage = new EG_WMS_InAndOutBoundMessage();
 
     #region 引用实体
     private readonly SqlSugarRepository<EG_WMS_TakeStock> _rep;
@@ -126,6 +127,120 @@ public class EGTakeStockService : IDynamicApiController, ITransient
     #endregion
 
     // 根据库位盘点
+
+    #region （根据库位盘点）在PC上生成盘点任务
+
+    /// <summary>
+    /// （根据库位盘点）在PC上生成盘点任务
+    /// </summary>
+    /// <param name="storagenum">库位编号</param>
+    /// <param name="taskstockremake">盘点备注</param>
+    /// <returns></returns>
+    [HttpPost]
+    [ApiDescriptionSettings(Name = "GenerateTakeStockTask", Order = 110)]
+    public async Task GenerateTakeStockTask(string storagenum, string? taskstockremake)
+    {
+        // 自动生成盘点编号（时间戳）
+        string takestocknum = currentTime.GetTheCurrentTimeTimeStamp("EGPD");
+
+        // 生成一个盘点任务
+
+        EG_WMS_TakeStock takedata = new EG_WMS_TakeStock()
+        {
+            TakeStockNum = takestocknum,
+            // 根据库位盘点
+            TakeStockType = 1,
+            // 盘点库位编号
+            TakeStockStorageNum = storagenum,
+            TakeStockTime = DateTime.Now,
+            CreateTime = DateTime.Now,
+            TakeStockStatus = 0,
+            TakeStockRemake = taskstockremake,
+        };
+
+        await _rep.InsertAsync(takedata);
+
+    }
+    #endregion
+
+    #region （根据库位盘点）根据盘点任务，扫描料箱保存到数据库中
+
+    /// <summary>
+    /// （根据库位盘点）根据盘点任务，扫描料箱保存到数据库中
+    /// </summary>
+    /// <param name="input"></param>
+    /// <returns></returns>
+    [HttpPost]
+    [ApiDescriptionSettings(Name = "GetMaerielWorkBinAddData", Order = 105)]
+    public async Task GetMaerielWorkBinAddData(MaterielWorkBinData input)
+    {
+        try
+        {
+            // 查询这条盘点记录
+            var datataskstock = _rep.GetFirst(x => x.TakeStockNum == input.TakeStockNum);
+
+            // 得到料箱
+            List<MaterielWorkBin> countData = input.materielWorkBins;
+
+            // 区域编号
+            var regionnum = boundMessage.GetStorageWhereRegion(datataskstock.TakeStockStorageNum);
+            // 仓库编号
+            var whnum = boundMessage.GetRegionWhereWHNum(regionnum);
+
+
+            for (int i = 0; i < countData.Count; i++)
+            {
+                // 料箱编号（详细表、料箱表）
+                string workbinnum = countData[i].WorkBinNum;
+                // 物料编号（主表）
+                string materienum = countData[i].MaterielNum;
+                // 物料的数量（主表、料箱表）
+                int productcount = countData[i].ProductCount;
+                // 生产日期（料箱表）
+                DateTime productiondate = countData[i].ProductionDate;
+                // 生产批次（详细表、料箱表）
+                string productionlot = countData[i].ProductionLot;
+
+                // 生成盘点数据
+                EG_WMS_TakeStockData data = new EG_WMS_TakeStockData()
+                {
+                    TakeStockNum = input.TakeStockNum,
+                    WorkBinNum = workbinnum,
+                    MaterielNum = materienum,
+                    ProductionLot = productionlot,
+                    ICountAll = productcount,
+                    // 库位编号
+                    StorageNum = datataskstock.TakeStockStorageNum,
+                    // 区域编号
+                    RegionNum = regionnum,
+                    // 仓库编号
+                    WHNum = whnum,
+                    CreateTime = DateTime.Now,
+                    ProductionDate = productiondate,
+                };
+
+                await _TakeStockData.InsertAsync(data);
+            }
+            // 修改盘点状态
+
+            await _rep.AsUpdateable()
+                 .AS("EG_WMS_TakeStock")
+                 .SetColumns(x => new EG_WMS_TakeStock
+                 {
+                     // 盘点数量（料箱）
+                     SumTakeStockCount = countData.Count,
+                     MaterielNum = countData[0].MaterielNum,
+                 })
+                 .ExecuteCommandAsync();
+        }
+        catch (Exception ex)
+        {
+
+            throw Oops.Oh(ex.Message);
+        }
+    }
+    #endregion
+
     #region （根据库位盘点）查找料箱（记录下来）
 
     /// <summary>
