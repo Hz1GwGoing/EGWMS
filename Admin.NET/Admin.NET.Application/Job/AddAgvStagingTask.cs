@@ -45,7 +45,7 @@ public class AddAgvStagingTask : IJob
         // 得到临时库存表里面这次入库的物料编号
         // 因为一次入库里面的物料只能是一种（前提）
         var teminvData = _TemInventory.AsQueryable()
-                      .Where(x => x.InAndOutBoundNum == taskstaging.InAndOutBoundNum)
+                      .Where(x => x.InBoundNum == taskstaging.InAndOutBoundNum)
                       .ToList();
 
         // 重新获取库位编号
@@ -118,7 +118,7 @@ public class AddAgvStagingTask : IJob
                     // 查询临时库存主表里面的库存编号
 
                     var datas = _TemInventory.AsQueryable()
-                                   .Where(x => x.InAndOutBoundNum == taskstaging.InAndOutBoundNum)
+                                   .Where(x => x.InBoundNum == taskstaging.InAndOutBoundNum)
                                    .Select(x => new
                                    {
                                        x.InventoryNum

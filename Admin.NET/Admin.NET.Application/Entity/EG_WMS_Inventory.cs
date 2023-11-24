@@ -7,13 +7,6 @@
 public class EG_WMS_Inventory : EntityBase
 {
     /// <summary>
-    /// 物料主键
-    /// </summary>
-    //[Required]
-    //[SugarColumn(IsIdentity = false, ColumnDescription = "物料主键", IsPrimaryKey = true)]
-    //public long InventoryId { get; set; }
-
-    /// <summary>
     /// 库存编号
     /// </summary>
 
@@ -45,10 +38,16 @@ public class EG_WMS_Inventory : EntityBase
     public int? IWaitingCount { get; set; }
 
     /// <summary>
-    /// 出入库编号
+    /// 入库编号
     /// </summary>
-    [SugarColumn(ColumnDescription = "出入库编号", Length = 50)]
-    public string? InAndOutBoundNum { get; set; }
+    [SugarColumn(ColumnDescription = "入库编号", Length = 50)]
+    public string? InBoundNum { get; set; }
+
+    /// <summary>
+    /// 出库编号
+    /// </summary>
+    [SugarColumn(ColumnDescription = "出库编号", Length = 50)]
+    public string? OutBoundNum { get; set; }
 
     /// <summary>
     /// 物料编号

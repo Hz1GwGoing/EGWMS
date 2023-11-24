@@ -275,7 +275,7 @@ public class EG_WMS_InAndOutBoundMessage
                 // 创建时间
                 CreateTime = DateTime.Now,
                 // 入库编号
-                InAndOutBoundNum = joinboundnum,
+                InBoundNum = joinboundnum,
                 // 是否删除
                 IsDelete = false,
                 // 是否出库
@@ -350,7 +350,7 @@ public class EG_WMS_InAndOutBoundMessage
     /// <summary>
     /// 通过区域编号得到仓库编号
     /// </summary>
-    /// <param name="regionnum"></param>
+    /// <param name="regionnum">区域编号</param>
     /// <returns></returns>
     public string GetRegionWhereWHNum(string regionnum)
     {
@@ -479,7 +479,7 @@ public class EG_WMS_InAndOutBoundMessage
                         // 创建时间
                         CreateTime = DateTime.Now,
                         // 入库编号
-                        InAndOutBoundNum = boundNum,
+                        InBoundNum = boundNum,
                         // 是否删除
                         IsDelete = false,
                         // 是否出库

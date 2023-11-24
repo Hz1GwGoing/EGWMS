@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-
-namespace Admin.NET.Application.Service.EG_WMS_BaseServer;
+﻿namespace Admin.NET.Application.Service.EG_WMS_BaseServer;
 
 /// <summary>
 /// 基础实用接口
@@ -158,58 +156,15 @@ public class BaseService : IDynamicApiController, ITransient
 
         List<GetAllInAndBoundDetailData> data = _InAndOutBound.AsQueryable()
                       .InnerJoin<EG_WMS_InAndOutBoundDetail>((a, b) => a.InAndOutBoundNum == b.InAndOutBoundNum)
-                      .InnerJoin<EG_WMS_Tem_Inventory>((a, b, c) => c.InAndOutBoundNum == b.InAndOutBoundNum)
+                      .InnerJoin<EG_WMS_Tem_Inventory>((a, b, c) => c.InBoundNum == b.InAndOutBoundNum)
                       .InnerJoin<EG_WMS_Materiel>((a, b, c, d) => d.MaterielNum == c.MaterielNum)
                       .InnerJoin<EG_WMS_Tem_InventoryDetail>((a, b, c, d, e) => e.InventoryNum == c.InventoryNum)
                       .InnerJoin<EG_WMS_WorkBin>((a, b, c, d, e, f) => e.WorkBinNum == f.WorkBinNum)
                       .InnerJoin<Entity.EG_WMS_Region>((a, b, c, d, e, f, g) => g.RegionNum == e.RegionNum)
                       .InnerJoin<Entity.EG_WMS_WareHouse>((a, b, c, d, e, f, g, h) => h.WHNum == e.WHNum)
                       .InnerJoin<Entity.EG_WMS_Storage>((a, b, c, d, e, f, g, h, i) => i.StorageNum == e.StorageNum)
-                      .Where((a, b, c, d, e, f, g, h, i) => a.InAndOutBoundNum == inandoutbound)
-                      .Select((a, b, c, d, e, f, g, h, i) => new GetAllInAndBoundDetailData
-                      {
-                          MaterielNum = d.MaterielNum,
-                          MaterielName = d.MaterielName,
-                          MaterieSpecs = d.MaterielSpecs,
-                          ICountAll = (int)c.ICountAll,
-                          WorkBinNum = f.WorkBinNum,
-                          WorkBinName = f.WorkBinName,
-                          WHName = h.WHName,
-                          RegionName = g.RegionName,
-                          StorageName = i.StorageName,
-                          InAndOutBoundUser = a.InAndOutBoundUser,
-                      })
-                      .ToList();
-
-
-        return data;
-
-    }
-
-    #endregion
-
-    #region 查询得到出入库详情表
-
-    /// <summary>
-    /// 查询得到出入库详情表
-    /// 修改
-    /// </summary>
-    /// <returns></returns>
-    [HttpPost]
-    [ApiDescriptionSettings(Name = "GetAllInAndBoundDetailMessage")]
-    public List<GetAllInAndBoundDetailData> GetAllInAndBoundDetailMessage()
-    {
-
-        List<GetAllInAndBoundDetailData> data = _InAndOutBound.AsQueryable()
-                      .InnerJoin<EG_WMS_InAndOutBoundDetail>((a, b) => a.InAndOutBoundNum == b.InAndOutBoundNum)
-                      .InnerJoin<EG_WMS_Tem_Inventory>((a, b, c) => c.InAndOutBoundNum == b.InAndOutBoundNum)
-                      .InnerJoin<EG_WMS_Materiel>((a, b, c, d) => d.MaterielNum == c.MaterielNum)
-                      .InnerJoin<EG_WMS_Tem_InventoryDetail>((a, b, c, d, e) => e.InventoryNum == c.InventoryNum)
-                      .InnerJoin<EG_WMS_WorkBin>((a, b, c, d, e, f) => e.WorkBinNum == f.WorkBinNum)
-                      .InnerJoin<Entity.EG_WMS_Region>((a, b, c, d, e, f, g) => g.RegionNum == e.RegionNum)
-                      .InnerJoin<Entity.EG_WMS_WareHouse>((a, b, c, d, e, f, g, h) => h.WHNum == e.WHNum)
-                      .InnerJoin<Entity.EG_WMS_Storage>((a, b, c, d, e, f, g, h, i) => i.StorageNum == e.StorageNum)
-                      .OrderBy(a => a.Id)
+                      .WhereIF(inandoutbound.Substring(0, 4) == "EGRK", (a, b, c, d, e, f, g, h, i) => c.InBoundNum == inandoutbound)
+                      .WhereIF(inandoutbound.Substring(0, 4) == "EGCK", (a, b, c, d, e, f, g, h, i) => c.OutBoundNum == inandoutbound)
                       .Select((a, b, c, d, e, f, g, h, i) => new GetAllInAndBoundDetailData
                       {
                           MaterielNum = d.MaterielNum,
@@ -783,7 +738,7 @@ public class BaseService : IDynamicApiController, ITransient
 
                 // 根据入库编号得到临时库位表里面的库存编号
                 var dataTemList = _TemInventory.AsQueryable()
-                               .Where(u => u.InAndOutBoundNum == taskData.InAndOutBoundNum)
+                               .Where(u => u.InBoundNum == taskData.InAndOutBoundNum)
                                .Select(x => x.InventoryNum)
                                .ToList();
 

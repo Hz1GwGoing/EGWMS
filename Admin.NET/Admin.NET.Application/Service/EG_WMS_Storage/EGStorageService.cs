@@ -29,7 +29,7 @@ public class EGStorageService : IDynamicApiController, ITransient
         var data = _rep.AsQueryable()
                        .InnerJoin<Entity.EG_WMS_Region>((a, b) => a.RegionNum == b.RegionNum)
                        .RightJoin<Entity.EG_WMS_WareHouse>((a, b, c) => b.WHNum == c.WHNum)
-                       .Where(x => x.StorageType == type);
+                       .Where(a => a.StorageType == type);
 
         return await data.ToPagedListAsync(page, pageSize);
 

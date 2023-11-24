@@ -826,13 +826,13 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
                     {
                         // 查询得到临时库存主表里面所有的数据
                         var listTemInvData = _TemInventory.AsQueryable()
-                                       .Where(x => x.InAndOutBoundNum == listInBoundData[0].InAndOutBoundNum)
+                                       .Where(x => x.InBoundNum == listInBoundData[0].InAndOutBoundNum)
                                        .Select(x => x)
                                        .ToList();
 
                         var listTemInvDetailData = _TemInventoryDetail.AsQueryable()
                                           .InnerJoin<EG_WMS_Tem_Inventory>((a, b) => a.InventoryNum == b.InventoryNum)
-                                          .Where((a, b) => b.InAndOutBoundNum == listInBoundData[0].InAndOutBoundNum)
+                                          .Where((a, b) => b.InBoundNum == listInBoundData[0].InAndOutBoundNum)
                                           .ToList();
 
                         List<EG_WMS_Inventory> invDataList = listTemInvData.Adapt<List<EG_WMS_Inventory>>();

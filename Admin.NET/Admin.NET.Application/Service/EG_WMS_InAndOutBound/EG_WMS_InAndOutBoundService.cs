@@ -250,7 +250,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                                 // 创建时间
                                 CreateTime = DateTime.Now,
                                 // 入库编号
-                                InAndOutBoundNum = joinboundnum,
+                                InBoundNum = joinboundnum,
                                 // 是否删除
                                 IsDelete = false,
                                 // 是否出库
@@ -553,7 +553,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                                 // 创建时间
                                 CreateTime = DateTime.Now,
                                 // 入库编号
-                                InAndOutBoundNum = joinboundnum,
+                                InBoundNum = joinboundnum,
                                 // 是否删除
                                 IsDelete = false,
                                 // 是否出库
@@ -831,29 +831,13 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                     EndPoint = endpoint,
                 };
 
-                #region 得到区域编号和仓库编号
                 // 查询库位编号所在的区域编号
-                var _storagelistdata = await _Storage.GetFirstAsync(u => u.StorageNum == input.EndPoint);
 
-
-                if (_storagelistdata == null || string.IsNullOrEmpty(_storagelistdata.RegionNum))
-                {
-                    throw Oops.Oh("没有查询到这个库位");
-                }
-
-                string regionnum = _storagelistdata.RegionNum;
+                var regionnum = InAndOutBoundMessage.GetStorageWhereRegion(input.EndPoint);
 
                 // 通过查询出来的区域得到仓库编号
 
-                var _regionlistdata = await _Region.GetFirstAsync(x => x.RegionNum == regionnum);
-
-
-                if (_regionlistdata == null || string.IsNullOrEmpty(_regionlistdata.WHNum))
-                {
-                    throw Oops.Oh("没有查询到这个仓库");
-                }
-                #endregion
-
+                var whnum = InAndOutBoundMessage.GetRegionWhereWHNum(regionnum);
 
                 // 生成出库详单
 
@@ -863,7 +847,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                     InAndOutBoundNum = outboundnum,
                     CreateTime = DateTime.Now,
                     // 区域编号
-                    RegionNum = _storagelistdata.RegionNum,
+                    RegionNum = regionnum,
                     // 策略推荐的库位
                     StorageNum = input.StartPoint,
                 };
@@ -887,6 +871,8 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                                     {
                                         OutboundStatus = 1,
                                         UpdateTime = DateTime.Now,
+                                        // 出库编号
+                                        OutBoundNum = outboundnum,
                                     })
                                     .Where(x => x.InventoryNum == tem_InventoryDetails[i].InventoryNum)
                                     .ExecuteCommandAsync();
@@ -897,7 +883,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                                  .ToList();
 
                     // 计算总数
-                    sumcount += invCount[i].ICountAll;
+                    sumcount += invCount[0].ICountAll;
 
                     // 得到每个料箱编号
                     if (tem_InventoryDetails.Count > 1)
@@ -915,7 +901,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                                      .AS("EG_WMS_InAndOutBoundDetail")
                                      .SetColumns(it => new EG_WMS_InAndOutBoundDetail
                                      {
-                                         WHNum = _regionlistdata.WHNum,
+                                         WHNum = whnum,
                                          WorkBinNum = wbnum,
                                          MaterielNum = input.MaterielNum,
                                      })
@@ -1085,7 +1071,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                     // 创建时间
                     CreateTime = DateTime.Now,
                     // 入库编号
-                    InAndOutBoundNum = joinboundnum,
+                    InBoundNum = joinboundnum,
                     // 是否删除
                     IsDelete = false,
                     // 是否出库
