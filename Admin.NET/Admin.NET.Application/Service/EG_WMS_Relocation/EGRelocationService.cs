@@ -196,6 +196,8 @@ public class EGRelocationService : IDynamicApiController, ITransient
     /// 返回总数（总条数）
     /// </summary>
     /// <returns></returns>
+    [HttpGet]
+    [ApiDescriptionSettings(Name = "RelocationAllCount")]
     public int RelocationAllCount()
     {
         return _Relocation.AsQueryable().Count();

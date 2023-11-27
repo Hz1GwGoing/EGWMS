@@ -179,7 +179,7 @@ public class EGWareHouseService : IDynamicApiController, ITransient
     /// </summary>
     /// <param name="input"></param>
     /// <returns></returns>
-    [HttpGet]
+    [HttpPost]
     [ApiDescriptionSettings(Name = "List")]
     public async Task<List<EGWareHouseOutput>> List([FromQuery] EGWareHouseInput input)
     {

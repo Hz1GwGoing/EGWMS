@@ -55,6 +55,11 @@ public class EG_WMS_InAndOutBoundOutput
     /// </summary>
     public string? InAndOutBoundRemake { get; set; }
 
+    /// <summary>
+    /// 是否成功（0-成功，1-失败）
+    /// </summary>
+    public int? SuccessOrNot { get; set; }
+
 }
 
 

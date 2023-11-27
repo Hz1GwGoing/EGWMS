@@ -38,7 +38,6 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
         #endregion
 
         #region 任务下达
-
         public async Task<DHMessage> AddAsync(TaskEntity taskEntity)
         {
             // 查询是否有传入的模板
@@ -735,8 +734,8 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
                                 .Select(x => x)
                                 .ToList();
 
-                #region 判断是不是取消的任务
-                if (AgvStatus == 3)
+                #region 判断是不是取消任务或则任务失败
+                if (AgvStatus == 3 || AgvStatus == 7)
                 {
                     // 入库情况
                     if (listInBoundData[0].InAndOutBoundType == 0)
@@ -764,6 +763,8 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
                                          // 未占用
                                          StorageOccupy = 0,
                                          UpdateTime = DateTime.Now,
+                                         TaskNo = null,
+                                         StorageProductionDate = null,
                                      })
                                      .Where(x => x.TaskNo == acceptDTO.orderId)
                                      .ExecuteCommandAsync();
@@ -802,6 +803,7 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
                                          // 占用
                                          StorageOccupy = 1,
                                          UpdateTime = DateTime.Now,
+                                         TaskNo = null,
                                      })
                                      .Where(x => x.TaskNo == acceptDTO.orderId)
                                      .ExecuteCommandAsync();

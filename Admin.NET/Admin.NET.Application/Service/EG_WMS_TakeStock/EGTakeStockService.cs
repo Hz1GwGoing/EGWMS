@@ -249,8 +249,8 @@ public class EGTakeStockService : IDynamicApiController, ITransient
     /// <param name="input"></param>
     /// <returns></returns>
     [HttpPost]
-    [ApiDescriptionSettings(Name = "GetMaerielWorkBinAddData", Order = 100)]
-    public async Task GetMaerielWorkBinAddData(GetMaterielWorkBinData input)
+    [ApiDescriptionSettings(Name = "GetMaerielWorkBinAddDataList", Order = 100)]
+    public async Task GetMaerielWorkBinAddDataList(GetMaterielWorkBinData input)
     {
         try
         {
@@ -530,9 +530,9 @@ public class EGTakeStockService : IDynamicApiController, ITransient
                .Where((a, b) => a.MaterielNum == input.MaterielNum)
                .Select((a, b) => new
                {
-                   a,
                    b.StorageNum
                })
+               .Distinct()
                .ToList();
 
         if (data == null || data.Count == 0)
@@ -546,13 +546,8 @@ public class EGTakeStockService : IDynamicApiController, ITransient
         {
             // 自动生成盘点编号（时间戳）
 
-            string takestocknum = i + currentTime.GetTheCurrentTimeTimeStamp("EDPD");
+            string takestocknum = i + "-" + currentTime.GetTheCurrentTimeTimeStamp("EDPD");
             string storagenum = data[i].StorageNum;
-
-            if (i > 1 && storagenum == data[i - 1].StorageNum)
-            {
-                break;
-            }
 
             EG_WMS_TakeStock takedata = new EG_WMS_TakeStock()
             {

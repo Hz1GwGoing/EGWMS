@@ -1,6 +1,4 @@
-﻿using Admin.NET.Core;
-
-namespace Admin.NET.Application;
+﻿namespace Admin.NET.Application;
 
 
 /// <summary>
@@ -217,7 +215,8 @@ public class EGRegionService : IDynamicApiController, ITransient
     /// 获取仓库名称列表
     /// </summary>
     /// <returns></returns>
-    [ApiDescriptionSettings(Name = "EGWareHouseWHNameDropdown"), HttpGet]
+    [HttpGet]
+    [ApiDescriptionSettings(Name = "EGWareHouseWHNameDropdown")]
     public async Task<dynamic> EGWareHouseWHNumDropdown()
     {
         return await _rep.Context.Queryable<EG_WMS_WareHouse>()

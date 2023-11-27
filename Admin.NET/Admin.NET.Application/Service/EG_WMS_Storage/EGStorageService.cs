@@ -24,6 +24,9 @@ public class EGStorageService : IDynamicApiController, ITransient
     /// <param name="page">页数</param>
     /// <param name="pageSize">每页容量</param>
     /// <returns></returns>
+
+    [HttpPost]
+    [ApiDescriptionSettings(Name = "ScreeningRepositoryLocation")]
     public async Task<SqlSugarPagedList<Entity.EG_WMS_Storage>> ScreeningRepositoryLocation(string type, int page, int pageSize)
     {
         var data = _rep.AsQueryable()
@@ -75,7 +78,7 @@ public class EGStorageService : IDynamicApiController, ITransient
     /// <param name="pageSize">每页容量</param>
     /// <returns></returns>
 
-    [HttpGet]
+    [HttpPost]
     [ApiDescriptionSettings(Name = "SelectRegionStorageCount")]
     public async Task<SqlSugarPagedList<SelectRegionStorageCountDto>> SelectRegionStorageCount(int page, int pageSize)
     {
