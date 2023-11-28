@@ -1,11 +1,11 @@
 ﻿namespace Admin.NET.Application.Job;
 
 /// <summary>
-/// 再次请求AGV暂存任务
+/// 再次请求AGV入库暂存任务
 /// </summary>
-[JobDetail("repeat_AgvTaskJob", Description = "再次请求AGV暂存任务", GroupName = "AGVTask", Concurrent = false)]
-[Daily(TriggerId = "trigger_repeatAgvTaskJob", Description = "再次请求AGV暂存任务")]
-public class AddAgvStagingTask : IJob
+[JobDetail("repeat_AgvInBoundTaskJob", Description = "再次请求AGV入库暂存任务", GroupName = "AGVTask", Concurrent = false)]
+[Daily(TriggerId = "trigger_repeatAgvInBoundTaskJob", Description = "再次请求AGV入库暂存任务")]
+public class AddAgvStagingInBoundTask : IJob
 {
     #region 关系注入
     private readonly IServiceProvider _serviceProvider;
@@ -22,7 +22,7 @@ public class AddAgvStagingTask : IJob
     #endregion
 
     #region 构造函数
-    public AddAgvStagingTask(IServiceProvider serviceProvider)
+    public AddAgvStagingInBoundTask(IServiceProvider serviceProvider)
     {
         _serviceProvider = serviceProvider;
     }
@@ -34,11 +34,11 @@ public class AddAgvStagingTask : IJob
         using var serviceScope = _serviceProvider.CreateScope();
 
         // 检索暂存任务表里面有没有没有下发未完成的任务
-        var taskstaging = _TaskStagingEntity.GetFirst(x => x.StagingStatus == 0);
+        var taskstaging = _TaskStagingEntity.GetFirst(x => x.StagingStatus == 0 && x.InAndOutBoundNum.Contains("EGRK"));
 
         if (taskstaging == null)
         {
-            throw Oops.Oh("当前没有暂存的任务");
+            throw Oops.Oh("当前没有暂存的入库任务！");
         }
 
         // 通过检索出来的任务得到入库编号
@@ -59,7 +59,7 @@ public class AddAgvStagingTask : IJob
         // 重新下发AGV任务
 
         TaskEntity taskEntity = taskstaging.Adapt<TaskEntity>();
-        taskEntity.TaskPath = taskstaging.TaskPath += endStorage;
+        taskEntity.TaskPath = taskstaging.TaskPath + endStorage;
 
         DHMessage item = await taskService.AddAsync(taskEntity);
         if (item.code == 1000)
@@ -150,11 +150,11 @@ public class AddAgvStagingTask : IJob
                     throw Oops.Oh("错误：" + ex);
                 }
             }
-
-
-
         }
-
+        else
+        {
+            throw Oops.Oh("任务下发失败");
+        }
     }
 }
 
