@@ -268,12 +268,14 @@ public class BaseService : IDynamicApiController, ITransient
     {
 
         var data = _Storage.AsQueryable()
-                         .Where(x => x.RegionNum == regionnum)
-                         .Select(x => new SelectStorageDto
-                         {
-                             StorageNum = x.StorageNum,
-                             StorageName = x.StorageName,
-                         });
+                           .Where(x => x.RegionNum == regionnum)
+                           .Select(x => new SelectStorageDto
+                           {
+                               StorageNum = x.StorageNum,
+                               StorageName = x.StorageName,
+                               StorageOccupy = (int)x.StorageOccupy,
+                               StorageStatus = (int)x.StorageStatus,
+                           });
 
         return await data.ToPagedListAsync(page, pageSize);
 

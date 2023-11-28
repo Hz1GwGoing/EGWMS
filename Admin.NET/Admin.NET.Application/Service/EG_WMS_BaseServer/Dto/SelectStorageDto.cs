@@ -5,5 +5,6 @@ public class SelectStorageDto
 {
     public string StorageNum { get; set; }
     public string StorageName { get; set; }
-
+    public int StorageOccupy { get; set; }
+    public int StorageStatus { get; set; }
 }

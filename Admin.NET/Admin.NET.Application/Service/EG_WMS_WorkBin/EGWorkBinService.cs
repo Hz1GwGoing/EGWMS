@@ -42,7 +42,7 @@ public class EGWorkBinService : IDynamicApiController, ITransient
 
                     // 获取创建日期
                     .WhereIF(input.CreateTime > DateTime.MinValue, u => u.CreateTime >= input.CreateTime)
-                    
+
                     .Select<EGWorkBinOutput>()
 ;
         if (input.ProductionDateRange != null && input.ProductionDateRange.Count > 0)
@@ -115,38 +115,21 @@ public class EGWorkBinService : IDynamicApiController, ITransient
     }
     #endregion
 
-    #region 获取料箱信息
-    /// <summary>
-    /// 获取料箱信息
-    /// </summary>
-    /// <param name="input"></param>
-    /// <returns></returns>
-    [HttpGet]
-    [ApiDescriptionSettings(Name = "Detail")]
-    public async Task<EG_WMS_WorkBin> Get([FromQuery] QueryByIdEGWorkBinInput input)
-    {
-        //return await _rep.GetFirstAsync(u => u.Id == input.Id);
-
-        // 模糊查询
-        return await _rep.GetFirstAsync(u => u.WorkBinNum.Contains(input.WorkBinNum) || u.WorkBinName.Contains(input.WorkBinName));
-
-    }
-    #endregion
-
-    #region 获取料箱信息列表
-    /// <summary>
-    /// 获取料箱信息列表
-    /// </summary>
-    /// <param name="input"></param>
-    /// <returns></returns>
-    [HttpGet]
-    [ApiDescriptionSettings(Name = "List")]
-    public async Task<List<EGWorkBinOutput>> List([FromQuery] EGWorkBinInput input)
-    {
-        return await _rep.AsQueryable().Select<EGWorkBinOutput>().ToListAsync();
-    }
-
-    #endregion
-
-
 }
+
+//-------------------------------------/归档/-------------------------------------//
+
+#region 获取料箱信息列表
+///// <summary>
+///// 获取料箱信息列表
+///// </summary>
+///// <param name="input"></param>
+///// <returns></returns>
+//[HttpGet]
+//[ApiDescriptionSettings(Name = "List")]
+//public async Task<List<EGWorkBinOutput>> List([FromQuery] EGWorkBinInput input)
+//{
+//    return await _rep.AsQueryable().Select<EGWorkBinOutput>().ToListAsync();
+//}
+
+#endregion

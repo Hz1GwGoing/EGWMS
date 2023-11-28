@@ -546,7 +546,7 @@ public class EGTakeStockService : IDynamicApiController, ITransient
         {
             // 自动生成盘点编号（时间戳）
 
-            string takestocknum = i + "-" + currentTime.GetTheCurrentTimeTimeStamp("EDPD");
+            string takestocknum = i + "-" + currentTime.GetTheCurrentTimeTimeStamp("EGPD");
             string storagenum = data[i].StorageNum;
 
             EG_WMS_TakeStock takedata = new EG_WMS_TakeStock()
@@ -635,7 +635,7 @@ public class EGTakeStockService : IDynamicApiController, ITransient
     #region （根据物料盘点）将需要修改的数据保存到库存表中
 
     /// <summary>
-    /// （根据物料盘点）将需要修改的数据保存到库存表中
+    /// （根据物料盘点）将需要修改的数据保存到库存表中（需要修改）
     /// </summary>
     /// <param name="input"></param>
     /// <returns></returns>
@@ -698,6 +698,15 @@ public class EGTakeStockService : IDynamicApiController, ITransient
                                          .ExecuteCommandAsync();
 
                     // 修改盘点记录
+
+                    await _rep.AsUpdateable()
+                              .SetColumns(it => new EG_WMS_TakeStock
+                              {
+                                  TakeStockStatus = 1,
+                              })
+                              .Where(x => x.TakeStockNum == input.PdNum)
+                              .ExecuteCommandAsync();
+
 
 
                     // 提交事务
@@ -786,7 +795,7 @@ public class EGTakeStockService : IDynamicApiController, ITransient
     }
     #endregion
 
-    //-------------------------------------//-------------------------------------//
+    //-------------------------------------/归档/-------------------------------------//
 
     #region （根据库位盘点）替换原库存中的数据
 

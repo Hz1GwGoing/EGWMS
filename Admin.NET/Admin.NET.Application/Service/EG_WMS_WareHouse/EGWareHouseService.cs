@@ -22,35 +22,6 @@ public class EGWareHouseService : IDynamicApiController, ITransient
 
     #endregion
 
-    #region 分页查询仓库
-
-    /// <summary>
-    /// 分页查询仓库
-    /// </summary>
-    /// <param name="input"></param>
-    /// <returns></returns>
-    [HttpPost]
-    [ApiDescriptionSettings(Name = "Page")]
-    public async Task<SqlSugarPagedList<EGWareHouseOutput>> Page(EGWareHouseInput input)
-    {
-
-        var query = _rep.AsQueryable()
-                    .WhereIF(!string.IsNullOrWhiteSpace(input.WHNum), u => u.WHNum.Contains(input.WHNum.Trim()))
-                    .WhereIF(!string.IsNullOrWhiteSpace(input.WHName), u => u.WHName.Contains(input.WHName.Trim()))
-                    .WhereIF(input.WHType > 0, u => u.WHType == input.WHType)
-                    .WhereIF(!string.IsNullOrWhiteSpace(input.WHAddress), u => u.WHAddress.Contains(input.WHAddress.Trim()))
-                    .WhereIF(input.WHStatus > 0, u => u.WHStatus == input.WHStatus)
-
-                    // 获取创建日期
-                    .WhereIF(input.CreateTime > DateTime.MinValue, u => u.CreateTime >= input.CreateTime)
-                    .Select<EGWareHouseOutput>()
-;
-        query = query.OrderBuilder(input);
-        return await query.ToPagedListAsync(input.Page, input.PageSize);
-    }
-
-    #endregion
-
     #region 获得仓库列表包括仓库下面所有的数据
 
     /// <summary>
@@ -155,24 +126,6 @@ public class EGWareHouseService : IDynamicApiController, ITransient
     }
     #endregion
 
-    #region 获取仓库
-    /// <summary>
-    /// 获取仓库
-    /// </summary>
-    /// <param name="input"></param>
-    /// <returns></returns>
-    [HttpGet]
-    [ApiDescriptionSettings(Name = "Detail")]
-    public async Task<Entity.EG_WMS_WareHouse> Get([FromQuery] QueryByIdEGWareHouseInput input)
-    {
-        //return await _rep.GetFirstAsync(u => u.Id == input.Id);
-
-        // 模糊查询
-        return await _rep.GetFirstAsync(u => u.WHName.Contains(input.WHName) || u.WHNum.Contains(input.WHNum));
-
-    }
-    #endregion
-
     #region 获取仓库列表
     /// <summary>
     /// 获取仓库列表
@@ -189,3 +142,33 @@ public class EGWareHouseService : IDynamicApiController, ITransient
 
 }
 
+//-------------------------------------/归档/-------------------------------------//
+
+#region 分页查询仓库
+
+///// <summary>
+///// 分页查询仓库
+///// </summary>
+///// <param name="input"></param>
+///// <returns></returns>
+//    [HttpPost]
+//    [ApiDescriptionSettings(Name = "Page")]
+//    public async Task<SqlSugarPagedList<EGWareHouseOutput>> Page(EGWareHouseInput input)
+//    {
+
+//        var query = _rep.AsQueryable()
+//                    .WhereIF(!string.IsNullOrWhiteSpace(input.WHNum), u => u.WHNum.Contains(input.WHNum.Trim()))
+//                    .WhereIF(!string.IsNullOrWhiteSpace(input.WHName), u => u.WHName.Contains(input.WHName.Trim()))
+//                    .WhereIF(input.WHType > 0, u => u.WHType == input.WHType)
+//                    .WhereIF(!string.IsNullOrWhiteSpace(input.WHAddress), u => u.WHAddress.Contains(input.WHAddress.Trim()))
+//                    .WhereIF(input.WHStatus > 0, u => u.WHStatus == input.WHStatus)
+
+//                    // 获取创建日期
+//                    .WhereIF(input.CreateTime > DateTime.MinValue, u => u.CreateTime >= input.CreateTime)
+//                    .Select<EGWareHouseOutput>()
+//;
+//        query = query.OrderBuilder(input);
+//        return await query.ToPagedListAsync(input.Page, input.PageSize);
+//    }
+
+#endregion
