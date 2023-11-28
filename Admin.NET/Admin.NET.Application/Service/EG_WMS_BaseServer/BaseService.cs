@@ -178,6 +178,7 @@ public class BaseService : IDynamicApiController, ITransient
                           StorageName = i.StorageName,
                           InAndOutBoundUser = a.InAndOutBoundUser,
                       })
+                      .Distinct()
                       .ToList();
 
 
