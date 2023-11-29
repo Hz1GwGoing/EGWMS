@@ -43,32 +43,6 @@ public class EGStorageService : IDynamicApiController, ITransient
 
     #endregion
 
-    #region 查询区域下库位总数
-
-    /// <summary>
-    /// 查询区域下库位总数
-    /// </summary>
-    /// <returns></returns>
-    [HttpGet]
-    [ApiDescriptionSettings(Name = "GetSumStorageCount")]
-    public List<GetCountStorage> GetSumStorageCount()
-    {
-        return _rep.AsQueryable()
-            .Where(a => a.StorageStatus == 0)
-            .GroupBy(a => a.RegionNum)
-            .Select(a => new GetCountStorage
-            {
-                RegionNum = a.RegionNum,
-                SumCountStorage = SqlFunc.AggregateCount(a.StorageNum)
-            })
-            .ToList();
-
-    }
-
-
-
-    #endregion
-
     #region 得到每个区域下有多少个库位
 
     /// <summary>
@@ -206,37 +180,6 @@ public class EGStorageService : IDynamicApiController, ITransient
 
     #endregion
 
-    #region 获取库位
-    /// <summary>
-    /// 获取库位
-    /// </summary>
-    /// <param name="input"></param>
-    /// <returns></returns>
-    [HttpGet]
-    [ApiDescriptionSettings(Name = "Detail")]
-    public async Task<Entity.EG_WMS_Storage> Get([FromQuery] QueryByIdEGStorageInput input)
-    {
-        // 模糊查询
-        return await _rep.GetFirstAsync(u => u.StorageNum.Contains(input.StorageNum) ||
-                                        u.StorageName.Contains(input.StorageName) ||
-                                        u.StorageGroup.Contains(input.StorageGroup));
-    }
-    #endregion
-
-    #region 获取库位列表
-    /// <summary>
-    /// 获取库位列表
-    /// </summary>
-    /// <param name="input"></param>
-    /// <returns></returns>
-    [HttpGet]
-    [ApiDescriptionSettings(Name = "List")]
-    public async Task<List<EGStorageOutput>> List([FromQuery] EGStorageInput input)
-    {
-        return await _rep.AsQueryable().Select<EGStorageOutput>().ToListAsync();
-    }
-    #endregion
-
     //-------------------------------------//-------------------------------------//
 
     #region 归档
@@ -267,11 +210,11 @@ public class EGStorageService : IDynamicApiController, ITransient
     #endregion
 
     #region 获取仓库名称
-    /// <summary>
-    /// 获取仓库名称
-    /// </summary>
-    /// <param name="input"></param>
-    /// <returns></returns>
+    ///// <summary>
+    ///// 获取仓库名称
+    ///// </summary>
+    ///// <param name="input"></param>
+    ///// <returns></returns>
     //[ApiDescriptionSettings(Name = "EGWareHouseWHNameDropdown"), HttpGet]
     //public async Task<dynamic> EGWareHouseWHNumDropdown()
     //{
@@ -287,11 +230,11 @@ public class EGStorageService : IDynamicApiController, ITransient
     #endregion
 
     #region 获取区域名称
-    /// <summary>
-    /// 获取区域名称
-    /// </summary>
-    /// <param name="input"></param>
-    /// <returns></returns>
+    ///// <summary>
+    ///// 获取区域名称
+    ///// </summary>
+    ///// <param name="input"></param>
+    ///// <returns></returns>
     //[ApiDescriptionSettings(Name = "EGRegionRegionNameDropdown"), HttpGet]
     //public async Task<dynamic> EGRegionRegionNumDropdown()
     //{
@@ -307,11 +250,11 @@ public class EGStorageService : IDynamicApiController, ITransient
     #endregion
 
     #region 分页查询库位
-    /// <summary>
-    /// 分页查询库位
-    /// </summary>
-    /// <param name="input"></param>
-    /// <returns></returns>
+    ///// <summary>
+    ///// 分页查询库位
+    ///// </summary>
+    ///// <param name="input"></param>
+    ///// <returns></returns>
     //[HttpPost]
     //[ApiDescriptionSettings(Name = "Page")]
     //public async Task<SqlSugarPagedList<EGStorageOutput>> Page(EGStorageInput input)

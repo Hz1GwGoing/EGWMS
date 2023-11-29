@@ -179,57 +179,26 @@ public class EGRegionService : IDynamicApiController, ITransient
     }
     #endregion
 
-    #region 获取区域
-    /// <summary>
-    /// 获取区域
-    /// </summary>
-    /// <param name="input"></param>
-    /// <returns></returns>
-    [HttpGet]
-    [ApiDescriptionSettings(Name = "Detail")]
-    public async Task<EG_WMS_Region> Get([FromQuery] QueryByIdEGRegionInput input)
-    {
-        //return await _rep.GetFirstAsync(u => u.Id == input.Id);
-
-        // 模糊查询
-        return await _rep.GetFirstAsync(u => u.RegionName.Contains(input.RegionName) || u.RegionNum.Contains(input.RegionNum));
-    }
-    #endregion
-
-    #region 获取区域列表
-    /// <summary>
-    /// 获取区域列表
-    /// </summary>
-    /// <param name="input"></param>
-    /// <returns></returns>
-    [HttpGet]
-    [ApiDescriptionSettings(Name = "List")]
-    public async Task<List<EGRegionOutput>> List([FromQuery] EGRegionInput input)
-    {
-        return await _rep.AsQueryable().Select<EGRegionOutput>().ToListAsync();
-    }
-    #endregion
-
-    #region 获取仓库名称列表
-    /// <summary>
-    /// 获取仓库名称列表
-    /// </summary>
-    /// <returns></returns>
-    [HttpGet]
-    [ApiDescriptionSettings(Name = "EGWareHouseWHNameDropdown")]
-    public async Task<dynamic> EGWareHouseWHNumDropdown()
-    {
-        return await _rep.Context.Queryable<EG_WMS_WareHouse>()
-                .Select(u => new
-                {
-                    ISWareHouse = u.WHName,
-                    Value = u.Id
-                }
-                ).ToListAsync();
-    }
-
-    #endregion
-
-
 }
 
+//-------------------------------------//-------------------------------------//
+
+#region 获取仓库名称列表
+///// <summary>
+///// 获取仓库名称列表
+///// </summary>
+///// <returns></returns>
+//[HttpGet]
+//[ApiDescriptionSettings(Name = "EGWareHouseWHNameDropdown")]
+//public async Task<dynamic> EGWareHouseWHNumDropdown()
+//{
+//    return await _rep.Context.Queryable<EG_WMS_WareHouse>()
+//            .Select(u => new
+//            {
+//                ISWareHouse = u.WHName,
+//                Value = u.Id
+//            }
+//            ).ToListAsync();
+//}
+
+#endregion

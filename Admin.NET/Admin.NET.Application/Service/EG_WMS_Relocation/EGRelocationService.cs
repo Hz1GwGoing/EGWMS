@@ -190,21 +190,6 @@ public class EGRelocationService : IDynamicApiController, ITransient
     }
     #endregion
 
-    #region 返回总数（总条数）
-
-    /// <summary>
-    /// 返回总数（总条数）
-    /// </summary>
-    /// <returns></returns>
-    [HttpGet]
-    [ApiDescriptionSettings(Name = "RelocationAllCount")]
-    public int RelocationAllCount()
-    {
-        return _Relocation.AsQueryable().Count();
-    }
-
-    #endregion
-
     #region 分页查询移库信息
     /// <summary>
     /// 分页查询移库信息
@@ -250,56 +235,6 @@ public class EGRelocationService : IDynamicApiController, ITransient
         var entity = await _Relocation.GetFirstAsync(u => u.Id == input.Id) ?? throw Oops.Oh(ErrorCodeEnum.D1002);
         await _Relocation.FakeDeleteAsync(entity);   //假删除
     }
-    #endregion
-
-    #region 更新移库信息
-    /// <summary>
-    /// 更新移库信息
-    /// </summary>
-    /// <param name="input"></param>
-    /// <returns></returns>
-    [HttpPost]
-    [ApiDescriptionSettings(Name = "Update")]
-    public async Task Update(UpdateEGRelocationInput input)
-    {
-        var entity = input.Adapt<EG_WMS_Relocation>();
-        await _Relocation.AsUpdateable(entity).IgnoreColumns(ignoreAllNullColumns: true).ExecuteCommandAsync();
-    }
-    #endregion
-
-    #region 获取移库信息
-    /// <summary>
-    /// 获取移库信息
-    /// </summary>
-    /// <param name="input"></param>
-    /// <returns></returns>
-    [HttpGet]
-    [ApiDescriptionSettings(Name = "Detail")]
-    public async Task<EG_WMS_Relocation> Get([FromQuery] QueryByIdEGRelocationInput input)
-    {
-        //return await _rep.GetFirstAsync(u => u.Id == input.Id);
-
-        // 模糊查询
-        return await _Relocation.GetFirstAsync(u => u.RelocatioNum.Contains(input.RelocatioNum));
-
-    }
-    #endregion
-
-    #region 获取移库信息列表
-    /// <summary>
-    /// 获取移库信息列表
-    /// </summary>
-    /// <param name="input"></param>
-    /// <returns></returns>
-    [HttpGet]
-    [ApiDescriptionSettings(Name = "List")]
-    public async Task<List<EGRelocationOutput>> List([FromQuery] EGRelocationInput input)
-    {
-        return await _Relocation.AsQueryable().Select<EGRelocationOutput>().ToListAsync();
-    }
-
-
-
     #endregion
 
     #region 联表查询类

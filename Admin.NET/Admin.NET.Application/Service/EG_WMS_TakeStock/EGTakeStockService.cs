@@ -92,40 +92,6 @@ public class EGTakeStockService : IDynamicApiController, ITransient
     }
     #endregion
 
-    #region 获取盘点信息（模糊查询）
-    /// <summary>
-    /// 获取盘点信息
-    /// </summary>
-    /// <param name="input"></param>
-    /// <returns></returns>
-    [HttpGet]
-    [ApiDescriptionSettings(Name = "Detail", Order = 140)]
-    public async Task<EG_WMS_TakeStock> Get([FromQuery] QueryByIdEGTakeStockInput input)
-    {
-        //return await _rep.GetFirstAsync(u => u.Id == input.Id);
-
-        // 模糊查询
-        return await _rep.GetFirstAsync(u => u.TakeStockNum.Contains(input.TakeStockNum));
-
-    }
-
-    #endregion
-
-    #region 获取盘点信息列表
-    /// <summary>
-    /// 获取盘点信息列表
-    /// </summary>
-    /// <param name="input"></param>
-    /// <returns></returns>
-    [HttpGet]
-    [ApiDescriptionSettings(Name = "List", Order = 120)]
-    public async Task<List<EGTakeStockOutput>> List([FromQuery] EGTakeStockInput input)
-    {
-        return await _rep.AsQueryable().Select<EGTakeStockOutput>().ToListAsync();
-    }
-
-    #endregion
-
     // 根据库位盘点
 
     #region （根据库位盘点）在PC上生成盘点任务
@@ -632,105 +598,6 @@ public class EGTakeStockService : IDynamicApiController, ITransient
     }
     #endregion
 
-    #region （根据物料盘点）将需要修改的数据保存到库存表中
-
-    ///// <summary>
-    ///// （根据物料盘点）将需要修改的数据保存到库存表中（需要修改）
-    ///// </summary>
-    ///// <param name="input"></param>
-    ///// <returns></returns>
-    ///// <exception cref="Exception"></exception>
-
-    //[HttpPost]
-    //[ApiDescriptionSettings(Name = "UpdateDataSaveInventory", Order = 88)]
-    //public async Task UpdateDataSaveInventory(TakeStockModel input)
-    //{
-    //    try
-    //    {
-    //        // 得到盘点数据表中的数据
-    //        EG_WMS_TakeStockData takeData = await _TakeStockData.GetFirstAsync(x => x.TakeStockNum == input.PdNum);
-
-    //        string invmaterienum = takeData.MaterielNum;
-    //        int invicountall = takeData.ICountAll;
-    //        string invdproductionlot = takeData.ProductionLot;
-    //        string invdworkbinnum = takeData.WorkBinNum;
-
-
-    //        // 得到符合条件的库存表里面的数据
-    //        var listItem = _model.AsQueryable()
-    //                             .InnerJoin<EG_WMS_InventoryDetail>((a, b) => a.InventoryNum == b.InventoryNum)
-    //                             .Where((a, b) => a.InventoryNum == input.InventoryNum)
-    //                             .ToList();
-
-    //        if (listItem.Count == 0)
-    //        {
-    //            throw Oops.Oh("没有在库存中找到有类似的库存信息");
-    //        }
-
-
-    //        using (TransactionScope scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
-    //        {
-    //            try
-    //            {
-    //                // 修改主表
-    //                await _model.AsUpdateable()
-    //                         .SetColumns(it => new EG_WMS_Inventory
-    //                         {
-    //                             MaterielNum = invmaterienum,
-    //                             ICountAll = invicountall,
-    //                             UpdateTime = DateTime.Now,
-    //                             InventoryRemake = $"此库存已被盘点修改，盘点编号为：{takeData.TakeStockNum}"
-    //                         })
-    //                         .Where(x => x.InventoryNum == listItem[0].InventoryNum)
-    //                         .ExecuteCommandAsync();
-
-    //                // 修改详细表
-
-    //                await _InventoryDetail.AsUpdateable()
-    //                                      .SetColumns(it => new EG_WMS_InventoryDetail
-    //                                      {
-    //                                          // 生产批次
-    //                                          ProductionLot = invdproductionlot,
-    //                                          WorkBinNum = invdworkbinnum,
-    //                                          UpdateTime = DateTime.Now,
-    //                                      })
-    //                                     .Where(x => x.InventoryNum == listItem[0].InventoryNum)
-    //                                     .ExecuteCommandAsync();
-
-    //                // 修改盘点记录
-
-    //                await _rep.AsUpdateable()
-    //                          .SetColumns(it => new EG_WMS_TakeStock
-    //                          {
-    //                              TakeStockStatus = 1,
-    //                          })
-    //                          .Where(x => x.TakeStockNum == input.PdNum)
-    //                          .ExecuteCommandAsync();
-
-
-
-    //                // 提交事务
-    //                scope.Complete();
-    //            }
-    //            catch (Exception ex)
-    //            {
-    //                // 发生异常回滚事务
-    //                scope.Dispose();
-    //                throw Oops.Oh(ex.Message);
-    //            }
-    //        }
-    //    }
-    //    catch (Exception ex)
-    //    {
-
-    //        throw Oops.Oh(ex.Message);
-    //    }
-
-    //}
-
-
-    #endregion
-
     #region 料箱数据实体
     /// <summary>
     /// 料箱数据实体
@@ -924,49 +791,6 @@ public class EGTakeStockService : IDynamicApiController, ITransient
     //{
     //    var entity = input.Adapt<EGTakeStock>();
     //    await _rep.AsUpdateable(entity).IgnoreColumns(ignoreAllNullColumns: true).ExecuteCommandAsync();
-    //}
-    #endregion
-
-    #region 获取盘点信息（联表查询）<未添加错误异常处理器>
-    //public async Task<List<TakeStockData>> GetTakeStockMessage()
-    //{
-    //    List<EGTakeStock> data = await _rep.GetListAsync();
-    //    List<string> materielNums = new List<string>();
-    //    // 循环遍历得到物料编号
-    //    foreach (var item in data)
-    //    {
-    //        materielNums.Add(item.MaterielNum);
-    //    }
-    //    List<TakeStockData> takeStockDataList = new List<TakeStockData>();
-    //    // 将每一条数据得到，并且添加到takeStockDataList集合中
-    //    for (int i = 0; i < materielNums.Count; i++)
-    //    {
-    //        string num = materielNums[i];
-    //        var materielData = await _db.GetFirstAsync(u => u.MaterielNum == num);
-    //        var inventoryData = await _model.GetFirstAsync(u => u.MaterielNum == num);
-    //        var takeStockData = await _rep.GetFirstAsync(u => u.MaterielNum == num);
-    //        var materielnum = materielData.MaterielNum;
-    //        var materielname = materielData.MaterielName;
-    //        var materielspecs = materielData.MaterielSpecs;
-    //        var icountAll = inventoryData.ICountAll;
-    //        // 盘点状态
-    //        var takestockstatus = takeStockData.TakeStockStatus;
-    //        var takestockcount = takeStockData.TakeStockCount;
-    //        var diffCount = takeStockData.TakeStockDiffCount;
-
-    //        TakeStockData Data = new TakeStockData()
-    //        {
-    //            MaterielNum = materielnum,
-    //            MaterielName = materielname,
-    //            MaterielSpecs = materielspecs,
-    //            TakeStockStatus = (int)takestockstatus,
-    //            ICountAll = (int)icountAll,
-    //            TakeStockCount = (int)takestockcount,
-    //            DiffCount = (int)diffCount
-    //        };
-    //        takeStockDataList.Add(Data);
-    //    }
-    //    return takeStockDataList;
     //}
     #endregion
 
@@ -1859,5 +1683,103 @@ public class EGTakeStockService : IDynamicApiController, ITransient
     //}
     #endregion
 
+    #region （根据物料盘点）将需要修改的数据保存到库存表中
+
+    ///// <summary>
+    ///// （根据物料盘点）将需要修改的数据保存到库存表中（需要修改）
+    ///// </summary>
+    ///// <param name="input"></param>
+    ///// <returns></returns>
+    ///// <exception cref="Exception"></exception>
+
+    //[HttpPost]
+    //[ApiDescriptionSettings(Name = "UpdateDataSaveInventory", Order = 88)]
+    //public async Task UpdateDataSaveInventory(TakeStockModel input)
+    //{
+    //    try
+    //    {
+    //        // 得到盘点数据表中的数据
+    //        EG_WMS_TakeStockData takeData = await _TakeStockData.GetFirstAsync(x => x.TakeStockNum == input.PdNum);
+
+    //        string invmaterienum = takeData.MaterielNum;
+    //        int invicountall = takeData.ICountAll;
+    //        string invdproductionlot = takeData.ProductionLot;
+    //        string invdworkbinnum = takeData.WorkBinNum;
+
+
+    //        // 得到符合条件的库存表里面的数据
+    //        var listItem = _model.AsQueryable()
+    //                             .InnerJoin<EG_WMS_InventoryDetail>((a, b) => a.InventoryNum == b.InventoryNum)
+    //                             .Where((a, b) => a.InventoryNum == input.InventoryNum)
+    //                             .ToList();
+
+    //        if (listItem.Count == 0)
+    //        {
+    //            throw Oops.Oh("没有在库存中找到有类似的库存信息");
+    //        }
+
+
+    //        using (TransactionScope scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
+    //        {
+    //            try
+    //            {
+    //                // 修改主表
+    //                await _model.AsUpdateable()
+    //                         .SetColumns(it => new EG_WMS_Inventory
+    //                         {
+    //                             MaterielNum = invmaterienum,
+    //                             ICountAll = invicountall,
+    //                             UpdateTime = DateTime.Now,
+    //                             InventoryRemake = $"此库存已被盘点修改，盘点编号为：{takeData.TakeStockNum}"
+    //                         })
+    //                         .Where(x => x.InventoryNum == listItem[0].InventoryNum)
+    //                         .ExecuteCommandAsync();
+
+    //                // 修改详细表
+
+    //                await _InventoryDetail.AsUpdateable()
+    //                                      .SetColumns(it => new EG_WMS_InventoryDetail
+    //                                      {
+    //                                          // 生产批次
+    //                                          ProductionLot = invdproductionlot,
+    //                                          WorkBinNum = invdworkbinnum,
+    //                                          UpdateTime = DateTime.Now,
+    //                                      })
+    //                                     .Where(x => x.InventoryNum == listItem[0].InventoryNum)
+    //                                     .ExecuteCommandAsync();
+
+    //                // 修改盘点记录
+
+    //                await _rep.AsUpdateable()
+    //                          .SetColumns(it => new EG_WMS_TakeStock
+    //                          {
+    //                              TakeStockStatus = 1,
+    //                          })
+    //                          .Where(x => x.TakeStockNum == input.PdNum)
+    //                          .ExecuteCommandAsync();
+
+
+
+    //                // 提交事务
+    //                scope.Complete();
+    //            }
+    //            catch (Exception ex)
+    //            {
+    //                // 发生异常回滚事务
+    //                scope.Dispose();
+    //                throw Oops.Oh(ex.Message);
+    //            }
+    //        }
+    //    }
+    //    catch (Exception ex)
+    //    {
+
+    //        throw Oops.Oh(ex.Message);
+    //    }
+
+    //}
+
+
+    #endregion
 }
 

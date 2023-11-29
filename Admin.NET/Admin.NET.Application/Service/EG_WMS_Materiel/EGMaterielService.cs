@@ -92,23 +92,6 @@ public class EGMaterielService : IDynamicApiController, ITransient
     }
     #endregion
 
-    #region 获取物料信息
-    /// <summary>
-    /// 获取物料信息
-    /// </summary>
-    /// <param name="input"></param>
-    /// <returns></returns>
-    [HttpGet]
-    [ApiDescriptionSettings(Name = "Detail")]
-    public async Task<EG_WMS_Materiel> Get([FromQuery] QueryByIdEGMaterielInput input)
-    {
-        //return await _rep.GetFirstAsync(u => u.Id == input.Id);
-
-        // 模糊查询
-        return await _rep.GetFirstAsync(u => u.MaterielNum.Contains(input.MaterielNum) || u.MaterielName.Contains(input.MaterielName));
-    }
-    #endregion
-
     #region 根据物料编号名称类别筛选物料
 
     /// <summary>
@@ -140,26 +123,6 @@ public class EGMaterielService : IDynamicApiController, ITransient
         return datatwo;
     }
 
-    #endregion
-
-    #region 获取物料信息列表
-
-    /// <summary>
-    /// 获取物料信息列表
-    /// </summary>
-    /// <param name="materielname"></param>
-    /// <returns></returns>
-    [HttpGet]
-    [ApiDescriptionSettings(Name = "List")]
-    public async Task<List<EGMaterielOutput>> List(string materielname)
-    {
-        //return await _rep.AsQueryable().Select<EGMaterielOutput>().ToListAsync();
-        // 模糊查询
-        return await _rep.AsQueryable()
-               .Where(x => x.MaterielName.Contains(materielname))
-               .Select<EGMaterielOutput>()
-               .ToListAsync();
-    }
     #endregion
 
     //-------------------------------------//-------------------------------------//
