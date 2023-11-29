@@ -95,7 +95,10 @@ public class EGStorageService : IDynamicApiController, ITransient
                            WHNum = c.WHNum,
                            WHName = c.WHName,
                            TotalStorage = SqlFunc.AggregateCount(b.StorageNum),
-                           EnabledStorage = SqlFunc.AggregateCount(b.StorageStatus == 0),
+                           //EnabledStorage = SqlFunc.AggregateCount(b.StorageStatus == 0 && b.StorageOccupy == 0),
+                           EnabledStorage = SqlFunc.Subqueryable<Entity.EG_WMS_Storage>()
+                                                   .Where(x => x.StorageOccupy == 0 && x.StorageStatus == 0 && x.RegionNum == a.RegionNum)
+                                                   .Select(x => SqlFunc.AggregateCount(x.StorageNum)),
                            UsedStorage = SqlFunc.AggregateSum(SqlFunc.IIF(b.StorageOccupy == 1, 1, 0)),
                            Remake = b.StorageRemake,
                            CreateUserName = a.CreateUserName,
