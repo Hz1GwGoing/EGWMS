@@ -294,60 +294,16 @@ public class EGRelocationService : IDynamicApiController, ITransient
 
 //-------------------------------------//-------------------------------------//
 
-#region 增加移库信息
-/// <summary>
-/// 增加移库信息
-/// </summary>
-/// <param name="input"></param>
-/// <returns></returns>
-//[HttpPost]
-//[ApiDescriptionSettings(Name = "Add")]
-//public async Task Add(AddEGRelocationInput input)
-//{
-//    var entity = input.Adapt<EGRelocation>();
-//    await _rep.InsertAsync(entity);
-//}
-#endregion
-
-#region 添加一条（移库记录）
-/// <summary>
-/// 添加一条移库记录
-/// </summary>
-/// <param name="input">移库记录字段</param>
-/// <returns></returns>
-/// <exception cref="Exception"></exception>
-//[HttpPost]
-//[ApiDescriptionSettings(Name = "InsertRepositoryRecords")]
-
-//public async Task InsertRepositoryRecords(EG_WMS_Relocation input)
-//{
-//    // 查询是否有一致的记录
-//    var is_vaild = await _rep.GetFirstAsync(u => u.RelocatioNum == input.RelocatioNum);
-//    if (is_vaild != null)
-//    {
-//        throw new Exception("已存在此移库记录！");
-//    }
-//    else
-//    {
-//        // 获得当前时间时间戳
-//        string timesStamp = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString();
-//        input.RelocatioNum = "EGYK" + timesStamp;
-//        await _rep.InsertAsync(input);
-//    }
-//}
-
-#endregion
-
 #region 移库操作
 
-/// <summary>
-/// 移库操作（更新详情表）
-/// </summary>
-/// <param name="materielnum">物料编号</param>
-/// <param name="regionnum">区域编号</param>
-/// <param name="storagenum">库位编号</param>
-/// <returns></returns>
-/// <exception cref="Exception"></exception>
+///// <summary>
+///// 移库操作（更新详情表）
+///// </summary>
+///// <param name="materielnum">物料编号</param>
+///// <param name="regionnum">区域编号</param>
+///// <param name="storagenum">库位编号</param>
+///// <returns></returns>
+///// <exception cref="Exception"></exception>
 //    [HttpPut]
 //    [ApiDescriptionSettings(Name = "LibraryTransferOperation")]
 

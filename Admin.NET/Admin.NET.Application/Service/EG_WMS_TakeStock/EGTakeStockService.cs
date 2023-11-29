@@ -666,13 +666,13 @@ public class EGTakeStockService : IDynamicApiController, ITransient
 
     #region （根据库位盘点）替换原库存中的数据
 
-    /// <summary>
-    /// （根据库位盘点）替换原库存中的数据
-    /// </summary>
-    /// <param name="workbinnum">料箱编号</param>
-    /// <param name="materielnum">物料编号</param>
-    /// <returns></returns>
-    /// <exception cref="Exception"></exception>
+    ///// <summary>
+    ///// （根据库位盘点）替换原库存中的数据
+    ///// </summary>
+    ///// <param name="workbinnum">料箱编号</param>
+    ///// <param name="materielnum">物料编号</param>
+    ///// <returns></returns>
+    ///// <exception cref="Exception"></exception>
     //[HttpPost]
     //[ApiDescriptionSettings(Name = "ReplaceaInventoryData", Order = 97)]
     //public async Task ReplaceaInventoryData(string workbinnum, string materielnum)
@@ -764,42 +764,12 @@ public class EGTakeStockService : IDynamicApiController, ITransient
 
     #endregion
 
-    #region 增加盘点信息
-    /// <summary>
-    /// 增加盘点信息
-    /// </summary>
-    /// <param name="input"></param>
-    /// <returns></returns>
-    //[HttpPost]
-    //[ApiDescriptionSettings(Name = "Add")]
-    //public async Task Add(AddEGTakeStockInput input)
-    //{
-    //    var entity = input.Adapt<EGTakeStock>();
-    //    await _rep.InsertAsync(entity);
-    //}
-    #endregion
-
-    #region 更新盘点信息
-    /// <summary>
-    /// 更新盘点信息
-    /// </summary>
-    /// <param name="input"></param>
-    /// <returns></returns>
-    //[HttpPost]
-    //[ApiDescriptionSettings(Name = "Update")]
-    //public async Task Update(UpdateEGTakeStockInput input)
-    //{
-    //    var entity = input.Adapt<EGTakeStock>();
-    //    await _rep.AsUpdateable(entity).IgnoreColumns(ignoreAllNullColumns: true).ExecuteCommandAsync();
-    //}
-    #endregion
-
     #region 获取盘点信息（联表查询）<已添加错误异常处理器>
 
-    /// <summary>
-    /// 获取盘点信息（联表查询）
-    /// </summary>
-    /// <returns></returns>
+    ///// <summary>
+    ///// 获取盘点信息（联表查询）
+    ///// </summary>
+    ///// <returns></returns>
     //[HttpGet]
     //[ApiDescriptionSettings(Name = "GetTakeStockMessage")]
     //public async Task<List<EGTakeStockData>> GetTakeStockMessage()
@@ -862,14 +832,14 @@ public class EGTakeStockService : IDynamicApiController, ITransient
 
     #region （根据库位）生成盘点信息 （一个库位上暂时不会有多个物料）
 
-    /// <summary>
-    /// （根据库位）生成盘点信息 （一个库位上暂时不会有多个物料）
-    /// </summary>
-    /// <param name="storagenum">库位编号</param>
-    /// <param name="takestockcount">盘点数量</param>
-    /// <param name="takestocknum">盘点编号</param>
-    /// <returns></returns>
-    /// <exception cref="Exception"></exception>
+    ///// <summary>
+    ///// （根据库位）生成盘点信息 （一个库位上暂时不会有多个物料）
+    ///// </summary>
+    ///// <param name="storagenum">库位编号</param>
+    ///// <param name="takestockcount">盘点数量</param>
+    ///// <param name="takestocknum">盘点编号</param>
+    ///// <returns></returns>
+    ///// <exception cref="Exception"></exception>
 
     //[HttpPost]
     //[ApiDescriptionSettings(Name = "ReasonStorageTakeStockMessage")]
@@ -965,13 +935,13 @@ public class EGTakeStockService : IDynamicApiController, ITransient
 
     #region （根据库位）输入盘点数量改变未盘点的状态
 
-    /// <summary>
-    ///（根据库位）输入盘点数量改变未盘点的状态
-    /// </summary>
-    /// <param name="takestocknum">盘点编号</param>
-    /// <param name="takestockcount">盘点数量</param>
-    /// <returns></returns>
-    /// <exception cref="Exception"></exception>
+    ///// <summary>
+    /////（根据库位）输入盘点数量改变未盘点的状态
+    ///// </summary>
+    ///// <param name="takestocknum">盘点编号</param>
+    ///// <param name="takestockcount">盘点数量</param>
+    ///// <returns></returns>
+    ///// <exception cref="Exception"></exception>
     //[HttpPut]
     //[ApiDescriptionSettings(Name = "UpdateTakeStockStorageNumMessageStatus")]
     //public async Task UpdateTakeStockStorageNumMessageStatus(string takestocknum, int takestockcount)
@@ -1035,13 +1005,13 @@ public class EGTakeStockService : IDynamicApiController, ITransient
 
     #region （根据物料）生成盘点信息（可以输入数量，生成盘点记录；也可以不输入数量，生成未盘点记录）
 
-    /// <summary>
-    /// （根据物料）生成盘点信息（可以输入数量，生成盘点记录；也可以不输入数量，生成未盘点记录）
-    /// </summary>
-    /// <param name="materielnum">物料编号</param>
-    /// <param name="takestockcount">盘点数量</param>
-    /// <returns></returns>
-    /// <exception cref="Exception"></exception>
+    ///// <summary>
+    ///// （根据物料）生成盘点信息（可以输入数量，生成盘点记录；也可以不输入数量，生成未盘点记录）
+    ///// </summary>
+    ///// <param name="materielnum">物料编号</param>
+    ///// <param name="takestockcount">盘点数量</param>
+    ///// <returns></returns>
+    ///// <exception cref="Exception"></exception>
 
     //[HttpPost]
     //[ApiDescriptionSettings(Name = "AddTakeStockMessage")]
@@ -1133,13 +1103,13 @@ public class EGTakeStockService : IDynamicApiController, ITransient
 
     #region （根据物料）输入盘点数量改变未盘点的状态
 
-    /// <summary>
-    /// （根据物料）输入盘点数量改变未盘点的状态
-    /// </summary>
-    /// <param name="takestocknum">盘点编号</param>
-    /// <param name="takestockcount">盘点数量</param>
-    /// <returns></returns>
-    /// <exception cref="Exception"></exception>
+    ///// <summary>
+    ///// （根据物料）输入盘点数量改变未盘点的状态
+    ///// </summary>
+    ///// <param name="takestocknum">盘点编号</param>
+    ///// <param name="takestockcount">盘点数量</param>
+    ///// <returns></returns>
+    ///// <exception cref="Exception"></exception>
     //[HttpPut]
     //[ApiDescriptionSettings(Name = "UpdateTakeStockMaterielNumMessageStatus")]
     //public async Task UpdateTakeStockMaterielNumMessageStatus(string takestocknum, int takestockcount)
@@ -1194,10 +1164,10 @@ public class EGTakeStockService : IDynamicApiController, ITransient
 
     #region 根据库位盘点（修改，待完善）
 
-    /// <summary>
-    /// 得到这个库位上面的所有料箱的数据
-    /// </summary>
-    /// <returns></returns>
+    ///// <summary>
+    ///// 得到这个库位上面的所有料箱的数据
+    ///// </summary>
+    ///// <returns></returns>
     //[HttpPost]
     //public List<ViewTaskStock> GetViewTaskStocks(string storagenum)
     //{
@@ -1365,13 +1335,13 @@ public class EGTakeStockService : IDynamicApiController, ITransient
 
     #region （根据库位）来盘点料箱（输入料箱数量，多了盘盈，少了盘亏）
 
-    /// <summary>
-    /// （根据库位）来盘点料箱（输入料箱数量，多了盘盈，少了盘亏）
-    /// </summary>
-    /// <param name="storagenum">库位编号</param>
-    /// <param name="takestockcount">盘点数量</param>
-    /// <returns></returns>
-    /// <exception cref="Exception"></exception>
+    ///// <summary>
+    ///// （根据库位）来盘点料箱（输入料箱数量，多了盘盈，少了盘亏）
+    ///// </summary>
+    ///// <param name="storagenum">库位编号</param>
+    ///// <param name="takestockcount">盘点数量</param>
+    ///// <returns></returns>
+    ///// <exception cref="Exception"></exception>
     //[HttpPost]
     //[ApiDescriptionSettings(Name = "ReasonStorageTakeStockMessage")]
     //public async Task ReasonStorageTakeStockMessage(string storagenum, int? takestockcount)
@@ -1465,13 +1435,13 @@ public class EGTakeStockService : IDynamicApiController, ITransient
 
     #region （根据库位）输入盘点数量改变未盘点的状态
 
-    /// <summary>
-    ///（根据库位）输入盘点数量改变未盘点的状态
-    /// </summary>
-    /// <param name="takestocknum">盘点编号</param>
-    /// <param name="takestockcount">盘点数量</param>
-    /// <returns></returns>
-    /// <exception cref="Exception"></exception>
+    ///// <summary>
+    /////（根据库位）输入盘点数量改变未盘点的状态
+    ///// </summary>
+    ///// <param name="takestocknum">盘点编号</param>
+    ///// <param name="takestockcount">盘点数量</param>
+    ///// <returns></returns>
+    ///// <exception cref="Exception"></exception>
     //[HttpPut]
     //[ApiDescriptionSettings(Name = "UpdateTakeStockStorageNumMessageStatus")]
     //public async Task UpdateTakeStockStorageNumMessageStatus(string takestocknum, int takestockcount)
@@ -1526,13 +1496,13 @@ public class EGTakeStockService : IDynamicApiController, ITransient
 
     #region （根据物料）生成盘点信息（输入物料编号，得到该物料的所有箱数）
 
-    /// <summary>
-    /// （根据物料）生成盘点信息（输入物料编号，得到该物料的所有箱数）
-    /// </summary>
-    /// <param name="materielnum">物料编号</param>
-    /// <param name="takestockcount">盘点数量</param>
-    /// <returns></returns>
-    /// <exception cref="Exception"></exception>
+    ///// <summary>
+    ///// （根据物料）生成盘点信息（输入物料编号，得到该物料的所有箱数）
+    ///// </summary>
+    ///// <param name="materielnum">物料编号</param>
+    ///// <param name="takestockcount">盘点数量</param>
+    ///// <returns></returns>
+    ///// <exception cref="Exception"></exception>
 
     //[HttpPost]
     //[ApiDescriptionSettings(Name = "AddTakeStockMessage")]
@@ -1629,13 +1599,13 @@ public class EGTakeStockService : IDynamicApiController, ITransient
 
     #region （根据物料）输入盘点数量改变未盘点的状态
 
-    /// <summary>
-    /// （根据物料）输入盘点数量改变未盘点的状态
-    /// </summary>
-    /// <param name="takestocknum">盘点编号</param>
-    /// <param name="takestockcount">盘点数量</param>
-    /// <returns></returns>
-    /// <exception cref="Exception"></exception>
+    ///// <summary>
+    ///// （根据物料）输入盘点数量改变未盘点的状态
+    ///// </summary>
+    ///// <param name="takestocknum">盘点编号</param>
+    ///// <param name="takestockcount">盘点数量</param>
+    ///// <returns></returns>
+    ///// <exception cref="Exception"></exception>
     //[HttpPut]
     //[ApiDescriptionSettings(Name = "UpdateTakeStockMaterielNumMessageStatus")]
     //public async Task UpdateTakeStockMaterielNumMessageStatus(string takestocknum, int takestockcount)

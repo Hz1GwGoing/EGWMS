@@ -974,11 +974,11 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
 
 
     #region 接受RCS的上报信息
-    /// <summary>
-    /// 接受RCS的上报信息
-    /// </summary>
-    /// <param name="acceptDto"></param>
-    /// <returns></returns>
+    ///// <summary>
+    ///// 接受RCS的上报信息
+    ///// </summary>
+    ///// <param name="acceptDto"></param>
+    ///// <returns></returns>
     //[HttpPost("/AGV/Task/AcceptAsync")]
     //[AllowAnonymous]
     //public string AcceptAsync(AcceptDTO acceptDto)

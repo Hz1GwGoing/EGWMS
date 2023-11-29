@@ -41,10 +41,6 @@ public class EGInventoryBaseInput
 /// </summary>
 public class EGInventoryInput : BasePageInput
 {
-    /// <summary>
-    /// 库存编号
-    /// </summary>
-    //public string? InventoryNum { get; set; }
 
     /// <summary>
     /// 库存总数
@@ -95,12 +91,6 @@ public class EGInventoryInput : BasePageInput
 /// </summary>
 public class AddEGInventoryInput : EGInventoryBaseInput
 {
-    /// <summary>
-    /// 库存编号
-    /// </summary>
-    //[Required(ErrorMessage = "库存编号不能为空")]
-    //public override string? InventoryNum { get; set; }
-
     /// <summary>
     /// 物料编号
     /// </summary>

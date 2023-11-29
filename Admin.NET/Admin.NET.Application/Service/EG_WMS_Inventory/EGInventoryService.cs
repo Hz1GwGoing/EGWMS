@@ -168,36 +168,6 @@ public class EGInventoryService : IDynamicApiController, ITransient
 
     //-------------------------------------//-------------------------------------//
 
-    #region 增加库存主表
-    /// <summary>
-    /// 增加库存主表
-    /// </summary>
-    /// <param name="input"></param>
-    /// <returns></returns>
-    //[HttpPost]
-    //[ApiDescriptionSettings(Name = "Add")]
-    //public async Task Add(AddEGInventoryInput input)
-    //{
-    //    var entity = input.Adapt<EGInventory>();
-    //    await _rep.InsertAsync(entity);
-    //}
-    #endregion
-
-    #region 删除库存主表
-    /// <summary>
-    /// 删除库存主表
-    /// </summary>
-    /// <param name="input"></param>
-    /// <returns></returns>
-    //[HttpPost]
-    //[ApiDescriptionSettings(Name = "Delete")]
-    //public async Task Delete(DeleteEGInventoryInput input)
-    //{
-    //    var entity = await _rep.GetFirstAsync(u => u.Id == input.Id) ?? throw Oops.Oh(ErrorCodeEnum.D1002);
-    //    await _rep.FakeDeleteAsync(entity);   //假删除
-    //}
-    #endregion
-
     #region 模糊查询（根据物料编号和物料名称和物料规格查询）
     //public async Task<List<EGInventoryAndMaterielDto>> Get([FromQuery] QueryByIdEGInventoryInput input)
     //{
