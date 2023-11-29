@@ -472,6 +472,7 @@ public class EG_WMS_InAndOutBoundMessage
                     InAndOutBoundType = 1,
                     InAndOutBoundTime = DateTime.Now,
                     InAndOutBoundUser = input.AddName,
+                    InAndOutBoundStatus = 2,
                     InAndOutBoundRemake = input.InAndOutBoundRemake,
                     CreateTime = DateTime.Now,
                     StartPoint = null,
@@ -524,7 +525,7 @@ public class EG_WMS_InAndOutBoundMessage
         if (taskstagingentity.Id == 0) taskstagingentity.Id = SnowFlakeSingle.Instance.NextId();
         taskstagingentity.TaskNo = taskstagingentity.TaskNo ?? taskstagingentity.Id.ToString();
         taskstagingentity.TaskName = taskstagingentity.TaskName ?? logictem.TemLogicName;
-        if (agvbound.StartPoint != null || agvbound.StartPoint != "")
+        if (agvbound.StartPoint != "没有合适的库位")
         {
             taskstagingentity.TaskPath = agvbound.StartPoint + ",";
 

@@ -3,7 +3,7 @@
 /// <summary>
 /// 再次请求AGV入库暂存任务
 /// </summary>
-[JobDetail("repeat_AgvInBoundTaskJob", Description = "再次请求AGV入库暂存任务", GroupName = "AGVTask", Concurrent = false)]
+[JobDetail("trigger_AgvInBoundTaskJob", Description = "再次请求AGV入库暂存任务", GroupName = "AGVTask", Concurrent = false)]
 [Daily(TriggerId = "trigger_repeatAgvInBoundTaskJob", Description = "再次请求AGV入库暂存任务")]
 public class AddAgvStagingInBoundTask : IJob
 {

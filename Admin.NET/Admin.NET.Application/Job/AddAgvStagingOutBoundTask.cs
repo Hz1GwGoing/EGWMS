@@ -1,5 +1,8 @@
 ﻿namespace Admin.NET.Application.Job;
 
+/// <summary>
+/// 再次请求AGV出库暂存任务
+/// </summary>
 [JobDetail("trigger_AgvOutBoundTaskJob", Description = "再次请求AGV出库暂存任务", GroupName = "AGVTask", Concurrent = false)]
 [Daily(TriggerId = "trigger_repeatAgvOutBoundTaskJob", Description = "再次请求AGV出库暂存任务")]
 public class AddAgvStagingOutBoundTask : IJob
@@ -116,7 +119,7 @@ public class AddAgvStagingOutBoundTask : IJob
 
                     // 根据库位编号查询所在区域
                     string regionnum = inoutboundMessage.GetStorageWhereRegion(requestStorage);
-                    string whnum = inoutboundMessage.GetRegionWhereWHNum(requestStorage);
+                    string whnum = inoutboundMessage.GetRegionWhereWHNum(regionnum);
 
                     // 根据得到的库位点，修改出库单据
                     await _InAndOutBound.AsUpdateable()
