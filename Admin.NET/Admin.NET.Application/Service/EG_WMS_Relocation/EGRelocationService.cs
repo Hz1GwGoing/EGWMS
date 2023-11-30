@@ -117,32 +117,41 @@ public class EGRelocationService : IDynamicApiController, ITransient
             }
             await _Relocation.InsertAsync(_relocation);
 
+            using (TransactionScope scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
+            {
+                try
+                {
+                    // 修改这个料箱的库存数据
+                    await _InventoryDetail.AsUpdateable()
+                                     .SetColumns(u => new EG_WMS_InventoryDetail
+                                     {
+                                         StorageNum = input.GOStorageNum,
+                                         UpdateTime = DateTime.Now,
+                                         InventoryDetailRemake = remake,
+                                     })
+                                     .Where(it => it.WorkBinNum == input.WorkBinNum)
+                                     .ExecuteCommandAsync();
 
-            // 修改这个料箱的库存数据
-            await _InventoryDetail.AsUpdateable()
-                             .AS("EG_WMS_InventoryDetail")
-                             .SetColumns(u => new EG_WMS_InventoryDetail
-                             {
-                                 StorageNum = input.GOStorageNum,
-                                 UpdateTime = DateTime.Now,
-                                 InventoryDetailRemake = remake,
-                             })
-                             .Where(it => it.WorkBinNum == input.WorkBinNum)
-                             .ExecuteCommandAsync();
+                    // 修改料箱表里面的数据
 
-            // 修改料箱表里面的数据
+                    await _WorkBin.AsUpdateable()
+                                  .SetColumns(it => new EG_WMS_WorkBin
+                                  {
+                                      StorageNum = input.GOStorageNum,
+                                      UpdateTime = DateTime.Now,
+                                      WorkBinRemake = remake,
+                                  })
+                                  .Where(u => u.WorkBinNum == input.WorkBinNum)
+                                  .ExecuteCommandAsync();
 
-            await _WorkBin.AsUpdateable()
-                          .AS("EG_WMS_WorkBin")
-                          .SetColumns(it => new EG_WMS_WorkBin
-                          {
-                              StorageNum = input.GOStorageNum,
-                              UpdateTime = DateTime.Now,
-                              WorkBinRemake = remake,
-                          })
-                          .Where(u => u.WorkBinNum == input.WorkBinNum)
-                          .ExecuteCommandAsync();
-
+                    // 修改库位占用
+                    // 旧库位取消占用（密集库单移料箱无意义）
+                }
+                catch (Exception)
+                {
+                    throw;
+                }
+            }
         }
         catch (Exception ex)
         {

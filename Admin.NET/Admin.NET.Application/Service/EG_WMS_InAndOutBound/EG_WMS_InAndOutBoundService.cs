@@ -34,10 +34,10 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
     }
     #endregion
 
-    #region AGV入库（入库WMS自动推荐库位）（用于测试）
+    #region  AGV入库（入库WMS自动推荐库位）（密集库）（用于测试）（潜伏举升）
 
     /// <summary>
-    /// AGV入库（入库WMS自动推荐库位）（用于测试）
+    /// AGV入库（入库WMS自动推荐库位）（密集库）（用于测试）（潜伏举升）
     /// </summary>
     /// <param name="input"></param>
     /// <returns></returns>
@@ -339,10 +339,10 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
 
     #endregion
 
-    #region AGV入库（需要前往等待点）
+    #region AGV入库（需要前往等待点）（密集库）（潜伏举升）
 
     /// <summary>
-    ///  AGV入库（需要前往等待点，到达等待点再获取库位点）
+    ///  AGV入库（需要前往等待点，到达等待点再获取库位点）（密集库）（潜伏举升）
     /// </summary>
     /// <param name="input"></param>
     /// <returns></returns>
@@ -625,10 +625,10 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
 
     #endregion
 
-    #region AGV入库（入库WMS自动推荐库位）（封装）
+    #region AGV入库（入库WMS自动推荐库位）（封装）（密集库）（潜伏举升）
 
     /// <summary>
-    /// AGV入库（入库WMS自动推荐库位）（封装）
+    /// AGV入库（入库WMS自动推荐库位）（封装）（密集库）（潜伏举升）
     /// </summary>
     /// <param name="input"></param>
     /// <returns></returns>
@@ -694,10 +694,10 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
 
     #endregion
 
-    #region AGV出库（两点位）（出库WMS自动推荐库位）
+    #region AGV出库（两点位）（出库WMS自动推荐库位）（密集库）（潜伏举升）
 
     /// <summary>
-    /// AGV出库（两点位）（出库WMS自动推荐库位）
+    /// AGV出库（两点位）（出库WMS自动推荐库位）（密集库）（潜伏举升）
     /// </summary>
     /// <param name="input"></param>
     /// <returns></returns>
@@ -889,6 +889,72 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
             throw Oops.Oh(ex.Message);
         }
     }
+
+    #endregion
+
+    #region AGV入库（堆高车）（立库）
+
+    [HttpPost]
+    [ApiDescriptionSettings(Name = "AgvJoinBoundTask", Order = 50)]
+    public async Task AgvJoinBoundTasksSetUpStoreHouse(AgvJoinDto input)
+    {
+        try
+        {
+            // 生成当前时间时间戳
+            string joinboundnum = _TimeStamp.GetTheCurrentTimeTimeStamp("EGRK");
+            // 起始点
+            string startpoint = input.StartPoint;
+            if (startpoint == null || input.EndPoint == "")
+            {
+                throw Oops.Oh("起始点不可为空");
+            }
+
+            // 目标点
+            if (input.EndPoint == null || input.EndPoint == "")
+            {
+                // 根据策略推荐
+                input.EndPoint = BaseService.AGVStrategyReturnRecommEndStorage(input.materielWorkBins[0].MaterielNum);
+                // 添加暂存任务
+                if (input.EndPoint == "没有合适的库位")
+                {
+                    await InAndOutBoundMessage.NotStorageAddStagingTask(input, joinboundnum);
+                    return;
+                }
+            }
+
+            string endpoint = input.EndPoint;
+
+            // 任务点集
+            var positions = startpoint + "," + endpoint;
+
+            TaskEntity taskEntity = input.Adapt<TaskEntity>();
+            taskEntity.TaskPath = positions;
+            taskEntity.InAndOutBoundNum = joinboundnum;
+
+            // 下达agv任务
+
+            DHMessage item = await taskService.AddAsync(taskEntity);
+
+            // 下达agv任务成功
+            if (item.code == 1000)
+            {
+                await InAndOutBoundMessage.ProcessInbound(input, joinboundnum);
+            }
+            else
+            {
+                throw Oops.Oh("下达AGV任务失败");
+
+            }
+        }
+        catch (Exception ex)
+        {
+
+            throw Oops.Oh(ex.Message);
+        }
+
+    }
+
+
 
     #endregion
 

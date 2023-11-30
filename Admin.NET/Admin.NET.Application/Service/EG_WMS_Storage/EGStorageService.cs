@@ -1,4 +1,6 @@
-﻿namespace Admin.NET.Application.Service.EG_WMS_Storage;
+﻿using static SKIT.FlurlHttpClient.Wechat.Api.Models.ChannelsECMerchantAddFreightTemplateRequest.Types.FreightTemplate.Types;
+
+namespace Admin.NET.Application.Service.EG_WMS_Storage;
 
 /// <summary>
 /// 库位管理接口
@@ -39,6 +41,46 @@ public class EGStorageService : IDynamicApiController, ITransient
 
     }
 
+
+
+    #endregion
+
+    #region 批量修改库位的所属区域（需要修改）
+
+    /// <summary>
+    /// 批量修改库位的所属区域
+    /// </summary>
+    /// <param name="input"></param>
+    /// <returns></returns>
+    [ApiDescriptionSettings(Name = "ChangeTheOwningAreaOfRepositoryInBatches"), HttpPost]
+    public async Task ChangeTheOwningAreaOfRepositoryInBatches(ChangeStorageNumBO input)
+    {
+        if (input.storagenum.Length == 0 || input.regionnum == null)
+        {
+            throw Oops.Oh("请传入合适的参数！");
+        }
+        // 判断存不存在该区域
+        var regiondata = await _region.GetFirstAsync(x => x.RegionNum == input.regionnum);
+        if (regiondata == null)
+        {
+            throw Oops.Oh("不存在该区域！");
+        }
+
+        for (int i = 0; i < input.storagenum.Length; i++)
+        {
+            await _rep.AsUpdateable()
+                     .SetColumns(it => new Entity.EG_WMS_Storage
+                     {
+                         RegionNum = input.regionnum,
+                         UpdateTime = DateTime.Now,
+                     })
+                     .Where(x => x.StorageNum == input.storagenum.GetValue(i).ToString())
+                     .ExecuteCommandAsync();
+
+        }
+
+
+    }
 
 
     #endregion

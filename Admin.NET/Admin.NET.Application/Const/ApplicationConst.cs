@@ -9,4 +9,9 @@ public class ApplicationConst
     /// API分组名称
     /// </summary>
     public const string GroupName = "业务应用";
+
+    /// <summary>
+    /// 可视化数据
+    /// </summary>
+    public const string GroupDisplay = "可视化数据";
 }

@@ -178,7 +178,19 @@ public class EGRegionService : IDynamicApiController, ITransient
                            .ExecuteCommandAsync();
     }
     #endregion
-
+    [HttpGet]
+    [ApiDescriptionSettings(Name = "EGWareHouseWHNameDropdown")]
+    public async Task<dynamic> EGWareHouseWHNumDropdown()
+    {
+        return await _rep.Context.Queryable<EG_WMS_WareHouse>()
+                .Select(u => new
+                {
+                    
+                    ISWareHouse = u.WHName,
+                    Value = u.Id
+                }
+                ).ToListAsync();
+    }
 }
 
 //-------------------------------------//-------------------------------------//
@@ -188,17 +200,6 @@ public class EGRegionService : IDynamicApiController, ITransient
 ///// 获取仓库名称列表
 ///// </summary>
 ///// <returns></returns>
-//[HttpGet]
-//[ApiDescriptionSettings(Name = "EGWareHouseWHNameDropdown")]
-//public async Task<dynamic> EGWareHouseWHNumDropdown()
-//{
-//    return await _rep.Context.Queryable<EG_WMS_WareHouse>()
-//            .Select(u => new
-//            {
-//                ISWareHouse = u.WHName,
-//                Value = u.Id
-//            }
-//            ).ToListAsync();
-//}
+
 
 #endregion

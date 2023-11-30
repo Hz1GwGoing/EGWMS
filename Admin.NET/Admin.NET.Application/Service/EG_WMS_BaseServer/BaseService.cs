@@ -1,4 +1,6 @@
-﻿namespace Admin.NET.Application.Service.EG_WMS_BaseServer;
+﻿using static SKIT.FlurlHttpClient.Wechat.Api.Models.ChannelsECWarehouseGetResponse.Types;
+
+namespace Admin.NET.Application.Service.EG_WMS_BaseServer;
 
 /// <summary>
 /// 基础实用接口
@@ -25,70 +27,7 @@ public class BaseService : IDynamicApiController, ITransient
 
     #endregion
 
-    #region 引用实体
-
-    ///// <summary>
-    ///// 出入库主表
-    ///// </summary>
-    //private readonly SqlSugarRepository<Entity.EG_WMS_InAndOutBound> _InAndOutBound;
-    ///// <summary>
-    ///// 出入库详细表
-    ///// </summary>
-    //private readonly SqlSugarRepository<EG_WMS_InAndOutBoundDetail> _InAndOutBoundDetail;
-    ///// <summary>
-    ///// 库存表
-    ///// </summary>
-    //private readonly SqlSugarRepository<EG_WMS_Inventory> _Inventory;
-    ///// <summary>
-    ///// 库存详情表
-    ///// </summary>
-    //private readonly SqlSugarRepository<EG_WMS_InventoryDetail> _InventoryDetail;
-    ///// <summary>
-    ///// 库位表
-    ///// </summary>
-    //private readonly SqlSugarRepository<Entity.EG_WMS_Storage> _Storage;
-    ///// <summary>
-    ///// 区域表
-    ///// </summary>
-    //private readonly SqlSugarRepository<EG_WMS_Region> _Region;
-    ///// <summary>
-    ///// 料箱表
-    ///// </summary>
-    //private readonly SqlSugarRepository<EG_WMS_WorkBin> _workbin;
-    ///// <summary>
-    ///// 移库表
-    ///// </summary>
-    //private readonly SqlSugarRepository<EG_WMS_Relocation> _Relocation;
-
-
-    #endregion
-
-    #region 关系注入
-
-    //public BaseService
-    //   (
-    //   SqlSugarRepository<Entity.EG_WMS_InAndOutBound> InAndOutBound,
-    //   SqlSugarRepository<EG_WMS_InAndOutBoundDetail> InAndOutBoundDetail,
-    //   SqlSugarRepository<EG_WMS_Inventory> Inventory,
-    //   SqlSugarRepository<EG_WMS_InventoryDetail> InventoryDetail,
-    //   SqlSugarRepository<Entity.EG_WMS_Storage> storage,
-    //   SqlSugarRepository<EG_WMS_Region> Region,
-    //   SqlSugarRepository<EG_WMS_WorkBin> WorkBin,
-    //   SqlSugarRepository<EG_WMS_Relocation> Relocation
-
-    //   )
-    //{
-    //    _InAndOutBound = InAndOutBound;
-    //    _Inventory = Inventory;
-    //    _InventoryDetail = InventoryDetail;
-    //    _InAndOutBoundDetail = InAndOutBoundDetail;
-    //    _Storage = storage;
-    //    _Region = Region;
-    //    _workbin = WorkBin;
-    //    _Relocation = Relocation;
-    //}
-
-
+    #region 构造函数
     public BaseService()
     {
 
@@ -282,6 +221,34 @@ public class BaseService : IDynamicApiController, ITransient
 
     }
 
+
+    #endregion
+
+    #region 展示有库存的库位信息
+
+    /// <summary>
+    /// 展示有库存的库位信息
+    /// </summary>
+    /// <param name="page">页数</param>
+    /// <param name="pageSize">每页容量</param>
+    /// <returns></returns>
+    [ApiDescriptionSettings(Name = "StorageExistInventory"), HttpPost]
+    public async Task<SqlSugarPagedList<SelectExistInventoryDto>> StorageExistInventory(int page, int pageSize)
+    {
+        var data = _Storage.AsQueryable()
+                                .Where(x => x.StorageOccupy == 1 && x.StorageStatus == 0)
+                                .Select(x => new SelectExistInventoryDto
+                                {
+                                    StorageNum = x.StorageNum,
+                                    StorageName = x.StorageName,
+                                    ShelfNum = (int)x.ShelfNum,
+                                    RoadwayNum = (int)x.RoadwayNum,
+                                    FloorNumber = (int)x.FloorNumber,
+                                });
+
+        return await data.ToPagedListAsync(page, pageSize);
+
+    }
 
     #endregion
 
