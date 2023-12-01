@@ -892,10 +892,15 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
 
     #endregion
 
-    #region AGV入库（堆高车）（立库）
+    #region AGV堆高车入库（入库WMS自动推荐库位）（立库）
 
+    /// <summary>
+    /// AGV堆高车入库（入库WMS自动推荐库位）（立库）
+    /// </summary>
+    /// <param name="input"></param>
+    /// <returns></returns>
     [HttpPost]
-    [ApiDescriptionSettings(Name = "AgvJoinBoundTasksSetUpStoreHouse", Order = 50)]
+    [ApiDescriptionSettings(Name = "AgvJoinBoundTasksSetUpStoreHouse", Order = 44)]
     public async Task AgvJoinBoundTasksSetUpStoreHouse(AgvJoinDto input)
     {
         try
@@ -909,35 +914,52 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                 throw Oops.Oh("起始点不可为空");
             }
 
-            // 目标点
-            if (input.EndPoint == null || input.EndPoint == "")
+            for (int i = 0; i < input.materielWorkBins.Count; i++)
             {
-                throw Oops.Oh("目标点点位没有传入！");
-            }
+                // 目标点
+                if (input.EndPoint == null || input.EndPoint == "")
+                {
+                    input.EndPoint = BaseService.AGVStacKingHighCarsIntoReturnStorage();
 
-            string endpoint = input.EndPoint;
+                    if (input.EndPoint == "当前没有合适的库位！")
+                    {
+                        throw Oops.Oh("当前没有合适的库位！");
+                    }
 
-            // 任务点集
-            var positions = startpoint + "," + endpoint;
+                    // 将库位占用
+                    await _Storage.AsUpdateable()
+                              .SetColumns(it => new EG_WMS_Storage
+                              {
+                                  StorageOccupy = 2
+                              })
+                              .Where(x => x.StorageNum == input.EndPoint.ToString())
+                              .ExecuteCommandAsync();
+                }
 
-            TaskEntity taskEntity = input.Adapt<TaskEntity>();
-            taskEntity.TaskPath = positions;
-            taskEntity.InAndOutBoundNum = joinboundnum;
+                string endpoint = input.EndPoint;
 
-            // 下达agv任务
+                // 任务点集
+                var positions = startpoint + "," + endpoint;
 
-            DHMessage item = await taskService.AddAsync(taskEntity);
+                TaskEntity taskEntity = input.Adapt<TaskEntity>();
+                taskEntity.TaskPath = positions;
+                taskEntity.InAndOutBoundNum = joinboundnum;
 
-            // 下达agv任务成功
-            if (item.code == 1000)
-            {
-                //return "成功";
-                await InAndOutBoundMessage.ProcessInbound(input, joinboundnum);
-            }
-            else
-            {
-                throw Oops.Oh("下达AGV任务失败");
+                // 下达agv任务
 
+                DHMessage item = await taskService.AddAsync(taskEntity);
+
+                // 下达agv任务成功
+                if (item.code == 1000)
+                {
+                    //return "成功";
+                    await InAndOutBoundMessage.ProcessInbound(input, joinboundnum);
+                }
+                else
+                {
+                    throw Oops.Oh("下达AGV任务失败");
+
+                }
             }
         }
         catch (Exception ex)

@@ -1,6 +1,4 @@
-﻿using static SKIT.FlurlHttpClient.Wechat.Api.Models.ChannelsECWarehouseGetResponse.Types;
-
-namespace Admin.NET.Application.Service.EG_WMS_BaseServer;
+﻿namespace Admin.NET.Application.Service.EG_WMS_BaseServer;
 
 /// <summary>
 /// 基础实用接口
@@ -258,6 +256,8 @@ public class BaseService : IDynamicApiController, ITransient
     /// 根据库存信息，物料数据在哪几个立库库位上
     /// </summary>
     /// <param name="materielNum">物料编号</param>
+    /// <param name="page">页码</param>
+    /// <param name="pageSize">每页容量</param>
     /// <returns></returns>
     [HttpPost]
     [ApiDescriptionSettings(Name = "AccordingTheInventorySetUpStorageNum")]
@@ -666,6 +666,10 @@ public class BaseService : IDynamicApiController, ITransient
                  .ToList()
                  .First();
 
+        if (storagenum == null)
+        {
+            return "当前没有合适的库位！";
+        }
         return storagenum.StorageNum.ToString();
 
     }
@@ -677,14 +681,15 @@ public class BaseService : IDynamicApiController, ITransient
 
     #endregion
 
-    #region （策略）（立库）堆高车出库WMS自动推荐的库位（根据先入先出原则）
+    #region （策略）（立库）堆高车出库WMS自动推荐的库位（根据先入先出原则以及出库总数）
 
     /// <summary>
-    /// （策略）（立库）堆高车出库WMS自动推荐的库位（根据先入先出原则）
+    /// （策略）（立库）堆高车出库WMS自动推荐的库位（根据先入先出原则以及出库总数）
     /// </summary>
-    /// <param name="materielNum"></param>
+    /// <param name="materielNum">物料编号</param>
+    /// <param name="CountSum">出库总数</param>
     /// <returns></returns>
-    public async Task AGV(string materielNum)
+    public async Task AGV(string materielNum, int CountSum)
     {
 
 
