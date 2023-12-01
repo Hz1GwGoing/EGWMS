@@ -29,7 +29,7 @@ public class EGStorageService : IDynamicApiController, ITransient
 
     [HttpPost]
     [ApiDescriptionSettings(Name = "ScreeningRepositoryLocation")]
-    public async Task<SqlSugarPagedList<Entity.EG_WMS_Storage>> ScreeningRepositoryLocation(string type, int page, int pageSize)
+    public async Task<SqlSugarPagedList<Entity.EG_WMS_Storage>> ScreeningRepositoryLocation(int type, int page, int pageSize)
     {
         var data = _rep.AsQueryable()
                        .InnerJoin<Entity.EG_WMS_Region>((a, b) => a.RegionNum == b.RegionNum)

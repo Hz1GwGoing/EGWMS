@@ -252,6 +252,38 @@ public class BaseService : IDynamicApiController, ITransient
 
     #endregion
 
+    #region 根据库存信息，物料数据在哪几个立库库位上
+
+    /// <summary>
+    /// 根据库存信息，物料数据在哪几个立库库位上
+    /// </summary>
+    /// <param name="materielNum">物料编号</param>
+    /// <returns></returns>
+    [HttpPost]
+    [ApiDescriptionSettings(Name = "AccordingTheInventorySetUpStorageNum")]
+    public async Task<SqlSugarPagedList<AccorDingSetUpStorageDto>> AccordingTheInventorySetUpStorageNum(string materielNum, int page, int pageSize)
+    {
+        var data = await _Inventory.AsQueryable()
+                   .InnerJoin<EG_WMS_InventoryDetail>((a, b) => a.InBoundNum == b.InventoryNum)
+                   .InnerJoin<Entity.EG_WMS_Storage>((a, b, c) => b.StorageNum == c.StorageNum)
+                   .Where((a, b, c) => a.MaterielNum == materielNum && a.OutboundStatus == 0 && c.StorageType == 1)
+                   .Select((a, b, c) => new AccorDingSetUpStorageDto
+                   {
+                       StorageNum = b.StorageNum,
+                       StorageName = c.StorageName,
+                       MaterielNum = a.MaterielNum,
+                       CountSum = (int)a.ICountAll,
+
+                   })
+                   .ToListAsync();
+
+        return data.ToPagedListAsync(page, pageSize);
+
+    }
+
+
+    #endregion
+
     //-------------------------------------/策略/-------------------------------------//
 
     #region （策略）（密集库）AGV入库WMS自动推荐的库位（优先最靠里的库位）
@@ -612,6 +644,52 @@ public class BaseService : IDynamicApiController, ITransient
             return "没有合适的库位";
         }
         return dataInt[0].ToString();
+    }
+
+
+    #endregion
+
+    #region （策略一）（立库）堆高车入库WMS自动推荐的库位（按照库位编号大小：从小到大依次开始推荐，不需要根据物料产品）
+
+    /// <summary>
+    /// （策略一）（立库）堆高车入库WMS自动推荐的库位（按照库位编号大小：从小到大依次开始推荐，不需要根据物料产品）
+    /// </summary>
+    /// <returns></returns>
+    [HttpPost]
+    [ApiDescriptionSettings(Name = "AGVStacKingHighCarsIntoReturnStorage")]
+    public string AGVStacKingHighCarsIntoReturnStorage()
+    {
+
+        var storagenum = _Storage.AsQueryable()
+                 .Where(x => x.StorageType == 1 && x.StorageOccupy == 0 && x.StorageStatus == 0)
+                 .OrderBy(x => x.StorageNum, OrderByType.Asc)
+                 .ToList()
+                 .First();
+
+        return storagenum.StorageNum.ToString();
+
+    }
+
+
+    #endregion
+
+    #region （策略二）（立库）堆高车入库WMS自动推荐的库位（按照库位编号大小：从小到大依次开始推荐，不需要根据物料产品）
+
+    #endregion
+
+    #region （策略）（立库）堆高车出库WMS自动推荐的库位（根据先入先出原则）
+
+    /// <summary>
+    /// （策略）（立库）堆高车出库WMS自动推荐的库位（根据先入先出原则）
+    /// </summary>
+    /// <param name="materielNum"></param>
+    /// <returns></returns>
+    public async Task AGV(string materielNum)
+    {
+
+
+
+
     }
 
 

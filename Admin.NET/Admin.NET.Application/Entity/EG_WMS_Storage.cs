@@ -37,10 +37,10 @@ public class EG_WMS_Storage : EntityBase
     public string? StorageAddress { get; set; }
 
     /// <summary>
-    /// 库位类别
+    /// 库位类别（0-密集库 1-立库）
     /// </summary>
-    [SugarColumn(ColumnDescription = "库位类别", Length = 100)]
-    public string? StorageType { get; set; }
+    [SugarColumn(ColumnDescription = "库位类别（0-密集库 1-立库）")]
+    public int? StorageType { get; set; }
 
     /// <summary>
     /// 库位长

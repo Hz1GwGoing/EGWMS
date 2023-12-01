@@ -87,7 +87,7 @@ public class StorageRegionAndWhDto
     /// <summary>
     /// 库位类别
     /// </summary>
-    public string StorageType { get; set; }
+    public int? StorageType { get; set; }
 
     public int TotalCount { get; set; }
 

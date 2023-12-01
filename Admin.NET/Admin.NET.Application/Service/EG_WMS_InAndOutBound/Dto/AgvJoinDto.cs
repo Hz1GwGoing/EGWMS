@@ -59,6 +59,6 @@ public class AgvJoinDto
     /// <summary>
     /// 绑定料箱，物料
     /// </summary>
-    public List<MaterielWorkBin> materielWorkBins { get; set; }
+    public List<MaterielWorkBin>? materielWorkBins { get; set; }
 
 }

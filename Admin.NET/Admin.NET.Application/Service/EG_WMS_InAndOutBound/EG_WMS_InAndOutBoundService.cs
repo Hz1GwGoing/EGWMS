@@ -895,7 +895,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
     #region AGV入库（堆高车）（立库）
 
     [HttpPost]
-    [ApiDescriptionSettings(Name = "AgvJoinBoundTask", Order = 50)]
+    [ApiDescriptionSettings(Name = "AgvJoinBoundTasksSetUpStoreHouse", Order = 50)]
     public async Task AgvJoinBoundTasksSetUpStoreHouse(AgvJoinDto input)
     {
         try
@@ -912,14 +912,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
             // 目标点
             if (input.EndPoint == null || input.EndPoint == "")
             {
-                // 根据策略推荐
-                input.EndPoint = BaseService.AGVStrategyReturnRecommEndStorage(input.materielWorkBins[0].MaterielNum);
-                // 添加暂存任务
-                if (input.EndPoint == "没有合适的库位")
-                {
-                    await InAndOutBoundMessage.NotStorageAddStagingTask(input, joinboundnum);
-                    return;
-                }
+                throw Oops.Oh("目标点点位没有传入！");
             }
 
             string endpoint = input.EndPoint;
@@ -938,6 +931,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
             // 下达agv任务成功
             if (item.code == 1000)
             {
+                //return "成功";
                 await InAndOutBoundMessage.ProcessInbound(input, joinboundnum);
             }
             else
