@@ -681,6 +681,44 @@ public class BaseService : IDynamicApiController, ITransient
 
     #endregion
 
+    #region （策略）（立库）堆高车出库WMS自动推荐的库位（按照库位编号大小：从小到大依次开始推荐，根据物料产品，类似先入先出）
+
+    /// <summary>
+    /// （策略）（立库）堆高车出库WMS自动推荐的库位（按照库位编号大小：从小到大依次开始推荐，根据物料产品，类似先入先出）
+    /// </summary>
+    /// <returns></returns>
+    public string AGVStackingHighCarStorageOutBound(string materielnum)
+    {
+
+        var storagenum = _Storage.AsQueryable()
+                .Where(x => x.StorageType == 1 && x.StorageOccupy == 1 && x.StorageStatus == 0)
+                .OrderBy(x => x.StorageNum, OrderByType.Asc)
+                .Select(x => x.StorageNum)
+                .ToList();
+
+        if (storagenum == null)
+        {
+            return "当前没有合适的库位！";
+        }
+
+        // 根据物料编号再次筛选库位
+
+        var inventorystoragenum = _Inventory.AsQueryable()
+                   .InnerJoin<EG_WMS_InventoryDetail>((a, b) => a.InventoryNum == b.InventoryNum)
+                   .Where((a, b) => a.MaterielNum == materielnum)
+                   .Select((a, b) => b.StorageNum)
+                   .ToList();
+
+        // 得到共有的数据
+        var commonData = storagenum.Intersect(inventorystoragenum).ToList();
+
+        return commonData.ToString();
+
+    }
+
+
+    #endregion
+
     #region （策略）（立库）堆高车出库WMS自动推荐的库位（根据先入先出原则以及出库总数）
 
     /// <summary>
@@ -699,6 +737,7 @@ public class BaseService : IDynamicApiController, ITransient
 
 
     #endregion
+
 
     #region （策略）AGV请求任务点
     /// <summary>

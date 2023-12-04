@@ -913,31 +913,30 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
             {
                 throw Oops.Oh("起始点不可为空");
             }
-
+            string wbnum = "";
+            int sumcount = 0;
+            string endpoint = "";
+            string endpoints = "";
             for (int i = 0; i < input.materielWorkBins.Count; i++)
             {
                 // 目标点
                 if (input.EndPoint == null || input.EndPoint == "")
                 {
-                    input.EndPoint = BaseService.AGVStacKingHighCarsIntoReturnStorage();
+                    endpoint = BaseService.AGVStacKingHighCarsIntoReturnStorage();
 
-                    if (input.EndPoint == "当前没有合适的库位！")
+                    if (endpoint == "当前没有合适的库位！")
                     {
                         throw Oops.Oh("当前没有合适的库位！");
                     }
 
-                    // 将库位占用
-                    await _Storage.AsUpdateable()
-                              .SetColumns(it => new EG_WMS_Storage
-                              {
-                                  StorageOccupy = 2
-                              })
-                              .Where(x => x.StorageNum == input.EndPoint.ToString())
-                              .ExecuteCommandAsync();
+                    // 生成入库单,只生成一次
+                    if (i == 0)
+                    {
+                        await InAndOutBoundMessage.WarehousingOperationTask(input, joinboundnum);
+                    }
                 }
 
-                string endpoint = input.EndPoint;
-
+                endpoints += "," + endpoint;
                 // 任务点集
                 var positions = startpoint + "," + endpoint;
 
@@ -950,10 +949,100 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                 DHMessage item = await taskService.AddAsync(taskEntity);
 
                 // 下达agv任务成功
+
                 if (item.code == 1000)
                 {
-                    //return "成功";
-                    await InAndOutBoundMessage.ProcessInbound(input, joinboundnum);
+                    // 查询任务列表
+                    var agvTask = _TaskEntity.AsQueryable()
+                                 .Where(x => x.InAndOutBoundNum == joinboundnum)
+                                 .ToList()
+                                 .Last();
+
+                    string inventorynum = $"{i}EGKC" + _TimeStamp.GetTheCurrentTimeTimeStamp();
+                    string workbinnum = input.materielWorkBins[i].WorkBinNum;
+                    string materienum = input.materielWorkBins[i].MaterielNum;
+                    int productcount = input.materielWorkBins[i].ProductCount;
+                    DateTime productiondate = input.materielWorkBins[i].ProductionDate;
+                    string productionlot = input.materielWorkBins[i].ProductionLot;
+                    // 将库位占用
+                    await _Storage.AsUpdateable()
+                              .SetColumns(it => new EG_WMS_Storage
+                              {
+                                  StorageOccupy = 2,
+                                  TaskNo = agvTask.TaskNo,
+                                  StorageProductionDate = productiondate,
+                              })
+                              .Where(x => x.StorageNum == endpoint)
+                              .ExecuteCommandAsync();
+                    // 计算总数
+                    sumcount += productcount;
+                    // 临时库存主表
+                    EG_WMS_Tem_Inventory addInventory = new EG_WMS_Tem_Inventory()
+                    {
+                        InventoryNum = inventorynum,
+                        MaterielNum = materienum,
+                        ICountAll = productcount,
+                        CreateTime = DateTime.Now,
+                        InBoundNum = joinboundnum,
+                        OutboundStatus = 0,
+                    };
+                    string _regionnum = InAndOutBoundMessage.GetStorageWhereRegion(endpoint);
+                    string _whnum = InAndOutBoundMessage.GetRegionWhereWHNum(_regionnum);
+                    // 临时详细表
+                    EG_WMS_Tem_InventoryDetail addInventoryDetail = new EG_WMS_Tem_InventoryDetail()
+                    {
+                        InventoryNum = inventorynum,
+                        WorkBinNum = workbinnum,
+                        ProductionLot = productionlot,
+                        CreateTime = DateTime.Now,
+                        StorageNum = endpoint,
+                        RegionNum = _regionnum,
+                        WHNum = _whnum,
+                    };
+                    // 料箱表 将料箱内容保存到料箱表中
+                    EG_WMS_WorkBin addWorkBin = new EG_WMS_WorkBin()
+                    {
+                        WorkBinNum = workbinnum,
+                        ProductCount = productcount,
+                        ProductionLot = productionlot,
+                        CreateTime = DateTime.Now,
+                        ProductionDate = productiondate,
+                        WorkBinStatus = 0,
+                        MaterielNum = materienum,
+                        StorageNum = endpoint,
+                        InAndOutBoundNum = joinboundnum,
+                    };
+                    wbnum += workbinnum;
+                    // 将数据保存到临时表中
+                    await _InventoryTem.InsertAsync(addInventory);
+                    await _InventoryDetailTem.InsertAsync(addInventoryDetail);
+                    await _workbin.InsertOrUpdateAsync(addWorkBin);
+
+                    // 是不是最后一条数据
+                    if (i == input.materielWorkBins.Count - 1)
+                    {
+                        // 修改入库单里面的库位信息
+                        await _rep.AsUpdateable()
+                             .SetColumns(it => new EG_WMS_InAndOutBound
+                             {
+                                 EndPoint = endpoints,
+                             })
+                             .Where(x => x.InAndOutBoundNum == joinboundnum)
+                             .ExecuteCommandAsync();
+
+                        await _InAndOutBoundDetail.AsUpdateable()
+                             .SetColumns(it => new EG_WMS_InAndOutBoundDetail
+                             {
+                                 StorageNum = endpoints,
+                                 RegionNum = _regionnum
+                             })
+                             .Where(x => x.InAndOutBoundNum == joinboundnum)
+                             .ExecuteCommandAsync();
+
+
+                        // 修改出入库表
+                        await InAndOutBoundMessage.UpdateInAndOutBoundTask(workbinnum, sumcount, joinboundnum, _whnum, materienum);
+                    }
                 }
                 else
                 {
@@ -970,6 +1059,181 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
 
     }
 
+
+
+    #endregion
+
+    #region AGV堆高车出库（出库WMS自动推荐库位）（立库）
+
+    public async Task AgvOutBoundTasksSetUpStoreHouse(AgvBoundDto input)
+    {
+        // 生成当前时间时间戳
+        string outboundnum = _TimeStamp.GetTheCurrentTimeTimeStamp("EGCK");
+
+        try
+        {
+            // 起始点
+            if (input.StartPoint == null || input.StartPoint == "")
+            {
+                // 根据策略推荐
+                input.StartPoint = BaseService.AGVStackingHighCarStorageOutBound(input.MaterielNum);
+            }
+            string startpoint = input.StartPoint;
+
+            // 目标点
+            if (input.EndPoint == null || input.EndPoint == "")
+            {
+                throw Oops.Oh("目标点不能为空");
+            }
+
+            string endpoint = input.EndPoint;
+
+            // 任务点集
+            var positions = startpoint + "," + endpoint;
+
+            TaskEntity taskEntity = input.Adapt<TaskEntity>();
+            taskEntity.TaskPath = positions;
+            taskEntity.InAndOutBoundNum = outboundnum;
+
+            // 下达agv任务
+
+            DHMessage item = await taskService.AddAsync(taskEntity);
+            if (item.code == 1000)
+            {
+                // 根据出库编号查询任务编号
+                var datatask = await _TaskEntity.GetFirstAsync(x => x.InAndOutBoundNum == outboundnum);
+
+                // 修改库位表中的状态为占用
+                await _Storage.AsUpdateable()
+                          .AS("EG_WMS_Storage")
+                          .SetColumns(it => new EG_WMS_Storage
+                          {
+                              // 预占用
+                              StorageOccupy = 2,
+                              TaskNo = datatask.TaskNo,
+                          })
+                          .Where(x => x.StorageNum == input.StartPoint)
+                          .ExecuteCommandAsync();
+
+                // 生成出库单
+                EG_WMS_InAndOutBound outbound = new EG_WMS_InAndOutBound
+                {
+                    // 编号
+                    InAndOutBoundNum = outboundnum,
+                    // 出入库类型（入库还是出库）
+                    InAndOutBoundType = 1,
+                    // 时间
+                    InAndOutBoundTime = DateTime.Now,
+                    // 操作人
+                    InAndOutBoundUser = input.AddName,
+                    // 备注
+                    InAndOutBoundRemake = input.InAndOutBoundRemake,
+                    // 创建时间
+                    CreateTime = DateTime.Now,
+                    // 起始点
+                    StartPoint = startpoint,
+                    // 目标点
+                    EndPoint = endpoint,
+                };
+
+                // 查询库位编号所在的区域编号
+
+                var regionnum = InAndOutBoundMessage.GetStorageWhereRegion(input.EndPoint);
+
+                // 通过查询出来的区域得到仓库编号
+
+                var whnum = InAndOutBoundMessage.GetRegionWhereWHNum(regionnum);
+
+                // 生成出库详单
+
+                EG_WMS_InAndOutBoundDetail outbounddetail = new EG_WMS_InAndOutBoundDetail()
+                {
+                    // 出入库编号
+                    InAndOutBoundNum = outboundnum,
+                    CreateTime = DateTime.Now,
+                    MaterielNum = input.MaterielNum,
+                    // 区域编号
+                    RegionNum = regionnum,
+                    // 策略推荐的库位
+                    StorageNum = input.StartPoint,
+                };
+
+                await _rep.InsertAsync(outbound);
+                await _InAndOutBoundDetail.InsertAsync(outbounddetail);
+
+                // 得到这个库位上的库存信息（先修改临时表里面的信息）
+
+                var tem_InventoryDetails = _InventoryDetailTem.AsQueryable()
+                                    .InnerJoin<EG_WMS_Tem_Inventory>((a, b) => a.InventoryNum == b.InventoryNum)
+                                    .Where((a, b) => a.StorageNum == startpoint && b.OutboundStatus == 0 && a.IsDelete == false && b.IsDelete == false)
+                                    .ToList();
+
+                string wbnum = "";
+                int sumcount = 0;
+                for (int i = 0; i < tem_InventoryDetails.Count; i++)
+                {
+                    await _InventoryTem.AsUpdateable()
+                                    .SetColumns(it => new EG_WMS_Tem_Inventory
+                                    {
+                                        OutboundStatus = 1,
+                                        UpdateTime = DateTime.Now,
+                                        // 出库编号
+                                        OutBoundNum = outboundnum,
+                                    })
+                                    .Where(x => x.InventoryNum == tem_InventoryDetails[i].InventoryNum)
+                                    .ExecuteCommandAsync();
+
+                    // 查询库存数量
+                    var invCount = _InventoryTem.AsQueryable()
+                                 .Where(it => it.InventoryNum == tem_InventoryDetails[i].InventoryNum)
+                                 .ToList();
+
+                    // 计算总数
+                    sumcount += invCount[0].ICountAll;
+
+                    // 得到每个料箱编号
+                    if (tem_InventoryDetails.Count > 1)
+                    {
+                        wbnum = tem_InventoryDetails[i].WorkBinNum + "," + wbnum;
+                    }
+                    else
+                    {
+                        wbnum = tem_InventoryDetails[i].WorkBinNum;
+                    }
+
+                }
+                // 修改出库详情表里面的料箱编号和物料编号
+                await _InAndOutBoundDetail.AsUpdateable()
+                                     .AS("EG_WMS_InAndOutBoundDetail")
+                                     .SetColumns(it => new EG_WMS_InAndOutBoundDetail
+                                     {
+                                         WHNum = whnum,
+                                         WorkBinNum = wbnum,
+                                         MaterielNum = input.MaterielNum,
+                                     })
+                                     .Where(u => u.InAndOutBoundNum == outboundnum)
+                                     .ExecuteCommandAsync();
+                // 改变出库状态
+                await _rep.AsUpdateable()
+                     .AS("EG_WMS_InAndOutBound")
+                     .SetColumns(it => new EG_WMS_InAndOutBound
+                     {
+                         // 总数
+                         InAndOutBoundCount = sumcount,
+                         // 出库中
+                         InAndOutBoundStatus = 5,
+                     })
+                     .Where(u => u.InAndOutBoundNum == outboundnum)
+                     .ExecuteCommandAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+
+            throw Oops.Oh("错误：" + ex);
+        }
+
+    }
 
 
     #endregion

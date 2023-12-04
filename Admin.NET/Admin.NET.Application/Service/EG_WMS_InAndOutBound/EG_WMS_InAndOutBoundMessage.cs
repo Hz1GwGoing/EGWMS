@@ -171,8 +171,25 @@ public class EG_WMS_InAndOutBoundMessage
             EndPoint = input.EndPoint,
         };
 
-        // 得到区域编号
-        var _storageRegionNum = GetStorageWhereRegion(input.EndPoint);
+        if (input.EndPoint != null)
+        {
+            // 得到区域编号
+            string _storageRegionNum = GetStorageWhereRegion(input.EndPoint);
+            // 生成入库详单
+
+            EG_WMS_InAndOutBoundDetail joindetail = new EG_WMS_InAndOutBoundDetail()
+            {
+                // 出入库编号
+                InAndOutBoundNum = joinboundnum,
+                CreateTime = DateTime.Now,
+                // 区域编号
+                RegionNum = _storageRegionNum,
+                // 目标点就是存储的点位即库位编号
+                StorageNum = input.EndPoint,
+            };
+            await _rep.InsertAsync(joinbound);
+            await _InAndOutBoundDetail.InsertAsync(joindetail);
+        }
 
         // 生成入库详单
 
@@ -182,9 +199,9 @@ public class EG_WMS_InAndOutBoundMessage
             InAndOutBoundNum = joinboundnum,
             CreateTime = DateTime.Now,
             // 区域编号
-            RegionNum = _storageRegionNum,
+            RegionNum = null,
             // 目标点就是存储的点位即库位编号
-            StorageNum = input.EndPoint,
+            StorageNum = null,
         };
         #endregion
 
