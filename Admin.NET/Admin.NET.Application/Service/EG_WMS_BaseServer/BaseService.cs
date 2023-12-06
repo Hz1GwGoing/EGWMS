@@ -681,14 +681,15 @@ public class BaseService : IDynamicApiController, ITransient
 
     #endregion
 
-    #region （策略）（立库）堆高车出库WMS自动推荐的库位（按照库位编号大小：从小到大依次开始推荐，根据物料产品，类似先入先出）
+    #region （策略）（立库）堆高车出库WMS自动推荐的库位（按照先入先出，以及输入物料、物料数量去推荐哪几个库位）
 
     /// <summary>
-    /// （策略）（立库）堆高车出库WMS自动推荐的库位（按照库位编号大小：从小到大依次开始推荐，根据物料产品，类似先入先出）
+    /// （策略）（立库）堆高车出库WMS自动推荐的库位（按照先入先出，以及输入物料、物料数量去推荐哪几个库位）
     /// </summary>
     /// <returns></returns>
-    public string AGVStackingHighCarStorageOutBound(string materielnum)
+    public List<string> AGVStackingHighCarStorageOutBound(string materielnum)
     {
+        // 根据物料产品筛选物料在哪几个库位上
 
         var storagenum = _Storage.AsQueryable()
                 .Where(x => x.StorageType == 1 && x.StorageOccupy == 1 && x.StorageStatus == 0)
@@ -698,7 +699,7 @@ public class BaseService : IDynamicApiController, ITransient
 
         if (storagenum == null)
         {
-            return "当前没有合适的库位！";
+            return new List<string> { "当前没有合适的库位！" };
         }
 
         // 根据物料编号再次筛选库位
@@ -712,7 +713,10 @@ public class BaseService : IDynamicApiController, ITransient
         // 得到共有的数据
         var commonData = storagenum.Intersect(inventorystoragenum).ToList();
 
-        return commonData.ToString();
+        return commonData;
+
+
+
 
     }
 

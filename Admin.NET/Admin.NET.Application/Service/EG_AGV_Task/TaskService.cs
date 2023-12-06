@@ -850,6 +850,7 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
                                  .SetColumns(it => new Entity.EG_WMS_Storage
                                  {
                                      StorageOccupy = 1,
+                                     UpdateTime = DateTime.Now,
                                      TaskNo = null,
                                  })
                                  .Where(x => x.TaskNo == acceptDTO.orderId)
@@ -875,34 +876,23 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
 
                 }
                 #endregion
-
-                #region 判断为出库成功的场景
-
-                // 判断为出库成功的场景
                 else if (acceptDTO.status == 8 && listInBoundData[0].InAndOutBoundType == 1)
                 {
                     try
                     {
-                        // 得到临时库存详细表里面的库存编号
-                        var teminvdetail = _TemInventoryDetail.AsQueryable()
-                                            .Where(x => x.StorageNum == listInBoundData[0].StartPoint)
-                                            .ToList();
 
                         // 查询得到临时库存主表中修改的数据
 
                         List<EG_WMS_Tem_Inventory> dataTemInvtory = new List<EG_WMS_Tem_Inventory>();
-                        for (int i = 0; i < teminvdetail.Count; i++)
-                        {
-                            dataTemInvtory.AddRange(_TemInventory.AsQueryable()
-                                                 .Where(x => x.InventoryNum == teminvdetail[i].InventoryNum)
-                                                 .Select(x => x)
-                                                 .ToList());
 
-                        }
+                        dataTemInvtory.AddRange(_TemInventory.AsQueryable()
+                                             .Where(x => x.OutBoundNum == listInBoundData[0].InAndOutBoundNum)
+                                             .Select(x => x)
+                                             .ToList());
+
                         List<EG_WMS_Inventory> invData = dataTemInvtory.Adapt<List<EG_WMS_Inventory>>();
 
                         _Inventory.InsertOrUpdate(invData);
-
 
                         // 修改库位表中的信息
 
@@ -947,6 +937,77 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
                                   .ExecuteCommandAsync();
 
                 }
+                #region 判断为出库成功的场景
+
+                // 判断为出库成功的场景
+                //else if (acceptDTO.status == 8 && listInBoundData[0].InAndOutBoundType == 1)
+                //{
+                //    try
+                //    {
+                //        // 得到临时库存详细表里面的库存编号
+                //        var teminvdetail = _TemInventoryDetail.AsQueryable()
+                //                            .Where(x => x.StorageNum == listInBoundData[0].StartPoint)
+                //                            .ToList();
+
+                //        // 查询得到临时库存主表中修改的数据
+
+                //        List<EG_WMS_Tem_Inventory> dataTemInvtory = new List<EG_WMS_Tem_Inventory>();
+                //        for (int i = 0; i < teminvdetail.Count; i++)
+                //        {
+                //            dataTemInvtory.AddRange(_TemInventory.AsQueryable()
+                //                                 .Where(x => x.InventoryNum == teminvdetail[i].InventoryNum)
+                //                                 .Select(x => x)
+                //                                 .ToList());
+
+                //        }
+                //        List<EG_WMS_Inventory> invData = dataTemInvtory.Adapt<List<EG_WMS_Inventory>>();
+
+                //        _Inventory.InsertOrUpdate(invData);
+
+
+                //        // 修改库位表中的信息
+
+                //        await _Storage.AsUpdateable()
+                //                 .AS("EG_WMS_Storage")
+                //                 .SetColumns(it => new Entity.EG_WMS_Storage
+                //                 {
+                //                     // 未占用
+                //                     StorageOccupy = 0,
+                //                     TaskNo = null,
+                //                     // 料箱生产时间
+                //                     StorageProductionDate = null,
+                //                 })
+                //                 .Where(x => x.TaskNo == acceptDTO.orderId)
+                //                 .ExecuteCommandAsync();
+
+                //        // 修改料箱表里面的出入库编号
+                //        await _WorkBin.AsUpdateable()
+                //                 .AS("EG_WMS_WorkBin")
+                //                 .SetColumns(it => new EG_WMS_WorkBin
+                //                 {
+                //                     InAndOutBoundNum = null,
+                //                 })
+                //                 .Where(x => x.InAndOutBoundNum == item.InAndOutBoundNum)
+                //                 .ExecuteCommandAsync();
+
+                //    }
+                //    catch (Exception ex)
+                //    {
+                //        throw Oops.Oh("错误：" + ex.Message);
+                //    }
+
+                //    // 修改出库状态
+                //    await _InAndOutBound.AsUpdateable()
+                //                  .AS("EG_WMS_InAndOutBound")
+                //                  .SetColumns(it => new Entity.EG_WMS_InAndOutBound
+                //                  {
+                //                      InAndOutBoundStatus = 3,
+                //                      SuccessOrNot = 0,
+                //                  })
+                //                  .Where(x => x.InAndOutBoundNum == listInBoundData[0].InAndOutBoundNum)
+                //                  .ExecuteCommandAsync();
+
+                //}
 
                 #endregion
 

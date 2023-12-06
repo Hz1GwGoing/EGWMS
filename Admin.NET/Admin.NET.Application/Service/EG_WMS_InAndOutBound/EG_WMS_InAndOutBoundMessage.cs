@@ -189,6 +189,7 @@ public class EG_WMS_InAndOutBoundMessage
             };
             await _rep.InsertAsync(joinbound);
             await _InAndOutBoundDetail.InsertAsync(joindetail);
+            return;
         }
 
         // 生成入库详单
