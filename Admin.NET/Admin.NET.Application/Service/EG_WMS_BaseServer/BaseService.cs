@@ -687,14 +687,16 @@ public class BaseService : IDynamicApiController, ITransient
     /// （策略）（立库）堆高车出库WMS自动推荐的库位（按照先入先出，以及输入物料、物料数量去推荐哪几个库位）
     /// </summary>
     /// <returns></returns>
-    public List<string> AGVStackingHighCarStorageOutBound(string materielnum)
+    public List<string> AGVStackingHighCarStorageOutBound(string materielnum, int quantity)
     {
         // 根据物料产品筛选物料在哪几个库位上
 
         var storagenum = _Storage.AsQueryable()
-                .Where(x => x.StorageType == 1 && x.StorageOccupy == 1 && x.StorageStatus == 0)
-                .OrderBy(x => x.StorageNum, OrderByType.Asc)
-                .Select(x => x.StorageNum)
+                .InnerJoin<EG_WMS_InventoryDetail>((a, b) => a.StorageNum == b.StorageNum)
+                .InnerJoin<EG_WMS_Inventory>((a, b, c) => b.InventoryNum == c.InventoryNum)
+                .Where((a, b, c) => a.StorageType == 1 && a.StorageOccupy == 1 && a.StorageStatus == 0 && c.MaterielNum == materielnum)
+                .OrderBy((a, b, c) => a.UpdateTime, OrderByType.Asc)
+                .Select((a, b, c) => new { a.StorageNum, c.ICountAll })
                 .ToList();
 
         if (storagenum == null)
@@ -702,22 +704,35 @@ public class BaseService : IDynamicApiController, ITransient
             return new List<string> { "当前没有合适的库位！" };
         }
 
-        // 根据物料编号再次筛选库位
-
-        var inventorystoragenum = _Inventory.AsQueryable()
-                   .InnerJoin<EG_WMS_InventoryDetail>((a, b) => a.InventoryNum == b.InventoryNum)
-                   .Where((a, b) => a.MaterielNum == materielnum)
-                   .Select((a, b) => b.StorageNum)
-                   .ToList();
-
-        // 得到共有的数据
-        var commonData = storagenum.Intersect(inventorystoragenum).ToList();
-
-        return commonData;
-
-
-
-
+        List<string> result = new List<string>();
+        int? sumcount = 0;
+        for (int i = 0; i < storagenum.Count; i++)
+        {
+            // 第一种情况（输入的数量恰好等于或大于第一个库位上的数量）
+            if (storagenum[i].ICountAll >= quantity)
+            {
+                result.Clear();
+                result.Add(storagenum[i].StorageNum.ToString());
+                break;
+            }
+            else if (storagenum[i].ICountAll < quantity)
+            {
+                if (sumcount >= quantity)
+                {
+                    break;
+                }
+                sumcount += storagenum[i].ICountAll;
+                result.Add(storagenum[i].StorageNum.ToString());
+            }
+            else if (i == storagenum.Count - 1)
+            {
+                if (sumcount < quantity)
+                {
+                    return new List<string> { "当前在库中该物料数量不足出库数量！" };
+                }
+            }
+        }
+        return result;
     }
 
 
@@ -741,7 +756,6 @@ public class BaseService : IDynamicApiController, ITransient
 
 
     #endregion
-
 
     #region （策略）AGV请求任务点
     /// <summary>

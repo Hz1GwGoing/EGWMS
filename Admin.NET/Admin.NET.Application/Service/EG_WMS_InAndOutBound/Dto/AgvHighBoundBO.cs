@@ -1,6 +1,5 @@
 ﻿namespace Admin.NET.Application.Service.EG_WMS_InAndOutBound.Dto;
-
-public class AgvBoundDto
+public class AgvHighBoundBO
 {
     /// <summary>
     /// 起始点
@@ -60,5 +59,6 @@ public class AgvBoundDto
     /// <summary>
     /// 出库数量
     /// </summary>
-    public int? Sumcount { get; set; }
+    public int Sumcount { get; set; }
+
 }
