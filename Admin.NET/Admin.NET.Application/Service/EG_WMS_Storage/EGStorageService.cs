@@ -130,10 +130,10 @@ public class EGStorageService : IDynamicApiController, ITransient
 
     #endregion
 
-    #region 分页查询库位表内容（联表：区域、仓库）
+    #region 分页查询库位表所有内容（联表：区域、仓库）
 
     /// <summary>
-    /// 分页查询库位表内容（联表：区域、仓库）
+    /// 分页查询库位表所有内容（联表：区域、仓库）
     /// </summary>
     /// <param name="page">页数</param>
     /// <param name="pageSize">每页容量</param>
@@ -145,6 +145,52 @@ public class EGStorageService : IDynamicApiController, ITransient
         var query = _rep.AsQueryable()
                         .InnerJoin<Entity.EG_WMS_Region>((a, b) => a.RegionNum == b.RegionNum)
                         .InnerJoin<Entity.EG_WMS_WareHouse>((a, b, c) => b.WHNum == c.WHNum)
+                        .OrderBy(a => a.StorageNum, OrderByType.Asc)
+                        .Select((a, b, c) => new StorageRegionAndWhDto
+                        {
+                            // 库位id
+                            ID = a.Id,
+                            StorageNum = a.StorageNum,
+                            StorageName = a.StorageName,
+                            StorageStatus = (int)a.StorageStatus,
+                            WHNum = c.WHNum,
+                            WHName = c.WHName,
+                            RegionNum = b.RegionNum,
+                            RegionName = b.RegionName,
+                            StorageType = a.StorageType,
+                            RoadwayNum = (int)a.RoadwayNum,
+                            ShelfNum = (int)a.ShelfNum,
+                            FloorNumber = (int)a.FloorNumber,
+                            StorageOccupy = (int)a.StorageOccupy,
+                            StorageRemake = a.StorageRemake,
+                            CreateUserName = a.CreateUserName,
+                            CreateTime = (DateTime)a.CreateTime,
+                            StorageGroup = a.StorageGroup,
+                        });
+
+
+        return await query.ToPagedListAsync(page, pageSize);
+
+    }
+
+    #endregion
+
+    #region 分页查询库位表未占用库位内容（联表：区域、仓库）
+
+    /// <summary>
+    /// 分页查询库位表未占用库位内容（联表：区域、仓库）
+    /// </summary>
+    /// <param name="page">页数</param>
+    /// <param name="pageSize">每页容量</param>
+    /// <returns></returns>
+    [HttpPost]
+    [ApiDescriptionSettings(Name = "GetUnoccupiedStorageRegionAndWH")]
+    public async Task<SqlSugarPagedList<StorageRegionAndWhDto>> GetUnoccupiedStorageRegionAndWH(int page, int pageSize)
+    {
+        var query = _rep.AsQueryable()
+                        .InnerJoin<Entity.EG_WMS_Region>((a, b) => a.RegionNum == b.RegionNum)
+                        .InnerJoin<Entity.EG_WMS_WareHouse>((a, b, c) => b.WHNum == c.WHNum)
+                        .Where((a, b, c) => a.StorageOccupy == 0)
                         .OrderBy(a => a.StorageNum, OrderByType.Asc)
                         .Select((a, b, c) => new StorageRegionAndWhDto
                         {

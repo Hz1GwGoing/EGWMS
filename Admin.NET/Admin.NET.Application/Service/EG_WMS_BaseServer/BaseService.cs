@@ -284,6 +284,56 @@ public class BaseService : IDynamicApiController, ITransient
 
     #endregion
 
+    #region 每月的入库数量
+
+    ///// <summary>
+    ///// 每月的入库数量
+    ///// </summary>
+    ///// <returns></returns>
+    //public async Task a()
+    //{
+    //    //SELECT DATE_FORMAT(InAndOutBoundTime,'%Y-%m') AS 月份,SUM(InAndOutBoundCount) AS 总数 FROM eg_wms_inandoutbound
+    //    //WHERE InAndOutBoundType = 0 AND InAndOutBoundStatus = 1
+    //    //GROUP BY DATE_FORMAT(InAndOutBoundTime, '%Y-%m')
+
+    //    //_InAndOutBound.AsQueryable()
+    //    //              .Where(x => x.InAndOutBoundStatus == 1 && x.InAndOutBoundType == 0)
+    //    //              .GroupBy()
+    //}
+
+
+    #endregion
+
+    #region 所有已占用库位数量
+
+    /// <summary>
+    /// 所有已占用库位数量
+    /// </summary>
+    /// <returns></returns>
+    public int GetAllOccupiedStorage()
+    {
+        return _Storage.AsQueryable()
+                       .Where(x => x.StorageOccupy == 1 && x.IsDelete == false && x.StorageStatus == 0)
+                       .Count();
+    }
+
+    #endregion
+
+    #region 所有未占用库位数量
+
+    /// <summary>
+    /// 所有未占用库位数量
+    /// </summary>
+    /// <returns></returns>
+    public int GetAllUnoccupiedStorage()
+    {
+        return _Storage.AsQueryable()
+                       .Where(x => x.StorageOccupy == 0 && x.IsDelete == false && x.StorageStatus == 0)
+                       .Count();
+    }
+
+    #endregion
+
     //-------------------------------------/策略/-------------------------------------//
 
     #region （策略）（密集库）AGV入库WMS自动推荐的库位（优先最靠里的库位）
@@ -313,6 +363,7 @@ public class BaseService : IDynamicApiController, ITransient
             // 一开始初始化数据，第一个开始
             var data = _Storage.AsQueryable()
                      .Where(x => x.RegionNum == dataRegion[k].RegionNum && x.StorageOccupy == 0 && x.StorageStatus == 0)
+                     .OrderBy(x => x.StorageNum, OrderByType.Desc)
                      .Select(x => new
                      {
                          x.StorageNum
@@ -740,19 +791,19 @@ public class BaseService : IDynamicApiController, ITransient
 
     #region （策略）（立库）堆高车出库WMS自动推荐的库位（根据先入先出原则以及出库总数）
 
-    /// <summary>
-    /// （策略）（立库）堆高车出库WMS自动推荐的库位（根据先入先出原则以及出库总数）
-    /// </summary>
-    /// <param name="materielNum">物料编号</param>
-    /// <param name="CountSum">出库总数</param>
-    /// <returns></returns>
-    public async Task AGV(string materielNum, int CountSum)
-    {
+    ///// <summary>
+    ///// （策略）（立库）堆高车出库WMS自动推荐的库位（根据先入先出原则以及出库总数）
+    ///// </summary>
+    ///// <param name="materielNum">物料编号</param>
+    ///// <param name="CountSum">出库总数</param>
+    ///// <returns></returns>
+    //public async Task AGV(string materielNum, int CountSum)
+    //{
 
 
 
 
-    }
+    //}
 
 
     #endregion
@@ -932,9 +983,26 @@ public class BaseService : IDynamicApiController, ITransient
 
     #endregion
 
+    #region 得到所有立库上面有料箱数据的
+
+    /// <summary>
+    /// 得到所有立库上面有料箱数据的
+    /// </summary>
+    /// <returns></returns>
+    public List<string> GetWorkBinAllDatas()
+    {
+
+        return _Storage.AsQueryable()
+                     .Where(x => x.StorageOccupy == 1 && x.StorageType == 1)
+                     .Select(x => x.StorageNum)
+                     .ToList();
+
+    }
+
+
+    #endregion
 
 }
-
 
 //-------------------------------------/归档/-------------------------------------//
 
