@@ -336,6 +336,28 @@ public class BaseService : IDynamicApiController, ITransient
 
     #endregion
 
+    #region 根据物料查询在库库位
+
+    /// <summary>
+    /// 根据物料查询库位
+    /// </summary>
+    /// <param name="materielnum">物料编号</param>
+    /// <returns></returns>
+    [HttpPost]
+    [ApiDescriptionSettings(Name = "QueryTheLocationAccordingMaterial")]
+    public List<string> QueryTheLocationAccordingMaterial(string materielnum)
+    {
+        var query = _Inventory.AsQueryable()
+                              .InnerJoin<EG_WMS_InventoryDetail>((a, b) => a.InventoryNum == b.InventoryNum)
+                              .Where((a, b) => a.MaterielNum == materielnum)
+                              .OrderBy((a, b) => b.StorageNum, OrderByType.Asc)
+                              .Select((a, b) => b.StorageNum)
+                              .ToList();
+
+        return query;
+    }
+
+    #endregion
     //-------------------------------------/策略/-------------------------------------//
 
     #region （策略）（密集库）AGV入库WMS自动推荐的库位（优先最靠里的库位）

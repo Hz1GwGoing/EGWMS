@@ -1,8 +1,12 @@
 ﻿namespace Admin.NET.Application.Job;
 
+/// <summary>
+/// 堆高车自动任务
+/// TODO：直接实现
+/// </summary>
 [JobDetail("trigger_RepetitionAGVTask", Description = "重复AGV搬运任务", GroupName = "AGVTask", Concurrent = false)]
 //[Daily(TriggerId = "trigger_RepetitionAGVTaskJob", Description = "重复AGV搬运任务")]
-[PeriodMinutes(19)]
+[PeriodMinutes(19, TriggerId = "trigger_RepetitionAGVTaskJob", StartNow = true, RunOnStart = true)]
 public class AddAgvHighJoinBoundTask : IJob
 {
     #region 关系注入
