@@ -28,6 +28,7 @@ public class EGRelocationService : IDynamicApiController, ITransient
          SqlSugarRepository<EG_WMS_InventoryDetail> InventoryDetail,
          SqlSugarRepository<EG_WMS_WorkBin> WorkBin,
          SqlSugarRepository<EG_WMS_Tem_Inventory> InventoryTem,
+         SqlSugarRepository<EG_WMS_Inventory> Inventory,
          SqlSugarRepository<EG_WMS_Tem_InventoryDetail> InventoryDetailTem,
          SqlSugarRepository<EG_WMS_Storage> Storage
         )
@@ -36,6 +37,7 @@ public class EGRelocationService : IDynamicApiController, ITransient
         _InventoryDetail = InventoryDetail;
         _WorkBin = WorkBin;
         _InventoryTem = InventoryTem;
+        _Inventory = Inventory;
         _InventoryDetailTem = InventoryDetailTem;
         _Storage = Storage;
     }
@@ -191,17 +193,21 @@ public class EGRelocationService : IDynamicApiController, ITransient
 
         var inventoryEnd = _Inventory.AsQueryable()
                                .InnerJoin<EG_WMS_InventoryDetail>((a, b) => a.InventoryNum == b.InventoryNum)
-                               .Where((a, b) => b.StorageNum == input.GoEndPoint)
+                               .Where((a, b) => b.StorageNum == input.GoEndPoint && a.OutboundStatus == 0)
                                .Select((a, b) => new
                                {
                                    b.StorageNum
                                })
                                .ToList();
 
-        if (inventoryStart.Count == 0 || inventoryEnd.Count == 0)
+        if (inventoryStart.Count == 0 || inventoryEnd.Count != 0)
         {
             throw Oops.Oh("当前库位没有存放数据或目标库位上有数据！");
         }
+
+        // 查询原始库位
+        var storagePrimitive = await _Storage.GetFirstAsync(x => x.StorageNum == input.StartPoint);
+
         using (TransactionScope scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
         {
 
@@ -272,6 +278,26 @@ public class EGRelocationService : IDynamicApiController, ITransient
                             })
                             .Where(x => x.RelocatioNum == relacationnum)
                             .ExecuteCommandAsync();
+
+                // 修改库位（原始）
+                await _Storage.AsUpdateable()
+                              .SetColumns(it => new EG_WMS_Storage
+                              {
+                                  StorageOccupy = 0,
+                                  StorageProductionDate = null
+                              })
+                              .Where(x => x.StorageNum == input.StartPoint)
+                              .ExecuteCommandAsync();
+
+                // 修改库位（移动后）
+                await _Storage.AsUpdateable()
+                              .SetColumns(it => new EG_WMS_Storage
+                              {
+                                  StorageOccupy = 1,
+                                  StorageProductionDate = storagePrimitive.StorageProductionDate
+                              })
+                              .Where(x => x.StorageNum == input.GoEndPoint)
+                              .ExecuteCommandAsync();
 
                 scope.Complete();
             }
