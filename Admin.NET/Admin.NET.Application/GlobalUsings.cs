@@ -29,5 +29,6 @@ global using Admin.NET.Application.Service.EG_WMS_Storage.Dto;
 global using Admin.NET.Application.Service.EG_WMS_InAndOutBound;
 global using Admin.NET.Application.Service.EG_WMS_TakeStock.Dto;
 global using Admin.NET.Application.Service.EG_WMS_WareHouse.Dto;
+global using Admin.NET.Application.Service.EG_WMS_Relocation.Dto;
 global using Admin.NET.Application.Service.EG_WMS_BaseServer.Dto;
 global using Admin.NET.Application.Service.EG_WMS_InAndOutBound.Dto;

@@ -1,6 +1,4 @@
-﻿using SqlSugar;
-
-namespace Admin.NET.Application;
+﻿namespace Admin.NET.Application;
 
 /// <summary>
 /// 出入库接口服务（agv、人工）
@@ -791,7 +789,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
 
                 // 查询库位编号所在的区域编号
 
-                var regionnum = InAndOutBoundMessage.GetStorageWhereRegion(input.EndPoint);
+                var regionnum = InAndOutBoundMessage.GetStorageWhereRegion(startpoint);
 
                 // 通过查询出来的区域得到仓库编号
 

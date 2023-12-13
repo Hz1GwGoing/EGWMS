@@ -1,4 +1,5 @@
-﻿namespace Admin.NET.Application;
+﻿
+namespace Admin.NET.Application;
 
 /// <summary>
 /// 移库信息接口
@@ -7,12 +8,14 @@
 public class EGRelocationService : IDynamicApiController, ITransient
 {
     private static readonly ToolTheCurrentTime currentTime = new ToolTheCurrentTime();
+    private static readonly EG_WMS_InAndOutBoundMessage messageApplication = new EG_WMS_InAndOutBoundMessage();
 
     #region 引用实体
     private readonly SqlSugarRepository<EG_WMS_Relocation> _Relocation;
     private readonly SqlSugarRepository<EG_WMS_InventoryDetail> _InventoryDetail;
     private readonly SqlSugarRepository<EG_WMS_WorkBin> _WorkBin;
     private readonly SqlSugarRepository<EG_WMS_Tem_Inventory> _InventoryTem;
+    private readonly SqlSugarRepository<EG_WMS_Inventory> _Inventory;
     private readonly SqlSugarRepository<EG_WMS_Tem_InventoryDetail> _InventoryDetailTem;
     private readonly SqlSugarRepository<EG_WMS_Storage> _Storage;
 
@@ -162,6 +165,126 @@ public class EGRelocationService : IDynamicApiController, ITransient
 
 
     }
+    #endregion
+
+    #region 移动整个密集库库位，上面的料箱数据
+
+    [HttpPost]
+    [ApiDescriptionSettings(Name = "MoveTheEntireDenseLibrary")]
+    public async Task MoveTheEntireDenseLibrary(RelocationBO input)
+    {
+        string relacationnum = currentTime.GetTheCurrentTimeTimeStamp("EGYK");
+
+        // 查询当前和目标库位上有没有数据
+        var inventoryStart = _Inventory.AsQueryable()
+                               .InnerJoin<EG_WMS_InventoryDetail>((a, b) => a.InventoryNum == b.InventoryNum)
+                               .Where((a, b) => b.StorageNum == input.StartPoint)
+                               .Select((a, b) => new
+                               {
+                                   a.ICountAll,
+                                   a.InventoryRemake,
+                                   a.InventoryNum,
+                                   b.WorkBinNum,
+                                   a.MaterielNum
+                               })
+                               .ToList();
+
+        var inventoryEnd = _Inventory.AsQueryable()
+                               .InnerJoin<EG_WMS_InventoryDetail>((a, b) => a.InventoryNum == b.InventoryNum)
+                               .Where((a, b) => b.StorageNum == input.GoEndPoint)
+                               .Select((a, b) => new
+                               {
+                                   b.StorageNum
+                               })
+                               .ToList();
+
+        if (inventoryStart.Count == 0 || inventoryEnd.Count == 0)
+        {
+            throw Oops.Oh("当前库位没有存放数据或目标库位上有数据！");
+        }
+        using (TransactionScope scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
+        {
+
+            try
+            {
+                // 生成一条移库记录
+                EG_WMS_Relocation _relocation = new EG_WMS_Relocation()
+                {
+                    RelocatioNum = relacationnum,
+                    OldStorageNum = input.StartPoint,
+                    NewStorageNum = input.GoEndPoint,
+                    RelocationTime = DateTime.Now,
+                    CreateTime = DateTime.Now,
+                };
+                string remake;
+                if (input.Remake == null || String.IsNullOrEmpty(input.Remake))
+                {
+                    remake = $"此库存已从{input.StartPoint}库位，移动到当前库位";
+                }
+                else
+                {
+                    remake = $"此库存已从{input.StartPoint}库位，移动到当前库位"
+                              + "," + input.Remake;
+                }
+                string newregionnum = messageApplication.GetStorageWhereRegion(input.GoEndPoint);
+                string newwhnum = messageApplication.GetRegionWhereWHNum(newregionnum);
+                int? sumcount = 0;
+
+                for (int i = 0; i < inventoryStart.Count; i++)
+                {
+                    sumcount += inventoryStart[i].ICountAll;
+
+                    await _Inventory.AsUpdateable()
+                         .SetColumns(it => new EG_WMS_Inventory
+                         {
+                             InventoryRemake = inventoryStart[i].InventoryRemake + remake
+                         })
+                         .Where(x => x.InventoryNum == inventoryStart[i].InventoryNum)
+                         .ExecuteCommandAsync();
+
+                    await _InventoryDetail.AsUpdateable()
+                                          .SetColumns(it => new EG_WMS_InventoryDetail
+                                          {
+                                              RegionNum = newregionnum,
+                                              WHNum = newwhnum,
+                                              StorageNum = input.GoEndPoint
+                                          })
+                                          .Where(x => x.InventoryNum == inventoryStart[i].InventoryNum)
+                                          .ExecuteCommandAsync();
+
+                    await _WorkBin.AsUpdateable()
+                                  .SetColumns(it => new EG_WMS_WorkBin
+                                  {
+                                      StorageNum = input.GoEndPoint,
+                                      UpdateTime = DateTime.Now,
+                                      WorkBinRemake = remake,
+                                  })
+                                  .Where(u => u.WorkBinNum == inventoryStart[i].WorkBinNum)
+                                  .ExecuteCommandAsync();
+                }
+                // 修改移库记录
+                await _Relocation.AsUpdateable()
+                            .SetColumns(it => new EG_WMS_Relocation
+                            {
+                                RelocationCount = sumcount,
+                                MaterielNum = inventoryStart[0].MaterielNum,
+                                RelocationRemake = input.Remake,
+                            })
+                            .Where(x => x.RelocatioNum == relacationnum)
+                            .ExecuteCommandAsync();
+
+                scope.Complete();
+            }
+            catch (Exception ex)
+            {
+                scope.Dispose();
+                throw Oops.Oh("错误：" + ex);
+            }
+        }
+
+    }
+
+
     #endregion
 
     #region 得到移库表关联库位关系（分页查询）（时间范围）

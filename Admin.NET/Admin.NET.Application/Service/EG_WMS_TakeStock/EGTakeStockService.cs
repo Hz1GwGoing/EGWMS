@@ -493,7 +493,7 @@ public class EGTakeStockService : IDynamicApiController, ITransient
 
         var data = _model.AsQueryable()
                .InnerJoin<EG_WMS_InventoryDetail>((a, b) => a.InventoryNum == b.InventoryNum)
-               .Where((a, b) => a.MaterielNum == input.MaterielNum)
+               .Where((a, b) => a.MaterielNum == input.MaterielNum && a.OutboundStatus == 0)
                .Select((a, b) => new
                {
                    b.StorageNum

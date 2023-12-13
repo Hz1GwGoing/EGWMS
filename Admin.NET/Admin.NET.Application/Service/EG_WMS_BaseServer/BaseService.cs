@@ -6,6 +6,8 @@
 [ApiDescriptionSettings(ApplicationConst.GroupName, Order = 100)]
 public class BaseService : IDynamicApiController, ITransient
 {
+    // TODO：
+    // 修改接口，完善代码结构，以及项目结构
 
     #region 关系注入
 
@@ -344,7 +346,7 @@ public class BaseService : IDynamicApiController, ITransient
     /// <param name="materielNum">物料编号</param>
     /// <returns></returns>
     [HttpPost]
-    [ApiDescriptionSettings(Name = "AGVStrategyReturnRecommEndStorage")]
+    [ApiDescriptionSettings(Name = "AGVStrategyReturnRecommEndStorage", Order = 1000)]
     public string AGVStrategyReturnRecommEndStorage(string materielNum)
     {
         // 根据物料编号，得到这个物料属于那个区域
@@ -447,6 +449,8 @@ public class BaseService : IDynamicApiController, ITransient
                 {
                     var datalist = _Storage.AsQueryable()
                          .Where(x => x.StorageGroup == getStorageGroup[i].StorageGroup && x.StorageStatus == 0)
+                         // TODO、没有验证
+                         .OrderBy(x => x.StorageNum, OrderByType.Desc)
                          .Select(it => new
                          {
                              it.StorageNum,
@@ -475,6 +479,7 @@ public class BaseService : IDynamicApiController, ITransient
                     var GetGroupOccupyNot = _Storage.AsQueryable()
                                   .Where(x => x.StorageOccupy == 0 && x.StorageStatus == 0 &&
                                          x.StorageGroup == allStorageOccupy.StorageGroup)
+                                  .OrderBy(x => x.StorageNum, OrderByType.Desc)
                                   .Select(it => new
                                   {
                                       it.StorageNum,
@@ -517,7 +522,7 @@ public class BaseService : IDynamicApiController, ITransient
     /// </summary>
     /// <returns></returns>
     [HttpPost]
-    [ApiDescriptionSettings(Name = "AGVStrategyReturnRecommendStorageOutBoundJudgeTime")]
+    [ApiDescriptionSettings(Name = "AGVStrategyReturnRecommendStorageOutBoundJudgeTime", Order = 999)]
     public string AGVStrategyReturnRecommendStorageOutBoundJudgeTime(string materielNum)
     {
 
@@ -629,7 +634,7 @@ public class BaseService : IDynamicApiController, ITransient
     /// </summary>
     /// <returns></returns>
     [HttpPost]
-    [ApiDescriptionSettings(Name = "AGVStrategyReturnRecommendStorageOutBound")]
+    [ApiDescriptionSettings(Name = "AGVStrategyReturnRecommendStorageOutBound", Order = 998)]
     public string AGVStrategyReturnRecommendStorageOutBound(string materielNum)
     {
         // 根据物料编号，得到这个物料属于那个区域
@@ -707,7 +712,7 @@ public class BaseService : IDynamicApiController, ITransient
     /// </summary>
     /// <returns></returns>
     [HttpPost]
-    [ApiDescriptionSettings(Name = "AGVStacKingHighCarsIntoReturnStorage")]
+    [ApiDescriptionSettings(Name = "AGVStacKingHighCarsIntoReturnStorage", Order = 997)]
     public string AGVStacKingHighCarsIntoReturnStorage()
     {
 
@@ -738,6 +743,8 @@ public class BaseService : IDynamicApiController, ITransient
     /// （策略）（立库）堆高车出库WMS自动推荐的库位（按照先入先出，以及输入物料、物料数量去推荐哪几个库位）
     /// </summary>
     /// <returns></returns>
+    [HttpPost]
+    [ApiDescriptionSettings(Name = "AGVStackingHighCarStorageOutBound", Order = 996)]
     public List<string> AGVStackingHighCarStorageOutBound(string materielnum, int quantity)
     {
         // 根据物料产品筛选物料在哪几个库位上
@@ -817,7 +824,7 @@ public class BaseService : IDynamicApiController, ITransient
     /// <returns></returns>
     [HttpPost]
     [UnifyProvider("easygreat")]
-    [ApiDescriptionSettings(Name = "AGVRequestsTaskPoint")]
+    [ApiDescriptionSettings(Name = "AGVRequestsTaskPoint", Order = 995)]
     public object AGVRequestsTaskPoint(string orderId, string modelProcessCode)
     {
 
