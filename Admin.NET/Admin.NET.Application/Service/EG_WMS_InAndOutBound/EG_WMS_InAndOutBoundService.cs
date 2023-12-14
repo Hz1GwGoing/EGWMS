@@ -1498,7 +1498,6 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                     // 是否出库
                     OutboundStatus = 0,
                 };
-
                 // 详细表
                 EG_WMS_InventoryDetail addInventoryDetail = new EG_WMS_InventoryDetail()
                 {
@@ -1522,7 +1521,6 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                     IsDelete = false,
 
                 };
-
                 // 料箱表 将料箱内容保存到料箱表中（生成新料箱或修改）
                 EG_WMS_WorkBin addWorkBin = new EG_WMS_WorkBin()
                 {
@@ -1540,6 +1538,15 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                     // 库位编号
                     StorageNum = input.EndPoint,
                 };
+                EG_WMS_Tem_Inventory tem_Inventory = new EG_WMS_Tem_Inventory();
+                EG_WMS_Tem_InventoryDetail tem_InventoryDetail = new EG_WMS_Tem_InventoryDetail();
+
+                var teminv = addInventory.Adapt(tem_Inventory);
+                var teminvd = addInventoryDetail.Adapt(tem_InventoryDetail);
+
+                // 临时表
+                await _InventoryTem.InsertAsync(teminv);
+                await _InventoryDetailTem.InsertAsync(teminvd);
 
                 await _Inventory.InsertAsync(addInventory);
                 await _InventoryDetail.InsertAsync(addInventoryDetail);

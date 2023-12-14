@@ -1,5 +1,4 @@
-﻿
-namespace Admin.NET.Application;
+﻿namespace Admin.NET.Application;
 
 /// <summary>
 /// 移库信息接口

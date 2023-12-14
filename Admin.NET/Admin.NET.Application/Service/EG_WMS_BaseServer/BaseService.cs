@@ -345,12 +345,20 @@ public class BaseService : IDynamicApiController, ITransient
 
     [HttpGet]
     [ApiDescriptionSettings(Name = "QueryMaterialsAccordingInventory")]
-    public List<string> QueryMaterialsAccordingInventory()
+    public List<AccordingInventoryDto> QueryMaterialsAccordingInventory()
     {
         return _Inventory.AsQueryable()
-           .Where(x => x.OutboundStatus == 0 && x.IsDelete == false)
+           .InnerJoin<EG_WMS_Materiel>((a, b) => a.MaterielNum == b.MaterielNum)
+           .Where(a => a.OutboundStatus == 0 && a.IsDelete == false)
            .Distinct()
-           .Select(x => x.MaterielNum)
+           .Select((a, b) => new AccordingInventoryDto
+           {
+               MaterielNum = a.MaterielNum,
+               MaterielName = b.MaterielName,
+               MaterielType = b.MaterielType,
+               MaterielMainUnit = b.MaterielMainUnit,
+               MaterielSpecs = b.MaterielSpecs,
+           })
            .ToList();
 
     }
