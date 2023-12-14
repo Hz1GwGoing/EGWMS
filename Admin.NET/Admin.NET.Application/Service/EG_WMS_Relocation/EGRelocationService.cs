@@ -171,6 +171,11 @@ public class EGRelocationService : IDynamicApiController, ITransient
 
     #region 移动整个密集库库位，上面的料箱数据
 
+    /// <summary>
+    /// 移动整个密集库库位，上面的料箱数据
+    /// </summary>
+    /// <param name="input"></param>
+    /// <returns></returns>
     [HttpPost]
     [ApiDescriptionSettings(Name = "MoveTheEntireDenseLibrary")]
     public async Task MoveTheEntireDenseLibrary(RelocationBO input)
@@ -222,6 +227,8 @@ public class EGRelocationService : IDynamicApiController, ITransient
                     RelocationTime = DateTime.Now,
                     CreateTime = DateTime.Now,
                 };
+
+                await _Relocation.InsertAsync(_relocation);
                 string remake;
                 if (input.Remake == null || String.IsNullOrEmpty(input.Remake))
                 {
