@@ -526,6 +526,7 @@ public class EGTakeStockService : IDynamicApiController, ITransient
                 TakeStockStatus = 0,
                 MaterielNum = input.MaterielNum,
                 TakeStockRemake = input.TakeStockRemake,
+                TakeStockTime = DateTime.Now,
             };
 
             await _rep.InsertAsync(takedata);

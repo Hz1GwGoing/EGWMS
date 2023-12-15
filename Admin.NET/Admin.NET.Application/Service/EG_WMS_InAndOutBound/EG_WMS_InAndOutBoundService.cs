@@ -70,7 +70,22 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
 
             }
 
-            string endpoint = input.EndPoint;
+            string endpoint = "";
+            // 判断用户输入的是否符合逻辑
+            var storageGroup = _Storage.GetFirstAsync(x => x.StorageNum == input.EndPoint);
+            var selectData = _Storage.AsQueryable()
+                 .Where(x => x.StorageGroup == storageGroup.Result.StorageGroup && x.StorageOccupy == 1)
+                 .OrderBy(x => x.StorageNum, OrderByType.Asc)
+                 .Select(x => x.StorageNum)
+                 .ToList();
+            if (storageGroup.Result.StorageNum.ToInt() > selectData[0].ToInt())
+            {
+                throw Oops.Oh("当前选择的这个库位，入库时有库位阻挡，请重新选择库位！");
+            }
+            else
+            {
+                endpoint = input.EndPoint;
+            }
 
             // 任务点集
             var positions = startpoint + "," + endpoint;
@@ -659,8 +674,22 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                     return;
                 }
             }
-
-            string endpoint = input.EndPoint;
+            string endpoint = "";
+            // 判断用户输入的是否符合逻辑
+            var storageGroup = _Storage.GetFirstAsync(x => x.StorageNum == input.EndPoint);
+            var selectData = _Storage.AsQueryable()
+                 .Where(x => x.StorageGroup == storageGroup.Result.StorageGroup && x.StorageOccupy == 1)
+                 .OrderBy(x => x.StorageNum, OrderByType.Asc)
+                 .Select(x => x.StorageNum)
+                 .ToList();
+            if (storageGroup.Result.StorageNum.ToInt() > selectData[0].ToInt())
+            {
+                throw Oops.Oh("当前选择的这个库位，入库时有库位阻挡，请重新选择库位！");
+            }
+            else
+            {
+                endpoint = input.EndPoint;
+            }
 
             // 任务点集
             var positions = startpoint + "," + endpoint;
@@ -711,6 +740,12 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
 
         try
         {
+            // 目标点
+            if (input.EndPoint == null || input.EndPoint == "")
+            {
+                throw Oops.Oh("目标点不能为空");
+            }
+
             // 起始点
             if (input.StartPoint == null || input.StartPoint == "")
             {
@@ -723,12 +758,21 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                     return;
                 }
             }
-            string startpoint = input.StartPoint;
-
-            // 目标点
-            if (input.EndPoint == null || input.EndPoint == "")
+            string startpoint = "";
+            // 判断用户输入的是否符合逻辑
+            var storageGroup = _Storage.GetFirstAsync(x => x.StorageNum == input.StartPoint);
+            var selectData = _Storage.AsQueryable()
+                 .Where(x => x.StorageGroup == storageGroup.Result.StorageGroup && x.StorageOccupy == 1)
+                 .OrderBy(x => x.StorageNum, OrderByType.Desc)
+                 .Select(x => x.StorageNum)
+                 .ToList();
+            if (storageGroup.Result.StorageNum.ToInt() > selectData[0].ToInt())
             {
-                throw Oops.Oh("目标点不能为空");
+                throw Oops.Oh("当前选择的这个库位，出库时有库位阻挡，请重新选择库位！");
+            }
+            else
+            {
+                startpoint = input.StartPoint;
             }
 
             string endpoint = input.EndPoint;
