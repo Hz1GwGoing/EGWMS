@@ -1,4 +1,6 @@
-﻿namespace Admin.NET.Application.Service.EG_WMS_BaseServer;
+﻿using SqlSugar.Extensions;
+
+namespace Admin.NET.Application.Service.EG_WMS_BaseServer;
 
 /// <summary>
 /// 基础实用接口
@@ -288,24 +290,58 @@ public class BaseService : IDynamicApiController, ITransient
 
     #region 每月的入库数量
 
-    ///// <summary>
-    ///// 每月的入库数量
-    ///// </summary>
-    ///// <returns></returns>
-    //public async Task a()
-    //{
-    //    //SELECT DATE_FORMAT(InAndOutBoundTime,'%Y-%m') AS 月份,SUM(InAndOutBoundCount) AS 总数 FROM eg_wms_inandoutbound
-    //    //WHERE InAndOutBoundType = 0 AND InAndOutBoundStatus = 1
-    //    //GROUP BY DATE_FORMAT(InAndOutBoundTime, '%Y-%m')
+    /// <summary>
+    /// 每月的入库数量
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet]
+    [ApiDescriptionSettings(Name = "MonthlyInventoryQuantity")]
+    public List<MonthlyInventoryQuantityDto> MonthlyInventoryQuantity()
+    {
+        //SELECT DATE_FORMAT(InAndOutBoundTime,'%Y-%m') AS 月份,SUM(InAndOutBoundCount) AS 总数 FROM eg_wms_inandoutbound
+        //WHERE InAndOutBoundType = 0 AND InAndOutBoundStatus = 1
+        //GROUP BY DATE_FORMAT(InAndOutBoundTime, '%Y-%m')
 
-    //    //_InAndOutBound.AsQueryable()
-    //    //              .Where(x => x.InAndOutBoundStatus == 1 && x.InAndOutBoundType == 0)
-    //    //              .GroupBy()
-    //}
+        return _InAndOutBound.AsQueryable()
+                     .Where(x => x.InAndOutBoundStatus == 1 && x.InAndOutBoundType == 0)
+                     .GroupBy(x => SqlFunc.MappingColumn(x.InAndOutBoundTime.Value.ToString(), "DATE_FORMAT(InAndOutBoundTime, '%Y-%m')"))
+                     .Select(x => new MonthlyInventoryQuantityDto
+                     {
+                         Mouth = SqlFunc.MappingColumn(x.InAndOutBoundTime.Value.ToString(), "DATE_FORMAT(InAndOutBoundTime, '%Y-%m')"),
+                         CountSum = (int)SqlFunc.AggregateSum(x.InAndOutBoundCount)
+                     })
+                     .ToList();
+
+    }
 
 
     #endregion
 
+    #region 每月的出库数量
+
+    /// <summary>
+    /// 每月的出库数量
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet]
+    [ApiDescriptionSettings(Name = "MonthlyOutboundQuantity")]
+    public List<MonthlyInventoryQuantityDto> MonthlyOutboundQuantity()
+    {
+
+        return _InAndOutBound.AsQueryable()
+             .Where(x => x.InAndOutBoundStatus == 3 && x.InAndOutBoundType == 1)
+             .GroupBy(x => SqlFunc.MappingColumn(x.InAndOutBoundTime.Value.ToString(), "DATE_FORMAT(InAndOutBoundTime, '%Y-%m')"))
+             .Select(x => new MonthlyInventoryQuantityDto
+             {
+                 Mouth = SqlFunc.MappingColumn(x.InAndOutBoundTime.Value.ToString(), "DATE_FORMAT(InAndOutBoundTime, '%Y-%m')"),
+                 CountSum = (int)SqlFunc.AggregateSum(x.InAndOutBoundCount)
+             })
+             .ToList();
+
+    }
+
+
+    #endregion
     #region 所有已占用库位数量
 
     /// <summary>
