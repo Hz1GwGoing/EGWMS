@@ -51,7 +51,7 @@ public class AddAgvHighJoinBoundTask : IJob
             taskEntity.TaskPath = positions;
             taskEntity.ModelNo = "stackStoreV21";
             taskEntity.CreateTime = DateTime.Now;
-            taskEntity.AGV = "M001";
+            taskEntity.AGV = "M002";
             DHMessage item = await taskService.AddAsync(taskEntity);
             if (item.code == 1000)
             {

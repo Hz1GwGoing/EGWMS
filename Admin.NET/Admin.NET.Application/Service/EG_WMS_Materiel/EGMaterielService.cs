@@ -102,28 +102,28 @@ public class EGMaterielService : IDynamicApiController, ITransient
     /// <returns></returns>
     [HttpPost]
     [ApiDescriptionSettings(Name = "GetMaterielsDataAndNumNameSpecs")]
-    public List<EG_WMS_Materiel> GetMaterielsDataAndNumNameSpecs(EGMaterielDto input)
+    public async Task<SqlSugarPagedList<EG_WMS_Materiel>> GetMaterielsDataAndNumNameSpecs(EGMaterielDto input)
     {
         if (input.MaterielNum == null && input.MaterielName == null && input.MaterielType == null && input.MaterielSpecs == null)
         {
-            List<EG_WMS_Materiel> dataone = _rep.AsQueryable()
+            var dataone = _rep.AsQueryable()
              .Skip((input.page - 1) * input.pageSize)
-             .Take(input.pageSize)
-             .ToList();
+             .Take(input.pageSize);
 
-            return dataone;
+
+            return await dataone.ToPagedListAsync(input.page, input.pageSize);
         }
 
-        List<EG_WMS_Materiel> datatwo = _rep.AsQueryable()
+        var datatwo = _rep.AsQueryable()
          .WhereIF(!string.IsNullOrWhiteSpace(input.MaterielNum), x => x.MaterielNum == input.MaterielNum)
          .WhereIF(!string.IsNullOrWhiteSpace(input.MaterielName), x => x.MaterielName.Contains(input.MaterielName))
          .WhereIF(!string.IsNullOrWhiteSpace(input.MaterielType), x => x.MaterielType.Contains(input.MaterielType))
          .WhereIF(!string.IsNullOrWhiteSpace(input.MaterielSpecs), x => x.MaterielType.Contains(input.MaterielSpecs))
          .Skip((input.page - 1) * input.pageSize)
-         .Take(input.pageSize)
-         .ToList();
+         .Take(input.pageSize);
 
-        return datatwo;
+        return await datatwo.ToPagedListAsync(input.page, input.pageSize);
+
     }
 
     #endregion
