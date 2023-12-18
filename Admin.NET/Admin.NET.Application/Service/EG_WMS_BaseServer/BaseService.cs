@@ -1,6 +1,4 @@
-﻿using SqlSugar.Extensions;
-
-namespace Admin.NET.Application.Service.EG_WMS_BaseServer;
+﻿namespace Admin.NET.Application.Service.EG_WMS_BaseServer;
 
 /// <summary>
 /// 基础实用接口
@@ -143,7 +141,7 @@ public class BaseService : IDynamicApiController, ITransient
     {
         var data = _Inventory.AsQueryable()
                    .InnerJoin<EG_WMS_Materiel>((inv, mat) => inv.MaterielNum == mat.MaterielNum)
-                   .WhereIF(!string.IsNullOrEmpty(input.materielNum), (inv, mat) => mat.MaterielNum.Contains(input.materielNum.Trim()))
+                   .WhereIF(!string.IsNullOrEmpty(input.materielNum), (inv, mat) => mat.MaterielNum == input.materielNum)
                    .WhereIF(!string.IsNullOrEmpty(input.materielName), (inv, mat) => mat.MaterielName.Contains(input.materielName.Trim()))
                    .WhereIF(!string.IsNullOrEmpty(input.materielType), (inv, mat) => mat.MaterielType.Contains(input.materielType.Trim()))
                    .WhereIF(!string.IsNullOrEmpty(input.materielSpecs), (inv, mat) => mat.MaterielSpecs.Contains(input.materielSpecs.Trim()))
@@ -342,6 +340,7 @@ public class BaseService : IDynamicApiController, ITransient
 
 
     #endregion
+
     #region 所有已占用库位数量
 
     /// <summary>

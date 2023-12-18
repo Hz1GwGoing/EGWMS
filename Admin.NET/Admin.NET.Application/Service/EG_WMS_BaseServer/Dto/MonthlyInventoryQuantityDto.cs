@@ -1,4 +1,4 @@
-﻿namespace Admin.NET.Application.Service.EG_WMS_BaseServer;
+﻿namespace Admin.NET.Application.Service.EG_WMS_BaseServer.Dto;
 
 public class MonthlyInventoryQuantityDto
 {

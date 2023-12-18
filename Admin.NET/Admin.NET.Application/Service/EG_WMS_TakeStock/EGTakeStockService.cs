@@ -71,7 +71,7 @@ public class EGTakeStockService : IDynamicApiController, ITransient
                     .WhereIF(input.TakeStockStatus == 0 || input.TakeStockStatus == 1, u => u.TakeStockStatus == input.TakeStockStatus)
                     .WhereIF(!string.IsNullOrWhiteSpace(input.TakeStockUser), u => u.TakeStockUser.Contains(input.TakeStockUser.Trim()))
                     .WhereIF(!string.IsNullOrWhiteSpace(input.TakeStockRemake), u => u.TakeStockRemake.Contains(input.TakeStockRemake.Trim()))
-                    .WhereIF(!string.IsNullOrWhiteSpace(input.MaterielNum), u => u.MaterielNum.Contains(input.MaterielNum.Trim()))
+                    .WhereIF(!string.IsNullOrWhiteSpace(input.MaterielNum), u => u.MaterielNum == input.MaterielNum)
                     .WhereIF(input.TakeStockType != null, u => u.TakeStockType == input.TakeStockType)
                     // 获取创建日期
                     .WhereIF(input.CreateTime > DateTime.MinValue, u => u.CreateTime >= input.CreateTime)

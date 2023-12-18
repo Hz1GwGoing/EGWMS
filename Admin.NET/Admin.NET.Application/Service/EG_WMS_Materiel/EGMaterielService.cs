@@ -115,7 +115,10 @@ public class EGMaterielService : IDynamicApiController, ITransient
         }
 
         List<EG_WMS_Materiel> datatwo = _rep.AsQueryable()
-         .Where(x => x.MaterielNum.Contains(input.MaterielNum) || x.MaterielName.Contains(input.MaterielName) || x.MaterielType.Contains(input.MaterielType) || x.MaterielSpecs.Contains(input.MaterielSpecs))
+         .WhereIF(!string.IsNullOrWhiteSpace(input.MaterielNum), x => x.MaterielNum == input.MaterielNum)
+         .WhereIF(!string.IsNullOrWhiteSpace(input.MaterielName), x => x.MaterielName.Contains(input.MaterielName))
+         .WhereIF(!string.IsNullOrWhiteSpace(input.MaterielType), x => x.MaterielType.Contains(input.MaterielType))
+         .WhereIF(!string.IsNullOrWhiteSpace(input.MaterielSpecs), x => x.MaterielType.Contains(input.MaterielSpecs))
          .Skip((input.page - 1) * input.pageSize)
          .Take(input.pageSize)
          .ToList();
