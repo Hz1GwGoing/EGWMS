@@ -72,17 +72,10 @@ public class EG_WMS_Materiel : EntityBase
     [SugarColumn(ColumnDescription = "辅单位", Length = 50)]
     public string? MaterielAssistUnit { get; set; }
 
-
     /// <summary>
-    /// 栈板编号
+    /// 需在库数量
     /// </summary>
-    [SugarColumn(ColumnDescription = "栈板编号", Length = 50)]
-    public string? PalletNum { get; set; }
-
-    /// <summary>
-    /// 库存编号
-    /// </summary>
-    [SugarColumn(ColumnDescription = "库存编号", Length = 50)]
-    public string? InventoryNum { get; set; }
+    [SugarColumn(ColumnDescription = "需在库数量", Length = 50)]
+    public int? QuantityNeedCount { get; set; }
 
 }

@@ -7,10 +7,94 @@
 public class EGMaterielService : IDynamicApiController, ITransient
 {
     private readonly SqlSugarRepository<EG_WMS_Materiel> _rep;
+    private readonly SqlSugarRepository<EG_WMS_Inventory> _Inventory = App.GetService<SqlSugarRepository<EG_WMS_Inventory>>();
+
     public EGMaterielService(SqlSugarRepository<EG_WMS_Materiel> rep)
     {
         _rep = rep;
     }
+
+    #region 修改物料安全库存
+
+    /// <summary>
+    /// 修改物料安全库存
+    /// </summary>
+    /// <param name="materielnum">物料编号</param>
+    /// <param name="SafetyCount">安全库存</param>
+    /// <returns></returns>
+    [HttpPost]
+    [ApiDescriptionSettings(Name = "UpdateSafetyCount")]
+    public async Task UpdateSafetyCount(string materielnum, int SafetyCount)
+    {
+        if (SafetyCount == 0 || SafetyCount < 0)
+        {
+            throw Oops.Oh("安全库存数量必须大于零");
+        }
+        var materieldata = await _rep.GetFirstAsync(x => x.MaterielNum == materielnum);
+        if (materieldata == null)
+        {
+            throw Oops.Oh("物料编号有误，查询不到该种物料");
+        }
+        await _rep.AsUpdateable()
+                  .SetColumns(it => new EG_WMS_Materiel
+                  {
+                      QuantityNeedCount = SafetyCount,
+                      UpdateTime = DateTime.Now,
+                  })
+                  .Where(x => x.MaterielNum == materielnum)
+                  .ExecuteCommandAsync();
+    }
+
+
+    #endregion
+
+    #region 查询物料是否不在安全库存里
+
+    /// <summary>
+    /// 查询物料是否不在安全库存里
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet]
+    [ApiDescriptionSettings(Name = "MaterialSafetyInventory")]
+    public List<InventoryEarlyWarningDto> MaterialSafetyInventory()
+    {
+        List<InventoryEarlyWarningDto> inventories = new List<InventoryEarlyWarningDto>();
+
+        // 查询每种物料的需在库数量
+        var materieldata = _rep.AsQueryable()
+                               .Where(x => x.IsDelete == false)
+                               .GroupBy(x => x.MaterielNum)
+                               .Distinct()
+                               .Select(x => new { x.MaterielNum, x.MaterielName, x.MaterielSpecs, x.QuantityNeedCount })
+                               .ToList();
+
+        for (int i = 0; i < materieldata.Count; i++)
+        {
+            // 查询在库数据
+            int? invmaterielcount = _Inventory.AsQueryable()
+                                             .Where(x => x.MaterielNum == materieldata[i].MaterielNum)
+                                             .Sum(x => x.ICountAll);
+
+            if (invmaterielcount < materieldata[i].QuantityNeedCount || invmaterielcount == null)
+            {
+                if (invmaterielcount == null)
+                {
+                    invmaterielcount = 0;
+                }
+                InventoryEarlyWarningDto invEarlyData = new InventoryEarlyWarningDto()
+                {
+                    MaterielNum = materieldata[i].MaterielNum,
+                    MaterielName = materieldata[i].MaterielName,
+                    MaterielSpecs = materieldata[i].MaterielSpecs,
+                    InventoryCount = invmaterielcount,
+                };
+                inventories.Add(invEarlyData);
+            }
+        }
+        return inventories;
+    }
+
+    #endregion
 
     #region 分页查询物料信息
     /// <summary>

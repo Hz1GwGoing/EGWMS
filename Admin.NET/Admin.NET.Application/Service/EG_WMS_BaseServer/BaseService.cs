@@ -48,7 +48,7 @@ public class BaseService : IDynamicApiController, ITransient
     {
         var data = _Inventory.AsQueryable()
                     .InnerJoin<EG_WMS_InventoryDetail>((o, cus) => o.InventoryNum == cus.InventoryNum)
-                    .InnerJoin<EG_WMS_Materiel>((o, cus, ml) => ml.MaterielNum == o.MaterielNum)
+                    .InnerJoin<Entity.EG_WMS_Materiel>((o, cus, ml) => ml.MaterielNum == o.MaterielNum)
                     .InnerJoin<Entity.EG_WMS_Storage>((o, cus, ml, age) => cus.StorageNum == age.StorageNum)
                     .InnerJoin<Entity.EG_WMS_Region>((o, cus, ml, age, ion) => age.RegionNum == ion.RegionNum)
                     .InnerJoin<Entity.EG_WMS_WareHouse>((o, cus, ml, age, ion, wh) => ion.WHNum == wh.WHNum)
@@ -93,7 +93,7 @@ public class BaseService : IDynamicApiController, ITransient
         List<GetAllInAndBoundDetailData> data = _InAndOutBound.AsQueryable()
                       .InnerJoin<EG_WMS_InAndOutBoundDetail>((a, b) => a.InAndOutBoundNum == b.InAndOutBoundNum)
                       .InnerJoin<EG_WMS_Tem_Inventory>((a, b, c) => c.InBoundNum == b.InAndOutBoundNum)
-                      .InnerJoin<EG_WMS_Materiel>((a, b, c, d) => d.MaterielNum == c.MaterielNum)
+                      .InnerJoin<Entity.EG_WMS_Materiel>((a, b, c, d) => d.MaterielNum == c.MaterielNum)
                       .InnerJoin<EG_WMS_Tem_InventoryDetail>((a, b, c, d, e) => e.InventoryNum == c.InventoryNum)
                       .InnerJoin<EG_WMS_WorkBin>((a, b, c, d, e, f) => e.WorkBinNum == f.WorkBinNum)
                       .InnerJoin<Entity.EG_WMS_Region>((a, b, c, d, e, f, g) => g.RegionNum == e.RegionNum)
@@ -137,7 +137,7 @@ public class BaseService : IDynamicApiController, ITransient
     public async Task<SqlSugarPagedList<MaterielDataSumDto>> MaterialAccorDingSumCount(MaterialSelectSumCountBO input)
     {
         var data = _Inventory.AsQueryable()
-                   .InnerJoin<EG_WMS_Materiel>((inv, mat) => inv.MaterielNum == mat.MaterielNum)
+                   .InnerJoin<Entity.EG_WMS_Materiel>((inv, mat) => inv.MaterielNum == mat.MaterielNum)
                    .WhereIF(!string.IsNullOrEmpty(input.materielNum), (inv, mat) => mat.MaterielNum == input.materielNum)
                    .WhereIF(!string.IsNullOrEmpty(input.materielName), (inv, mat) => mat.MaterielName.Contains(input.materielName.Trim()))
                    .WhereIF(!string.IsNullOrEmpty(input.materielType), (inv, mat) => mat.MaterielType.Contains(input.materielType.Trim()))
@@ -175,7 +175,7 @@ public class BaseService : IDynamicApiController, ITransient
     {
         var data = _Inventory.AsQueryable()
                    .InnerJoin<EG_WMS_InventoryDetail>((inv, invd) => inv.InventoryNum == invd.InventoryNum)
-                   .InnerJoin<EG_WMS_Materiel>((inv, invd, ma) => inv.MaterielNum == ma.MaterielNum)
+                   .InnerJoin<Entity.EG_WMS_Materiel>((inv, invd, ma) => inv.MaterielNum == ma.MaterielNum)
                    .InnerJoin<Entity.EG_WMS_Region>((inv, invd, ma, re) => invd.RegionNum == re.RegionNum)
                    .InnerJoin<Entity.EG_WMS_WareHouse>((inv, invd, ma, re, wh) => invd.WHNum == wh.WHNum)
                    .Where((inv, invd) => inv.MaterielNum == MaterielNum && inv.OutboundStatus == 0 && inv.IsDelete == false)
@@ -380,7 +380,7 @@ public class BaseService : IDynamicApiController, ITransient
     public List<AccordingInventoryDto> QueryMaterialsAccordingInventory()
     {
         return _Inventory.AsQueryable()
-           .InnerJoin<EG_WMS_Materiel>((a, b) => a.MaterielNum == b.MaterielNum)
+           .InnerJoin<Entity.EG_WMS_Materiel>((a, b) => a.MaterielNum == b.MaterielNum)
            .Where(a => a.OutboundStatus == 0 && a.IsDelete == false)
            .Distinct()
            .Select((a, b) => new AccordingInventoryDto
