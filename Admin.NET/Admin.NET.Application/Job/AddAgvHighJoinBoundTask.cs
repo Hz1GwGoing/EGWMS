@@ -6,7 +6,7 @@
 /// </summary>
 [JobDetail("trigger_RepetitionAGVTask", Description = "重复AGV搬运任务", GroupName = "AGVTask", Concurrent = false)]
 //[Daily(TriggerId = "trigger_RepetitionAGVTaskJob", Description = "重复AGV搬运任务")]
-[PeriodMinutes(21, TriggerId = "trigger_RepetitionAGVTaskJob", StartNow = false, RunOnStart = false)]
+[PeriodMinutes(21, TriggerId = "trigger_RepetitionAGVTaskJob", StartNow = true, RunOnStart = true)]
 public class AddAgvHighJoinBoundTask : IJob
 {
     #region 关系注入

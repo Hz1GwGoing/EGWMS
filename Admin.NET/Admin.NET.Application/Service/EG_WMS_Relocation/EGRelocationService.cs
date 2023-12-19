@@ -88,23 +88,14 @@ public class EGRelocationService : IDynamicApiController, ITransient
             // 生成一条移库记录
             EG_WMS_Relocation _relocation = new EG_WMS_Relocation()
             {
-                // 移库编号
                 RelocatioNum = relacationnum,
-                // 旧库位
                 OldStorageNum = oldStorageNum,
-                // 新库位
                 NewStorageNum = input.GOStorageNum,
-                // 移库数量
                 RelocationCount = listData[0].ICountAll,
-                // 物料编号
                 MaterielNum = listData[0].MaterielNum,
-                // 移库料箱
                 WorkBinNum = input.WorkBinNum,
-                // 备注
                 RelocationRemake = input.RelocationRemake,
-                // 移库时间
                 RelocationTime = DateTime.Now,
-                // 创建时间
                 CreateTime = DateTime.Now,
             };
 
