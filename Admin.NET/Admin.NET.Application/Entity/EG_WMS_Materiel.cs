@@ -82,6 +82,6 @@ public class EG_WMS_Materiel : EntityBase
     /// 提醒时间/h
     /// </summary>
     [SugarColumn(ColumnDescription = "提醒时间/h")]
-    public double? InventoryDateTime { get; set; }
+    public double? InventoryDateTime { get; set; } = null;
 
 }

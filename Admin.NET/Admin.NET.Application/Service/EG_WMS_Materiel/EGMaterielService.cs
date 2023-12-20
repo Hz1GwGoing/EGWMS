@@ -101,6 +101,7 @@ public class EGMaterielService : IDynamicApiController, ITransient
 
     /// <summary>
     /// 物料在库时间管控（提前1/4预警时间）
+    /// TODO：需要测试
     /// </summary>
     /// <returns></returns>
     [HttpGet]
@@ -112,7 +113,7 @@ public class EGMaterielService : IDynamicApiController, ITransient
         var _invdata = _Inventory.AsQueryable()
                                  .InnerJoin<EG_WMS_InventoryDetail>((a, b) => a.InBoundNum == b.InventoryNum)
                                  .InnerJoin<EG_WMS_Materiel>((a, b, c) => a.MaterielNum == c.MaterielNum)
-                                 .Where((a, b, c) => a.IsDelete == false && c.InventoryDateTime != null)
+                                 .Where((a, b, c) => a.OutboundStatus == 0 && c.InventoryDateTime != null || c.InventoryDateTime != 0)
                                  .GroupBy((a, b, c) => a.MaterielNum)
                                  .Select((a, b, c) => new
                                  {
@@ -159,6 +160,40 @@ public class EGMaterielService : IDynamicApiController, ITransient
     }
 
 
+
+    #endregion
+
+    #region 修改物料在库时间提醒
+
+    /// <summary>
+    /// 修改物料在库时间提醒
+    /// </summary>
+    /// <param name="materielnum">物料编号</param>
+    /// <param name="hour">预警时间/单位：小时</param>
+    /// <returns></returns>
+    [HttpPost]
+    [ApiDescriptionSettings(Name = "UpdateWarningMaterialTimeInStorage")]
+    public async Task UpdateWarningMaterialTimeInStorage(string materielnum, double hour)
+    {
+        var materieldata = await _rep.GetFirstAsync(x => x.MaterielNum == materielnum);
+        if (materieldata == null)
+        {
+            throw Oops.Oh("物料编号有误，查询不到该种物料");
+        }
+        if (hour < 0)
+        {
+            throw Oops.Oh("预警时间不能小于0");
+        }
+
+        await _rep.AsUpdateable()
+                  .SetColumns(it => new EG_WMS_Materiel
+                  {
+                      InventoryDateTime = hour,
+                      UpdateTime = DateTime.Now,
+                  })
+                  .Where(x => x.MaterielNum == materielnum)
+                  .ExecuteCommandAsync();
+    }
 
     #endregion
 

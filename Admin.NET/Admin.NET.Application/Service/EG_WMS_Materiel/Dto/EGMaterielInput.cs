@@ -143,6 +143,16 @@ public class AddEGMaterielInput : EGMaterielBaseInput
     [Required(ErrorMessage = "物料编号不能为空")]
     public override string? MaterielNum { get; set; }
 
+    /// <summary>
+    /// 需在库数量
+    /// </summary>
+    public int? QuantityNeedCount { get; set; } = null;
+
+    /// <summary>
+    /// 提醒时间/h
+    /// </summary>
+    public double? InventoryDateTime { get; set; } = null;
+
 }
 
 /// <summary>
