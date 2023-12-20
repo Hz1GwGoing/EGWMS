@@ -8,6 +8,7 @@ public class EGMaterielService : IDynamicApiController, ITransient
 {
     private readonly SqlSugarRepository<EG_WMS_Materiel> _rep;
     private readonly SqlSugarRepository<EG_WMS_Inventory> _Inventory = App.GetService<SqlSugarRepository<EG_WMS_Inventory>>();
+    private readonly SqlSugarRepository<EG_WMS_WorkBin> _WorkBin = App.GetService<SqlSugarRepository<EG_WMS_WorkBin>>();
 
     public EGMaterielService(SqlSugarRepository<EG_WMS_Materiel> rep)
     {
@@ -96,6 +97,71 @@ public class EGMaterielService : IDynamicApiController, ITransient
 
     #endregion
 
+    #region 物料在库时间管控（提前1/4预警时间）
+
+    /// <summary>
+    /// 物料在库时间管控（提前1/4预警时间）
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet]
+    [ApiDescriptionSettings(Name = "EarlyWarningTimeOfMaterielStorage")]
+    public async Task<List<MaterielStorageTimeWarringDto>> EarlyWarningTimeOfMaterielStorage()
+    {
+        List<MaterielStorageTimeWarringDto> datas = new List<MaterielStorageTimeWarringDto>();
+        // 查询在库数据
+        var _invdata = _Inventory.AsQueryable()
+                                 .InnerJoin<EG_WMS_InventoryDetail>((a, b) => a.InBoundNum == b.InventoryNum)
+                                 .InnerJoin<EG_WMS_Materiel>((a, b, c) => a.MaterielNum == c.MaterielNum)
+                                 .Where((a, b, c) => a.IsDelete == false && c.InventoryDateTime != null)
+                                 .GroupBy((a, b, c) => a.MaterielNum)
+                                 .Select((a, b, c) => new
+                                 {
+                                     a.MaterielNum,
+                                     a.ICountAll,
+                                     b.StorageNum,
+                                     b.WorkBinNum,
+                                     c.MaterielName
+                                 })
+                                 .ToList();
+
+        DateTime oldtime = new DateTime();
+        DateTime newtime = new DateTime();
+        DateTime newtimequarter = new DateTime();
+        DateTime nowtime = DateTime.Now;
+        for (int i = 0; i < _invdata.Count; i++)
+        {
+            // 查询当前入库数据的生产日期
+            EG_WMS_WorkBin _workbindata = await _WorkBin.GetFirstAsync(x => x.WorkBinNum == _invdata[i].WorkBinNum);
+            // 查询当前物料的预警时间
+            EG_WMS_Materiel _materieldata = await _rep.GetFirstAsync(x => x.MaterielNum == _invdata[i].MaterielNum);
+            // 生产时间
+            oldtime = (DateTime)_workbindata.ProductionDate;
+            // 生产时间加上提醒时间
+            newtime = oldtime.AddHours((double)_materieldata.InventoryDateTime);
+            // 生产时间加上提醒时间的四分之一
+            newtimequarter = oldtime.AddHours(((double)_materieldata.InventoryDateTime) / 4);
+            // 在生产时间加上提醒时间和生产时间加上提醒时间的四分之一之间，提前提醒用户哪些库存快要到提醒时间
+            if (nowtime <= newtime && nowtime >= newtimequarter)
+            {
+                MaterielStorageTimeWarringDto materieldata = new MaterielStorageTimeWarringDto()
+                {
+                    MaterielNum = _invdata[i].MaterielNum,
+                    MaterielName = _invdata[i].MaterielName,
+                    WorkBin = _invdata[i].WorkBinNum,
+                    Icount = (int)_invdata[i].ICountAll,
+                    StorageNum = _invdata[i].StorageNum,
+                    InventoryTime = oldtime,
+                };
+                datas.Add(materieldata);
+            }
+        }
+        return datas;
+    }
+
+
+
+    #endregion
+
     #region 分页查询物料信息
     /// <summary>
     /// 分页查询物料信息
@@ -123,7 +189,7 @@ public class EGMaterielService : IDynamicApiController, ITransient
                     .WhereIF(input.CreateTime > DateTime.MinValue, u => u.CreateTime >= input.CreateTime)
                     .OrderBy(u => u.Id)
                     .Select<EGMaterielOutput>()
-;
+    ;
         query = query.OrderBuilder(input);
         return await query.ToPagedListAsync(input.Page, input.PageSize);
     }

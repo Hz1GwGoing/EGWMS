@@ -78,4 +78,10 @@ public class EG_WMS_Materiel : EntityBase
     [SugarColumn(ColumnDescription = "需在库数量", Length = 50)]
     public int? QuantityNeedCount { get; set; }
 
+    /// <summary>
+    /// 提醒时间/h
+    /// </summary>
+    [SugarColumn(ColumnDescription = "提醒时间/h")]
+    public double? InventoryDateTime { get; set; }
+
 }

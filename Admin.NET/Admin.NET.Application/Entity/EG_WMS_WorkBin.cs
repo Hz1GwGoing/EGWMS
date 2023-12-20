@@ -4,13 +4,15 @@
 /// 料箱实体
 /// </summary>
 [SugarTable("EG_WMS_WorkBin", "料箱信息表")]
+// 唯一索引，设置true即设置为唯一索引
+[SugarIndex("Index_WorkBinNum_Only", nameof(EG_WMS_WorkBin.WorkBinNum), OrderByType.Desc, true)]
 public class EG_WMS_WorkBin : EntityBase
 {
     /// <summary>
     /// 料箱编号
     /// </summary>
     [SugarColumn(ColumnDescription = "料箱编号", Length = 50)]
-    public string? WorkBinNum { get; set; }
+    public string WorkBinNum { get; set; }
 
     /// <summary>
     /// 料箱名称
