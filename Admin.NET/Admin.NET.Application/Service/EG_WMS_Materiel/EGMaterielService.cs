@@ -163,6 +163,67 @@ public class EGMaterielService : IDynamicApiController, ITransient
 
     #endregion
 
+    #region 物料在库时间管控（超过预警时间）
+
+    /// <summary>
+    /// 物料在库时间管控（超过预警时间）
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet]
+    [ApiDescriptionSettings(Name = "MaterialInStockTimeControlExceed")]
+    public async Task<List<MaterielStorageTimeWarringDto>> MaterialInStockTimeControlExceed()
+    {
+        List<MaterielStorageTimeWarringDto> datas = new List<MaterielStorageTimeWarringDto>();
+        // 查询在库数据
+        var _invdata = _Inventory.AsQueryable()
+                                 .InnerJoin<EG_WMS_InventoryDetail>((a, b) => a.InBoundNum == b.InventoryNum)
+                                 .InnerJoin<EG_WMS_Materiel>((a, b, c) => a.MaterielNum == c.MaterielNum)
+                                 .Where((a, b, c) => a.OutboundStatus == 0 && c.InventoryDateTime != null || c.InventoryDateTime != 0)
+                                 .GroupBy((a, b, c) => a.MaterielNum)
+                                 .Select((a, b, c) => new
+                                 {
+                                     a.MaterielNum,
+                                     a.ICountAll,
+                                     b.StorageNum,
+                                     b.WorkBinNum,
+                                     c.MaterielName
+                                 })
+                                 .ToList();
+
+        DateTime oldtime = new DateTime();
+        DateTime newtime = new DateTime();
+        DateTime nowtime = DateTime.Now;
+        for (int i = 0; i < _invdata.Count; i++)
+        {
+            // 查询当前入库数据的生产日期
+            EG_WMS_WorkBin _workbindata = await _WorkBin.GetFirstAsync(x => x.WorkBinNum == _invdata[i].WorkBinNum);
+            // 查询当前物料的预警时间
+            EG_WMS_Materiel _materieldata = await _rep.GetFirstAsync(x => x.MaterielNum == _invdata[i].MaterielNum);
+            // 生产时间
+            oldtime = (DateTime)_workbindata.ProductionDate;
+            // 生产时间加上提醒时间
+            newtime = oldtime.AddHours((double)_materieldata.InventoryDateTime);
+            // 已经超过在库时间
+            if (newtime > nowtime)
+            {
+                MaterielStorageTimeWarringDto materieldata = new MaterielStorageTimeWarringDto()
+                {
+                    MaterielNum = _invdata[i].MaterielNum,
+                    MaterielName = _invdata[i].MaterielName,
+                    WorkBin = _invdata[i].WorkBinNum,
+                    Icount = (int)_invdata[i].ICountAll,
+                    StorageNum = _invdata[i].StorageNum,
+                    InventoryTime = oldtime,
+                };
+                datas.Add(materieldata);
+            }
+        }
+        return datas;
+    }
+
+
+    #endregion
+
     #region 修改物料在库时间提醒
 
     /// <summary>
