@@ -27,6 +27,7 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
         private readonly SqlSugarRepository<Entity.EG_WMS_Region> _Region = App.GetService<SqlSugarRepository<Entity.EG_WMS_Region>>();
         private readonly SqlSugarRepository<Entity.EG_WMS_Storage> _Storage = App.GetService<SqlSugarRepository<Entity.EG_WMS_Storage>>();
         private readonly SqlSugarRepository<Entity.EG_WMS_WorkBin> _WorkBin = App.GetService<SqlSugarRepository<Entity.EG_WMS_WorkBin>>();
+        private readonly SqlSugarRepository<InfoAgvEntity> _InfoAgvEntity = App.GetService<SqlSugarRepository<InfoAgvEntity>>();
 
         #endregion
 
@@ -1027,7 +1028,27 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
 
         #endregion
 
+        #region 获取AGV状态
 
+        [HttpPost("/AGV/Task/ObtainAGVStatus")]
+        [AllowAnonymous]
+        [UnifyProvider("easygreat")]
+        public async Task ObtainAGVStatus(ObtainAgvStatusModel input)
+        {
+            var infoagv = await _InfoAgvEntity.GetFirstAsync(x => x.deviceCode == input.deviceCode);
+
+            if (infoagv == null)
+            {
+                throw Oops.Oh("找不到这个编号的设备！");
+            }
+
+
+
+
+        }
+
+
+        #endregion
     }
 
 

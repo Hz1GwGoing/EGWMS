@@ -111,7 +111,7 @@ public class EGMaterielService : IDynamicApiController, ITransient
         List<MaterielStorageTimeWarringDto> datas = new List<MaterielStorageTimeWarringDto>();
         // 查询在库数据
         var _invdata = _Inventory.AsQueryable()
-                                 .InnerJoin<EG_WMS_InventoryDetail>((a, b) => a.InBoundNum == b.InventoryNum)
+                                 .InnerJoin<EG_WMS_InventoryDetail>((a, b) => a.InventoryNum == b.InventoryNum)
                                  .InnerJoin<EG_WMS_Materiel>((a, b, c) => a.MaterielNum == c.MaterielNum)
                                  .Where((a, b, c) => a.OutboundStatus == 0 && c.InventoryDateTime != null || c.InventoryDateTime != 0)
                                  .GroupBy((a, b, c) => a.MaterielNum)
@@ -176,7 +176,7 @@ public class EGMaterielService : IDynamicApiController, ITransient
         List<MaterielStorageTimeWarringDto> datas = new List<MaterielStorageTimeWarringDto>();
         // 查询在库数据
         var _invdata = _Inventory.AsQueryable()
-                                 .InnerJoin<EG_WMS_InventoryDetail>((a, b) => a.InBoundNum == b.InventoryNum)
+                                 .InnerJoin<EG_WMS_InventoryDetail>((a, b) => a.InventoryNum == b.InventoryNum)
                                  .InnerJoin<EG_WMS_Materiel>((a, b, c) => a.MaterielNum == c.MaterielNum)
                                  .Where((a, b, c) => a.OutboundStatus == 0 && c.InventoryDateTime != null || c.InventoryDateTime != 0)
                                  .GroupBy((a, b, c) => a.MaterielNum)
