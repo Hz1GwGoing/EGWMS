@@ -21,11 +21,11 @@ public class EGMaterielService : IDynamicApiController, ITransient
     /// 修改物料安全库存
     /// </summary>
     /// <param name="materielnum">物料编号</param>
-    /// <param name="SafetyCount">安全库存</param>
+    /// <param name="SafetyCount">安全库存（不传参数时为默认null，既不设置安全库存提醒）</param>
     /// <returns></returns>
     [HttpPost]
     [ApiDescriptionSettings(Name = "UpdateSafetyCount")]
-    public async Task UpdateSafetyCount(string materielnum, int SafetyCount)
+    public async Task UpdateSafetyCount(string materielnum, int? SafetyCount = null)
     {
         if (SafetyCount == 0 || SafetyCount < 0)
         {
@@ -49,10 +49,10 @@ public class EGMaterielService : IDynamicApiController, ITransient
 
     #endregion
 
-    #region 查询物料是否不在安全库存里
+    #region 查询物料是否存在安全库存里
 
     /// <summary>
-    /// 查询物料是否不在安全库存里
+    /// 查询物料是否存在安全库存里
     /// </summary>
     /// <returns></returns>
     [HttpGet]
@@ -63,7 +63,7 @@ public class EGMaterielService : IDynamicApiController, ITransient
 
         // 查询每种物料的需在库数量
         var materieldata = _rep.AsQueryable()
-                               .Where(x => x.IsDelete == false)
+                               .Where(x => x.IsDelete == false && x.QuantityNeedCount != null)
                                .GroupBy(x => x.MaterielNum)
                                .Distinct()
                                .Select(x => new { x.MaterielNum, x.MaterielName, x.MaterielSpecs, x.QuantityNeedCount })
@@ -113,7 +113,7 @@ public class EGMaterielService : IDynamicApiController, ITransient
         var _invdata = _Inventory.AsQueryable()
                                  .InnerJoin<EG_WMS_InventoryDetail>((a, b) => a.InventoryNum == b.InventoryNum)
                                  .InnerJoin<EG_WMS_Materiel>((a, b, c) => a.MaterielNum == c.MaterielNum)
-                                 .Where((a, b, c) => a.OutboundStatus == 0 && c.InventoryDateTime != null || c.InventoryDateTime != 0)
+                                 .Where((a, b, c) => a.OutboundStatus == 0 && c.InventoryDateTime != null)
                                  .GroupBy((a, b, c) => a.MaterielNum)
                                  .Select((a, b, c) => new
                                  {
@@ -139,10 +139,10 @@ public class EGMaterielService : IDynamicApiController, ITransient
             oldtime = (DateTime)_workbindata.ProductionDate;
             // 生产时间加上提醒时间
             newtime = oldtime.AddHours((double)_materieldata.InventoryDateTime);
-            // 生产时间加上提醒时间的四分之一
-            newtimequarter = oldtime.AddHours(((double)_materieldata.InventoryDateTime) / 4);
-            // 在生产时间加上提醒时间和生产时间加上提醒时间的四分之一之间，提前提醒用户哪些库存快要到提醒时间
-            if (nowtime <= newtime && nowtime >= newtimequarter)
+            // 生产时间加上提醒时间减去提醒时间的四分之一
+            newtimequarter = newtime.AddHours(-((double)_materieldata.InventoryDateTime) / 4);
+            // 在生产时间加上提醒时间和生产时间加上提醒时间减去提醒时间四分之一之间，提前提醒用户哪些库存快要到提醒时间
+            if (nowtime < newtime && nowtime >= newtimequarter)
             {
                 MaterielStorageTimeWarringDto materieldata = new MaterielStorageTimeWarringDto()
                 {
@@ -178,7 +178,7 @@ public class EGMaterielService : IDynamicApiController, ITransient
         var _invdata = _Inventory.AsQueryable()
                                  .InnerJoin<EG_WMS_InventoryDetail>((a, b) => a.InventoryNum == b.InventoryNum)
                                  .InnerJoin<EG_WMS_Materiel>((a, b, c) => a.MaterielNum == c.MaterielNum)
-                                 .Where((a, b, c) => a.OutboundStatus == 0 && c.InventoryDateTime != null || c.InventoryDateTime != 0)
+                                 .Where((a, b, c) => a.OutboundStatus == 0 && c.InventoryDateTime != null)
                                  .GroupBy((a, b, c) => a.MaterielNum)
                                  .Select((a, b, c) => new
                                  {
@@ -204,7 +204,8 @@ public class EGMaterielService : IDynamicApiController, ITransient
             // 生产时间加上提醒时间
             newtime = oldtime.AddHours((double)_materieldata.InventoryDateTime);
             // 已经超过在库时间
-            if (newtime > nowtime)
+            // TODO:需要修改
+            if (newtime <= nowtime)
             {
                 MaterielStorageTimeWarringDto materieldata = new MaterielStorageTimeWarringDto()
                 {
@@ -230,11 +231,11 @@ public class EGMaterielService : IDynamicApiController, ITransient
     /// 修改物料在库时间提醒
     /// </summary>
     /// <param name="materielnum">物料编号</param>
-    /// <param name="hour">预警时间/单位：小时</param>
+    /// <param name="hour">预警时间/单位：小时（不传参数时为默认null，既不设置在库时间提醒）</param>
     /// <returns></returns>
     [HttpPost]
     [ApiDescriptionSettings(Name = "UpdateWarningMaterialTimeInStorage")]
-    public async Task UpdateWarningMaterialTimeInStorage(string materielnum, double hour)
+    public async Task UpdateWarningMaterialTimeInStorage(string materielnum, double? hour = null)
     {
         var materieldata = await _rep.GetFirstAsync(x => x.MaterielNum == materielnum);
         if (materieldata == null)
@@ -273,14 +274,7 @@ public class EGMaterielService : IDynamicApiController, ITransient
                     .WhereIF(!string.IsNullOrWhiteSpace(input.MaterielName), u => u.MaterielName.Contains(input.MaterielName.Trim()))
                     .WhereIF(!string.IsNullOrWhiteSpace(input.MaterielType), u => u.MaterielType.Contains(input.MaterielType.Trim()))
                     .WhereIF(!string.IsNullOrWhiteSpace(input.MaterielSpecs), u => u.MaterielSpecs.Contains(input.MaterielSpecs.Trim()))
-                    .WhereIF(!string.IsNullOrWhiteSpace(input.MaterielDescribe), u => u.MaterielDescribe.Contains(input.MaterielDescribe.Trim()))
                     .WhereIF(!string.IsNullOrWhiteSpace(input.MaterielSource), u => u.MaterielSource.Contains(input.MaterielSource.Trim()))
-                    .WhereIF(!string.IsNullOrWhiteSpace(input.CreateUserName), u => u.CreateUserName.Contains(input.CreateUserName.Trim()))
-                    .WhereIF(!string.IsNullOrWhiteSpace(input.UpdateUserName), u => u.UpdateUserName.Contains(input.UpdateUserName.Trim()))
-                    .WhereIF(!string.IsNullOrWhiteSpace(input.MaterielReamke), u => u.MaterielReamke.Contains(input.MaterielReamke.Trim()))
-                    .WhereIF(!string.IsNullOrWhiteSpace(input.MaterielMainUnit), u => u.MaterielMainUnit.Contains(input.MaterielMainUnit.Trim()))
-                    .WhereIF(!string.IsNullOrWhiteSpace(input.MaterielAssistUnit), u => u.MaterielAssistUnit.Contains(input.MaterielAssistUnit.Trim()))
-
                     // 获取创建日期
                     .WhereIF(input.CreateTime > DateTime.MinValue, u => u.CreateTime >= input.CreateTime)
                     .OrderBy(u => u.Id)
