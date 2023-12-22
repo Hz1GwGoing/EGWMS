@@ -79,6 +79,16 @@ public class SysUserService : IDynamicApiController, ITransient
     public async Task<long> AddUser(AddUserInput input)
     {
         var isExist = await _sysUserRep.AsQueryable().Filter(null, true).AnyAsync(u => u.Account == input.Account);
+
+        // 判断新增的用户数量有没有达到指定数量
+        var userlist = _sysUserRep.AsQueryable()
+                    .Where(x => x.IsDelete == false)
+                    .Count();
+        if (userlist >= 7)
+        {
+            throw Oops.Oh("当前创建的用户数量已达到上限！");
+        }
+
         if (isExist) throw Oops.Oh(ErrorCodeEnum.D1003);
 
         var password = await _sysConfigService.GetConfigValue<string>(CommonConst.SysPassword);

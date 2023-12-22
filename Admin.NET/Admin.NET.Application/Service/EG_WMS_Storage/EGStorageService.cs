@@ -1,6 +1,4 @@
-﻿using static SKIT.FlurlHttpClient.Wechat.Api.Models.ChannelsECMerchantAddFreightTemplateRequest.Types.FreightTemplate.Types;
-
-namespace Admin.NET.Application.Service.EG_WMS_Storage;
+﻿namespace Admin.NET.Application.Service.EG_WMS_Storage;
 
 /// <summary>
 /// 库位管理接口
