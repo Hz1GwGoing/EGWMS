@@ -101,7 +101,6 @@ public class EGMaterielService : IDynamicApiController, ITransient
 
     /// <summary>
     /// 物料在库时间管控（提前1/4预警时间）
-    /// TODO：需要测试
     /// </summary>
     /// <returns></returns>
     [HttpGet]
@@ -152,6 +151,7 @@ public class EGMaterielService : IDynamicApiController, ITransient
                     Icount = (int)_invdata[i].ICountAll,
                     StorageNum = _invdata[i].StorageNum,
                     InventoryTime = oldtime,
+                    EarlyWarningTime = newtime,
                 };
                 datas.Add(materieldata);
             }
@@ -204,7 +204,6 @@ public class EGMaterielService : IDynamicApiController, ITransient
             // 生产时间加上提醒时间
             newtime = oldtime.AddHours((double)_materieldata.InventoryDateTime);
             // 已经超过在库时间
-            // TODO:需要修改
             if (newtime <= nowtime)
             {
                 MaterielStorageTimeWarringDto materieldata = new MaterielStorageTimeWarringDto()
@@ -215,6 +214,7 @@ public class EGMaterielService : IDynamicApiController, ITransient
                     Icount = (int)_invdata[i].ICountAll,
                     StorageNum = _invdata[i].StorageNum,
                     InventoryTime = oldtime,
+                    EarlyWarningTime = newtime,
                 };
                 datas.Add(materieldata);
             }

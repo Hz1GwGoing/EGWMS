@@ -10,9 +10,14 @@ public class MaterielStorageTimeWarringDto
     public string WorkBin { get; set; }
     public int Icount { get; set; }
     public string StorageNum { get; set; }
+
     /// <summary>
     /// 生产时间
     /// </summary>
     public DateTime InventoryTime { get; set; }
 
+    /// <summary>
+    /// 预警时间
+    /// </summary>
+    public DateTime EarlyWarningTime { get; set; }
 }
