@@ -67,5 +67,9 @@ public class EG_WMS_Inventory : EntityBase
     [SugarColumn(ColumnDescription = "出库状态 0 未出库 1 已出库")]
     public int? OutboundStatus { get; set; } = 0;
 
-
+    /// <summary>
+    /// 生产日期
+    /// </summary>
+    [SugarColumn(ColumnDescription = "生产日期")]
+    public DateTime? ProductionDate { get; set; }
 }

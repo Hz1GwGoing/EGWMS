@@ -118,9 +118,10 @@ public class EGMaterielService : IDynamicApiController, ITransient
                                  {
                                      a.MaterielNum,
                                      a.ICountAll,
+                                     a.ProductionDate,
                                      b.StorageNum,
                                      b.WorkBinNum,
-                                     c.MaterielName
+                                     c.MaterielName,
                                  })
                                  .ToList();
 
@@ -130,12 +131,10 @@ public class EGMaterielService : IDynamicApiController, ITransient
         DateTime nowtime = DateTime.Now;
         for (int i = 0; i < _invdata.Count; i++)
         {
-            // 查询当前入库数据的生产日期
-            EG_WMS_WorkBin _workbindata = await _WorkBin.GetFirstAsync(x => x.WorkBinNum == _invdata[i].WorkBinNum);
             // 查询当前物料的预警时间
             EG_WMS_Materiel _materieldata = await _rep.GetFirstAsync(x => x.MaterielNum == _invdata[i].MaterielNum);
             // 生产时间
-            oldtime = (DateTime)_workbindata.ProductionDate;
+            oldtime = (DateTime)_invdata[i].ProductionDate;
             // 生产时间加上提醒时间
             newtime = oldtime.AddHours((double)_materieldata.InventoryDateTime);
             // 生产时间加上提醒时间减去提醒时间的四分之一
@@ -184,6 +183,7 @@ public class EGMaterielService : IDynamicApiController, ITransient
                                  {
                                      a.MaterielNum,
                                      a.ICountAll,
+                                     a.ProductionDate,
                                      b.StorageNum,
                                      b.WorkBinNum,
                                      c.MaterielName
@@ -195,12 +195,10 @@ public class EGMaterielService : IDynamicApiController, ITransient
         DateTime nowtime = DateTime.Now;
         for (int i = 0; i < _invdata.Count; i++)
         {
-            // 查询当前入库数据的生产日期
-            EG_WMS_WorkBin _workbindata = await _WorkBin.GetFirstAsync(x => x.WorkBinNum == _invdata[i].WorkBinNum);
             // 查询当前物料的预警时间
             EG_WMS_Materiel _materieldata = await _rep.GetFirstAsync(x => x.MaterielNum == _invdata[i].MaterielNum);
             // 生产时间
-            oldtime = (DateTime)_workbindata.ProductionDate;
+            oldtime = (DateTime)_invdata[i].ProductionDate;
             // 生产时间加上提醒时间
             newtime = oldtime.AddHours((double)_materieldata.InventoryDateTime);
             // 已经超过在库时间

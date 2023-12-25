@@ -176,15 +176,11 @@ public class EG_WMS_InAndOutBoundMessage
             // 得到区域编号
             string _storageRegionNum = GetStorageWhereRegion(input.EndPoint);
             // 生成入库详单
-
             EG_WMS_InAndOutBoundDetail joindetail = new EG_WMS_InAndOutBoundDetail()
             {
-                // 出入库编号
                 InAndOutBoundNum = joinboundnum,
                 CreateTime = DateTime.Now,
-                // 区域编号
                 RegionNum = _storageRegionNum,
-                // 目标点就是存储的点位即库位编号
                 StorageNum = input.EndPoint,
             };
             await _rep.InsertAsync(joinbound);
@@ -196,12 +192,9 @@ public class EG_WMS_InAndOutBoundMessage
 
         EG_WMS_InAndOutBoundDetail joinbounddetail = new EG_WMS_InAndOutBoundDetail()
         {
-            // 出入库编号
             InAndOutBoundNum = joinboundnum,
             CreateTime = DateTime.Now,
-            // 区域编号
             RegionNum = null,
-            // 目标点就是存储的点位即库位编号
             StorageNum = null,
         };
         #endregion
@@ -226,7 +219,6 @@ public class EG_WMS_InAndOutBoundMessage
                              {
                                  WHNum = whnum,
                                  WorkBinNum = workbin,
-                                 // 只会有一种物料
                                  MaterielNum = materienum,
                              })
                              .Where(u => u.InAndOutBoundNum == joinboundnum)
@@ -238,12 +230,10 @@ public class EG_WMS_InAndOutBoundMessage
              .SetColumns(it => new Entity.EG_WMS_InAndOutBound
              {
                  InAndOutBoundCount = sumcount,
-                 // 入库中
                  InAndOutBoundStatus = 4,
              })
              .Where(u => u.InAndOutBoundNum == joinboundnum)
              .ExecuteCommandAsync();
-
     }
 
     /// <summary>
@@ -263,82 +253,51 @@ public class EG_WMS_InAndOutBoundMessage
         int sumcount = 0;
         for (int i = 0; i < list.Count; i++)
         {
-            // 库存编号（主表和详细表）
             string inventorynum = $"{i}EGKC" + _TimeStamp.GetTheCurrentTimeTimeStamp();
-            // 料箱编号（详细表、料箱表）
             string workbinnum = list[i].WorkBinNum;
-            // 物料编号（主表）
             string materienum = list[i].MaterielNum;
-            // 物料的数量（主表、料箱表）
             int productcount = list[i].ProductCount;
-            // 生产日期（料箱表）
             DateTime productiondate = list[i].ProductionDate;
-            // 生产批次（详细表、料箱表）
             string productionlot = list[i].ProductionLot;
-
             // 总数
             sumcount += productcount;
-
-            // 将得到的数据，保存在临时的库存主表和详细表中
-
             // 临时库存主表
             EG_WMS_Tem_Inventory addInventory = new EG_WMS_Tem_Inventory()
             {
-                // 库存编号
                 InventoryNum = inventorynum,
-                // 物料编号
                 MaterielNum = materienum,
-                // 库存总数
                 ICountAll = productcount,
-                // 创建时间
                 CreateTime = DateTime.Now,
-                // 入库编号
                 InBoundNum = joinboundnum,
-                // 是否删除
                 IsDelete = false,
-                // 是否出库
                 OutboundStatus = 0,
+                ProductionDate = productiondate,
             };
 
             // 临时详细表
             EG_WMS_Tem_InventoryDetail addInventoryDetail = new EG_WMS_Tem_InventoryDetail()
             {
-                // 库存编号
                 InventoryNum = inventorynum,
-                // 料箱编号
                 WorkBinNum = workbinnum,
-                // 生产批次
                 ProductionLot = productionlot,
-                // 创建时间
                 CreateTime = DateTime.Now,
-                // 库位编号
                 StorageNum = input.EndPoint,
-                // 区域编号
                 RegionNum = _regionnum,
-                // 仓库编号
                 WHNum = _whnum,
-                // 是否删除
                 IsDelete = false,
-
             };
 
             // 料箱表 将料箱内容保存到料箱表中
             EG_WMS_WorkBin addWorkBin = new EG_WMS_WorkBin()
             {
-                // 编号
                 WorkBinNum = workbinnum,
-                // 产品数量
                 ProductCount = productcount,
-                // 生产批次
                 ProductionLot = productionlot,
                 CreateTime = DateTime.Now,
-                // 生产日期
                 ProductionDate = productiondate,
                 WorkBinStatus = 0,
                 MaterielNum = materienum,
-                // 库位编号
                 StorageNum = input.EndPoint,
-                // 出入库编号
                 InAndOutBoundNum = joinboundnum,
             };
 
@@ -421,21 +380,13 @@ public class EG_WMS_InAndOutBoundMessage
                 #region 添加入库单
                 Entity.EG_WMS_InAndOutBound joinbound = new Entity.EG_WMS_InAndOutBound
                 {
-                    // 编号
                     InAndOutBoundNum = boundNum,
-                    // 出入库类型（入库还是出库）
                     InAndOutBoundType = 0,
-                    // 时间
                     InAndOutBoundTime = DateTime.Now,
-                    // 操作人
                     InAndOutBoundUser = input.AddName,
-                    // 备注
                     InAndOutBoundRemake = input.InAndOutBoundRemake,
-                    // 创建时间
                     CreateTime = DateTime.Now,
-                    // 起始点
                     StartPoint = input.StartPoint,
-                    // 目标点
                     EndPoint = null,
                 };
 
@@ -443,12 +394,9 @@ public class EG_WMS_InAndOutBoundMessage
 
                 EG_WMS_InAndOutBoundDetail joinbounddetail = new EG_WMS_InAndOutBoundDetail()
                 {
-                    // 出入库编号
                     InAndOutBoundNum = boundNum,
                     CreateTime = DateTime.Now,
-                    // 区域编号
                     RegionNum = null,
-                    // 目标点就是存储的点位即库位编号
                     StorageNum = null,
                 };
 
@@ -546,7 +494,6 @@ public class EG_WMS_InAndOutBoundMessage
         if (agvbound.StartPoint != "没有合适的库位")
         {
             taskstagingentity.TaskPath = agvbound.StartPoint + ",";
-
         }
         else
         {
@@ -591,66 +538,43 @@ public class EG_WMS_InAndOutBoundMessage
             // 总数
             sumcount += productcount;
 
-            // 将得到的数据，保存在临时的库存主表和详细表中
-
             // 临时库存主表
             EG_WMS_Tem_Inventory addInventory = new EG_WMS_Tem_Inventory()
             {
-                // 库存编号
                 InventoryNum = inventorynum,
-                // 物料编号
                 MaterielNum = materienum,
-                // 库存总数
                 ICountAll = productcount,
-                // 创建时间
                 CreateTime = DateTime.Now,
-                // 入库编号
                 InBoundNum = boundNum,
-                // 是否删除
                 IsDelete = false,
-                // 是否出库
                 OutboundStatus = 0,
+                ProductionDate = productiondate,
             };
 
             // 临时详细表
             EG_WMS_Tem_InventoryDetail addInventoryDetail = new EG_WMS_Tem_InventoryDetail()
             {
-                // 库存编号
                 InventoryNum = inventorynum,
-                // 料箱编号
                 WorkBinNum = workbinnum,
-                // 生产批次
                 ProductionLot = productionlot,
-                // 创建时间
                 CreateTime = DateTime.Now,
-                // 库位编号
                 StorageNum = null,
-                // 区域编号
                 RegionNum = null,
-                // 仓库编号
                 WHNum = null,
-                // 是否删除
                 IsDelete = false,
-
             };
 
             // 料箱表 将料箱内容保存到料箱表中
             EG_WMS_WorkBin addWorkBin = new EG_WMS_WorkBin()
             {
-                // 编号
                 WorkBinNum = workbinnum,
-                // 产品数量
                 ProductCount = productcount,
-                // 生产批次
                 ProductionLot = productionlot,
                 CreateTime = DateTime.Now,
-                // 生产日期
                 ProductionDate = productiondate,
                 WorkBinStatus = 0,
                 MaterielNum = materienum,
-                // 库位编号
                 StorageNum = null,
-                // 出入库编号
                 InAndOutBoundNum = boundNum,
             };
 

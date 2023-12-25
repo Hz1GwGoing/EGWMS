@@ -263,7 +263,7 @@ public class BaseService : IDynamicApiController, ITransient
     public async Task<SqlSugarPagedList<AccorDingSetUpStorageDto>> AccordingTheInventorySetUpStorageNum(string materielNum, int page, int pageSize)
     {
         var data = await _Inventory.AsQueryable()
-                   .InnerJoin<EG_WMS_InventoryDetail>((a, b) => a.InBoundNum == b.InventoryNum)
+                   .InnerJoin<EG_WMS_InventoryDetail>((a, b) => a.InventoryNum == b.InventoryNum)
                    .InnerJoin<Entity.EG_WMS_Storage>((a, b, c) => b.StorageNum == c.StorageNum)
                    .Where((a, b, c) => a.MaterielNum == materielNum && a.OutboundStatus == 0 && c.StorageType == 1)
                    .Select((a, b, c) => new AccorDingSetUpStorageDto
