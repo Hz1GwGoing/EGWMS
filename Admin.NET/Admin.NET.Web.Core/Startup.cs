@@ -58,7 +58,8 @@ public class Startup : AppStartup
         {
             options.AddPersistence<DbJobPersistence>(); // 添加作业持久化器
             // 堆高车自动任务
-            options.AddJob(JobBuilder.Create<AddAgvHighJoinBoundTask>().SetIncludeAnnotations(true));
+            options.AddJob(JobBuilder.Create<AddAgvHighJoinBoundTaskM001>().SetIncludeAnnotations(true));
+            options.AddJob(JobBuilder.Create<AddAgvHighJoinBoundTaskM002>().SetIncludeAnnotations(true));
         });
         // 脱敏检测
         services.AddSensitiveDetection();

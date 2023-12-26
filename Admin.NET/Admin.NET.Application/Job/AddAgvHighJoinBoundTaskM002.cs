@@ -4,10 +4,10 @@
 /// 堆高车自动任务
 /// TODO：直接实现
 /// </summary>
-[JobDetail("trigger_RepetitionAGVTask", Description = "重复AGV搬运任务", GroupName = "AGVTask", Concurrent = false)]
+[JobDetail("trigger_RepetitionAGVTaskM002", Description = "重复AGV搬运任务M002", GroupName = "AGVTask", Concurrent = false)]
 //[Daily(TriggerId = "trigger_RepetitionAGVTaskJob", Description = "重复AGV搬运任务")]
-[PeriodMinutes(21, TriggerId = "trigger_RepetitionAGVTaskJob", StartNow = true, RunOnStart = true)]
-public class AddAgvHighJoinBoundTask : IJob
+[PeriodMinutes(21, TriggerId = "trigger_RepetitionAGVTaskJobM002", StartNow = false, RunOnStart = false)]
+public class AddAgvHighJoinBoundTaskM002 : IJob
 {
     #region 关系注入
     private readonly IServiceProvider _serviceProvider;
@@ -17,7 +17,7 @@ public class AddAgvHighJoinBoundTask : IJob
     #endregion
 
     #region 构造函数
-    public AddAgvHighJoinBoundTask(IServiceProvider serviceProvider)
+    public AddAgvHighJoinBoundTaskM002(IServiceProvider serviceProvider)
     {
         _serviceProvider = serviceProvider;
     }
@@ -51,7 +51,7 @@ public class AddAgvHighJoinBoundTask : IJob
             taskEntity.TaskPath = positions;
             taskEntity.ModelNo = "stackStoreV21";
             taskEntity.CreateTime = DateTime.Now;
-            taskEntity.AGV = "M001";
+            taskEntity.AGV = "M002";
             DHMessage item = await taskService.AddAsync(taskEntity);
             if (item.code == 1000)
             {

@@ -8,11 +8,21 @@ public class EGStorageService : IDynamicApiController, ITransient
 {
     private readonly SqlSugarRepository<Entity.EG_WMS_Storage> _rep;
     private readonly SqlSugarRepository<Entity.EG_WMS_Region> _region;
+    private readonly SqlSugarRepository<EG_WMS_Inventory> _inventory;
+    private readonly SqlSugarRepository<EG_WMS_InventoryDetail> _inventoryDetail;
 
-    public EGStorageService(SqlSugarRepository<Entity.EG_WMS_Storage> rep, SqlSugarRepository<Entity.EG_WMS_Region> region)
+    public EGStorageService
+    (
+        SqlSugarRepository<Entity.EG_WMS_Storage> rep,
+        SqlSugarRepository<Entity.EG_WMS_Region> region,
+        SqlSugarRepository<EG_WMS_Inventory> inventory,
+        SqlSugarRepository<EG_WMS_InventoryDetail> inventoryDetail
+    )
     {
         _rep = rep;
         _region = region;
+        _inventory = inventory;
+        _inventoryDetail = inventoryDetail;
     }
 
     #region 根据类别得到库位编号（开发中。。。）
@@ -225,7 +235,7 @@ public class EGStorageService : IDynamicApiController, ITransient
     /// 查询库位占用情况
     /// </summary>
     /// <returns></returns>
-    [HttpPost]
+    [HttpGet]
     [ApiDescriptionSettings(Name = "QueryTheOccupancyOfStorageSpace")]
     public async Task<List<QueryStorageOccupancyDto>> QueryTheOccupancyOfStorageSpace()
     {
@@ -239,6 +249,38 @@ public class EGStorageService : IDynamicApiController, ITransient
     }
 
     #endregion
+
+    #region 查询特定库位上的数据
+
+    /// <summary>
+    /// 查询特定库位上的数据
+    /// </summary>
+    /// <param name="storagenum">库位编号</param>
+    /// <returns></returns>
+    [HttpPost]
+    [ApiDescriptionSettings(Name = "QueryStorageInventoryData")]
+    public async Task<List<StorageInventoryDataDto>> QueryStorageInventoryData(string storagenum)
+    {
+        List<StorageInventoryDataDto> data = await _inventory.AsQueryable()
+                             .InnerJoin<EG_WMS_InventoryDetail>((a, b) => a.InventoryNum == b.InventoryNum)
+                             .Where((a, b) => b.StorageNum == storagenum && a.IsDelete == false && a.OutboundStatus == 0)
+                             .Select((a, b) => new StorageInventoryDataDto
+                             {
+
+                             }, true)
+                             .ToListAsync();
+        if (data.Count == 0)
+        {
+            throw Oops.Oh("当前库位上没有存放数据");
+        }
+
+        return data;
+
+    }
+
+
+    #endregion
+
 
     #region 增加库位
     /// <summary>
