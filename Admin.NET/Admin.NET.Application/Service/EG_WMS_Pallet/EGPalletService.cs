@@ -1,9 +1,11 @@
-﻿namespace Admin.NET.Application;
+﻿using Admin.NET.Application.IService.EG_WMS_Pallet;
+
+namespace Admin.NET.Application;
 /// <summary>
 /// 栈板管理接口
 /// </summary>
 [ApiDescriptionSettings(ApplicationConst.GroupName, Order = 100)]
-public class EGPalletService : IDynamicApiController, ITransient
+public class EGPalletService : IDynamicApiController, ITransient, IEGPalletServics
 {
 
     private readonly SqlSugarRepository<EG_WMS_Pallet> _rep;

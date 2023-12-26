@@ -1,11 +1,9 @@
-﻿//using Admin.NET.Application.Entity.AGV.V2;
-using Admin.NET.Application.Service.AGV.V2.Task.DTO;
+﻿using Admin.NET.Application.Service.AGV.V2.Task.DTO;
 
 namespace Admin.NET.Application.Service.AGV.V2.Task
 {
     /// <summary>
-    /// 任务信息 V2.0
-    /// wk 2022-04-23
+    /// 任务信息 V3.0
     /// </summary>
     public interface ITaskService
     {

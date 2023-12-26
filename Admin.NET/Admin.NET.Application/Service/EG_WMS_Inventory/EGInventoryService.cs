@@ -36,23 +36,23 @@ public class EGInventoryService : IDynamicApiController, ITransient
     public async Task<SqlSugarPagedList<EGInventoryOutput>> Page(EGInventoryInput input)
     {
         var query = _rep.AsQueryable()
-                    // 库存编号
-                    //.WhereIF(!string.IsNullOrWhiteSpace(input.InventoryNum), u => u.InventoryNum.Contains(input.InventoryNum.Trim()))
-                    .WhereIF(input.ICountAll > 0, u => u.ICountAll == input.ICountAll)
-                    .WhereIF(input.IUsable > 0, u => u.IUsable == input.IUsable)
-                    .WhereIF(input.IFrostCount > 0, u => u.IFrostCount == input.IFrostCount)
-                    .WhereIF(input.IWaitingCount > 0, u => u.IWaitingCount == input.IWaitingCount)
-                    // 物料编号
-                    .WhereIF(!string.IsNullOrWhiteSpace(input.MaterielNum), u => u.MaterielNum == input.MaterielNum.Trim())
-                    // 备注
-                    .WhereIF(!string.IsNullOrWhiteSpace(input.InventoryRemake), u => u.InventoryRemake == input.InventoryRemake.Trim())
-                    // 出库状态
-                    .WhereIF(input.OutboundStatus > 0, u => u.OutboundStatus == input.OutboundStatus)
-                    // 获取创建日期
-                    .WhereIF(input.CreateTime > DateTime.MinValue, u => u.CreateTime >= input.CreateTime)
-                    // 倒序
-                    .OrderBy(it => it.CreateTime, OrderByType.Desc)
-                    .Select<EGInventoryOutput>()
+            // 库存编号
+            //.WhereIF(!string.IsNullOrWhiteSpace(input.InventoryNum), u => u.InventoryNum.Contains(input.InventoryNum.Trim()))
+            .WhereIF(input.ICountAll > 0, u => u.ICountAll == input.ICountAll)
+            .WhereIF(input.IUsable > 0, u => u.IUsable == input.IUsable)
+            .WhereIF(input.IFrostCount > 0, u => u.IFrostCount == input.IFrostCount)
+            .WhereIF(input.IWaitingCount > 0, u => u.IWaitingCount == input.IWaitingCount)
+            // 物料编号
+            .WhereIF(!string.IsNullOrWhiteSpace(input.MaterielNum), u => u.MaterielNum == input.MaterielNum.Trim())
+            // 备注
+            .WhereIF(!string.IsNullOrWhiteSpace(input.InventoryRemake), u => u.InventoryRemake == input.InventoryRemake.Trim())
+            // 出库状态
+            .WhereIF(input.OutboundStatus > 0, u => u.OutboundStatus == input.OutboundStatus)
+            // 获取创建日期
+            .WhereIF(input.CreateTime > DateTime.MinValue, u => u.CreateTime >= input.CreateTime)
+            // 倒序
+            .OrderBy(it => it.CreateTime, OrderByType.Desc)
+            .Select<EGInventoryOutput>()
 ;
         query = query.OrderBuilder(input);
         return await query.ToPagedListAsync(input.Page, input.PageSize);

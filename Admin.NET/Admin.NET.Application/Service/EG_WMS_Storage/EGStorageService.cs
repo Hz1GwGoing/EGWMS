@@ -219,6 +219,27 @@ public class EGStorageService : IDynamicApiController, ITransient
 
     #endregion
 
+    #region 查询库位占用情况
+
+    /// <summary>
+    /// 查询库位占用情况
+    /// </summary>
+    /// <returns></returns>
+    [HttpPost]
+    [ApiDescriptionSettings(Name = "QueryTheOccupancyOfStorageSpace")]
+    public async Task<List<QueryStorageOccupancyDto>> QueryTheOccupancyOfStorageSpace()
+    {
+        return await _rep.AsQueryable()
+             .Where(x => x.StorageType == 0 && x.RegionNum == "nearwc")
+             .OrderBy(x => x.StorageNum, OrderByType.Desc)
+             .Select(x => new QueryStorageOccupancyDto
+             {
+             }, true)
+             .ToListAsync();
+    }
+
+    #endregion
+
     #region 增加库位
     /// <summary>
     /// 增加库位
