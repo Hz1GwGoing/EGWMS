@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Authorization;
 using Admin.NET.Application.Service.AGV.V2.Task.DTO;
 using Newtonsoft.Json;
 using Admin.NET.Application.Service.EG_AGV_Task.DTO;
+using System.Linq;
+using WkHtmlToPdfDotNet;
 
 namespace Admin.NET.Application.Service.EG_AGV_Task
 {
@@ -1033,18 +1035,65 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
         [HttpPost("/AGV/Task/ObtainAGVStatus")]
         [AllowAnonymous]
         [UnifyProvider("easygreat")]
-        public async Task ObtainAGVStatus(ObtainAgvStatusModel input)
+        public async Task ObtainAGVStatus(List<ObtainAgvStatusModel> input)
         {
-            var infoagv = await _InfoAgvEntity.GetFirstAsync(x => x.deviceCode == input.deviceCode);
-
-            if (infoagv == null)
+            #region 参数
+            //{
+            //    "payLoad":"0.0", 设备负载状态
+            //    "devicePosition":"57540086", 设备当前位置
+            //    "devicePostionRec":[  设备所在二维码的 x,y 坐标，前边的值是x，后边的是y
+            //        4983,
+            //        -6093
+            //    ],
+            //    "state":"InCharging",  设备状态
+            //    "deviceCode":"CE35592BAK00001",  设备序列号
+            //    "battery":"79",  电池电量
+            //    "deviceName":"M001"  设备名称
+            //}
+            #endregion
+            try
             {
-                throw Oops.Oh("找不到这个编号的设备！");
+                for (int i = 0; i < input.Count; i++)
+                {
+                    // 将数组转换成string
+                    string devicepostionrec = string.Join(",", input[i].devicePostionRec);
+                    InfoAgvEntity info = input[i].Adapt<InfoAgvEntity>();
+                    info.devicePostionRec = devicepostionrec;
+
+                    // 查询是否已经有相同的数据
+                    var agvinfo = await _InfoAgvEntity.GetFirstAsync(x => x.deviceCode == info.deviceCode);
+
+                    if (agvinfo == null)
+                    {
+                        await _InfoAgvEntity.InsertAsync(info);
+                    }
+                    else
+                    {
+                        await _InfoAgvEntity.AsUpdateable()
+                                            .SetColumns(it => new InfoAgvEntity
+                                            {
+                                                orderId = info.orderId,
+                                                shelfNumber = info.shelfNumber,
+                                                deviceStatus = info.deviceStatus,
+                                                oritation = info.oritation,
+                                                speed = info.speed,
+                                                payLoad = info.payLoad,
+                                                devicePosition = info.devicePosition,
+                                                devicePostionRec = devicepostionrec,
+                                                state = info.state,
+                                                battery = info.battery,
+                                                deviceName = info.deviceName,
+                                                UpdateTime = DateTime.Now,
+                                            })
+                                            .Where(x => x.deviceCode == info.deviceCode)
+                                            .ExecuteCommandAsync();
+                    }
+                }
             }
-
-
-
-
+            catch (Exception ex)
+            {
+                throw Oops.Oh(ex);
+            }
         }
 
 
