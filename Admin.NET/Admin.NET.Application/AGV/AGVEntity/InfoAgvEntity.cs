@@ -3,7 +3,7 @@
 /// <summary>
 /// AGV信息实体
 /// </summary>
-[SugarTable("EG_AGV_InfoAgvEntity", "AGV信息表")]
+[SugarTable("EG_AGV_InfoAgv", "AGV信息表")]
 // 设备序列号是唯一的
 //[SugarIndex("Index_AGVdeviceCode_Only", nameof(InfoAgvEntity.deviceCode), OrderByType.Desc, true)]
 public class InfoAgvEntity : EntityBase

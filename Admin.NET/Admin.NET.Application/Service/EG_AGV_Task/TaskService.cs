@@ -4,8 +4,6 @@ using Microsoft.AspNetCore.Authorization;
 using Admin.NET.Application.Service.AGV.V2.Task.DTO;
 using Newtonsoft.Json;
 using Admin.NET.Application.Service.EG_AGV_Task.DTO;
-using System.Linq;
-using WkHtmlToPdfDotNet;
 
 namespace Admin.NET.Application.Service.EG_AGV_Task
 {
@@ -1032,6 +1030,11 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
 
         #region 获取AGV状态
 
+        /// <summary>
+        /// 获取AGV状态
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
         [HttpPost("/AGV/Task/ObtainAGVStatus")]
         [AllowAnonymous]
         [UnifyProvider("easygreat")]

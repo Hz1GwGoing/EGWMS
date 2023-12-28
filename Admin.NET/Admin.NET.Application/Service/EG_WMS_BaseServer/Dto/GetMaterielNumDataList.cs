@@ -7,12 +7,6 @@ public class GetMaterielNumDataList
 
     public int ICountAll { get; set; }
 
-    //public int IUsable { get; set; }
-
-    //public int IFrostCount { get; set; }
-
-    //public int IWaitingCount { get; set; }
-
     public string InAndOutBoundNum { get; set; }
 
     public string MaterielNum { get; set; }
@@ -27,6 +21,7 @@ public class GetMaterielNumDataList
 
     public int IsDelete { get; set; }
 
+    public DateTime ProductionDate { get; set; }
     // 详细表
 
     public string ProductionLot { get; set; }
