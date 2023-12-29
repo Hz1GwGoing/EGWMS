@@ -480,7 +480,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                     {
                         // 回滚事务
                         scope.Dispose();
-                        throw Oops.Oh("错误：" + ex.Message);
+                        throw Oops.Oh(ex.Message);
                     }
                 }
             }
@@ -491,7 +491,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
         }
         catch (Exception ex)
         {
-            throw Oops.Oh("错误：" + ex.Message);
+            throw Oops.Oh(ex.Message);
         }
     }
 
@@ -535,13 +535,13 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
             else
             {
                 // 判断用户输入的是否符合逻辑
-                var storageGroup = _Storage.GetFirstAsync(x => x.StorageNum == input.EndPoint);
+                var storageGroup = _Storage.GetFirst(x => x.StorageNum == input.EndPoint);
                 var selectData = _Storage.AsQueryable()
-                     .Where(x => x.StorageGroup == storageGroup.Result.StorageGroup && x.StorageOccupy == 1)
+                     .Where(x => x.StorageGroup == storageGroup.StorageGroup && x.StorageOccupy == 1)
                      .OrderBy(x => x.StorageNum, OrderByType.Asc)
                      .Select(x => x.StorageNum)
                      .ToList();
-                if (storageGroup.Result.StorageNum.ToInt() > selectData[0].ToInt())
+                if (storageGroup.StorageNum.ToInt() > selectData[0].ToInt())
                 {
                     throw Oops.Oh("当前选择的这个库位，入库时有库位阻挡，请重新选择库位！");
                 }
@@ -617,13 +617,13 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
             else
             {
                 // 判断用户输入的是否符合逻辑
-                var storageGroup = _Storage.GetFirstAsync(x => x.StorageNum == input.StartPoint);
+                var storageGroup = _Storage.GetFirst(x => x.StorageNum == input.StartPoint);
                 var selectData = _Storage.AsQueryable()
-                     .Where(x => x.StorageGroup == storageGroup.Result.StorageGroup && x.StorageOccupy == 1)
+                     .Where(x => x.StorageGroup == storageGroup.StorageGroup && x.StorageOccupy == 1)
                      .OrderBy(x => x.StorageNum, OrderByType.Asc)
                      .Select(x => x.StorageNum)
                      .ToList();
-                if (storageGroup.Result.StorageNum.ToInt() > selectData[0].ToInt())
+                if (storageGroup.StorageNum.ToInt() > selectData[0].ToInt())
                 {
                     throw Oops.Oh("当前选择的这个库位，出库时有库位阻挡，请重新选择库位！");
                 }
@@ -1082,7 +1082,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
         catch (Exception ex)
         {
 
-            throw Oops.Oh("错误：" + ex);
+            throw Oops.Oh("错误：" + ex.Message);
         }
 
     }
@@ -1236,7 +1236,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
         catch (Exception ex)
         {
 
-            throw Oops.Oh("错误：" + ex);
+            throw Oops.Oh("错误：" + ex.Message);
         }
 
     }
@@ -1580,7 +1580,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                 catch (Exception ex)
                 {
                     scope.Dispose();
-                    throw Oops.Oh("错误：" + ex);
+                    throw Oops.Oh("错误：" + ex.Message);
                 }
             }
 

@@ -22,6 +22,7 @@ public class GetMaterielNumDataList
     public int IsDelete { get; set; }
 
     public DateTime ProductionDate { get; set; }
+
     // 详细表
 
     public string ProductionLot { get; set; }
