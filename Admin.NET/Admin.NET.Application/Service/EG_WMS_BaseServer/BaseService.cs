@@ -798,80 +798,63 @@ public class BaseService : IDynamicApiController, ITransient
 
     #endregion
 
-    #region （策略）（立库）堆高车出库WMS自动推荐的库位（按照先入先出，以及输入物料、物料数量去推荐哪几个库位）
+    #region （策略）（立库）堆高车出库WMS自动推荐的库位（根据先入先出原则以及出库总数）
 
     /// <summary>
-    /// （策略）（立库）堆高车出库WMS自动推荐的库位（按照先入先出，以及输入物料、物料数量去推荐哪几个库位）
+    /// （策略）（立库）堆高车出库WMS自动推荐的库位（根据先入先出原则以及出库总数）
     /// </summary>
+    /// <param name="materielNum">物料编号</param>
+    /// <param name="quantity">出库总数</param>
     /// <returns></returns>
     [HttpPost]
     [ApiDescriptionSettings(Name = "AGVStackingHighCarStorageOutBound", Order = 996)]
-    public List<string> AGVStackingHighCarStorageOutBound(string materielnum, int quantity)
+    public List<string> AGVStackingHighCarStorageOutBound(string materielNum, int quantity)
     {
-        // 根据物料产品筛选物料在哪几个库位上
 
-        var storagenum = _Storage.AsQueryable()
-                .InnerJoin<EG_WMS_InventoryDetail>((a, b) => a.StorageNum == b.StorageNum)
-                .InnerJoin<EG_WMS_Inventory>((a, b, c) => b.InventoryNum == c.InventoryNum)
-                .Where((a, b, c) => a.StorageType == 1 && a.StorageOccupy == 1 && a.StorageStatus == 0 && c.MaterielNum == materielnum)
-                .OrderBy((a, b, c) => a.UpdateTime, OrderByType.Asc)
-                .Select((a, b, c) => new { a.StorageNum, c.ICountAll })
-                .ToList();
+        // 找到这个物料在库存中存在的
+        var invdata = _Inventory.AsQueryable()
+                                .InnerJoin<EG_WMS_InventoryDetail>((a, b) => a.InventoryNum == b.InventoryNum)
+                                .InnerJoin<Entity.EG_WMS_Storage>((a, b, c) => b.StorageNum == c.StorageNum)
+                                .Where((a, b, c) => a.MaterielNum == materielNum && a.OutboundStatus == 0 && a.IsDelete == false && c.StorageType == 1)
+                                .OrderBy((a, b) => a.CreateTime, OrderByType.Asc) // 从小到大排序
+                                .Select((a, b) => new { a.ICountAll, b.StorageNum })
+                                .ToList();
 
-        if (storagenum == null)
+        if (invdata.Count == 0 || invdata == null)
         {
-            return new List<string> { "当前没有合适的库位！" };
+            throw Oops.Oh("当前库存中没有存在该物料的库存信息！");
         }
 
         List<string> result = new List<string>();
         int? sumcount = 0;
-        for (int i = 0; i < storagenum.Count; i++)
+        for (int i = 0; i < invdata.Count; i++)
         {
             // 第一种情况（输入的数量恰好等于或大于第一个库位上的数量）
-            if (storagenum[i].ICountAll >= quantity)
+            if (invdata[i].ICountAll >= quantity)
             {
                 result.Clear();
-                result.Add(storagenum[i].StorageNum.ToString());
+                result.Add(invdata[i].StorageNum.ToString());
                 break;
             }
-            else if (storagenum[i].ICountAll < quantity)
+            else if (invdata[i].ICountAll < quantity)
             {
                 if (sumcount >= quantity)
                 {
                     break;
                 }
-                sumcount += storagenum[i].ICountAll;
-                result.Add(storagenum[i].StorageNum.ToString());
+                sumcount += invdata[i].ICountAll;
+                result.Add(invdata[i].StorageNum.ToString());
             }
-            else if (i == storagenum.Count - 1)
+            else if (i == invdata.Count - 1)
             {
                 if (sumcount < quantity)
                 {
-                    return new List<string> { "当前在库中该物料数量不足出库数量！" };
+                    throw Oops.Oh("当前在库中该物料数量不足出库数量！");
                 }
             }
         }
         return result;
     }
-
-
-    #endregion
-
-    #region （策略）（立库）堆高车出库WMS自动推荐的库位（根据先入先出原则以及出库总数）
-
-    ///// <summary>
-    ///// （策略）（立库）堆高车出库WMS自动推荐的库位（根据先入先出原则以及出库总数）
-    ///// </summary>
-    ///// <param name="materielNum">物料编号</param>
-    ///// <param name="CountSum">出库总数</param>
-    ///// <returns></returns>
-    //public async Task AGV(string materielNum, int CountSum)
-    //{
-
-
-
-
-    //}
 
 
     #endregion
@@ -1082,4 +1065,63 @@ public class BaseService : IDynamicApiController, ITransient
 
 //-------------------------------------/归档/-------------------------------------//
 
+#region （策略）（立库）堆高车出库WMS自动推荐的库位（按照先入先出，以及输入物料、物料数量去推荐哪几个库位）
 
+///// <summary>
+///// （策略）（立库）堆高车出库WMS自动推荐的库位（按照先入先出，以及输入物料、物料数量去推荐哪几个库位）
+///// </summary>
+///// <param name="materielnum">物料编号</param>
+///// <param name="quantity">出库总数</param>
+///// <returns></returns>
+//[HttpPost]
+//[ApiDescriptionSettings(Name = "AGVStackingHighCarStorageOutBound", Order = 996)]
+//public List<string> AGVStackingHighCarStorageOutBound(string materielnum, int quantity)
+//{
+//    // 根据物料产品筛选物料在哪几个库位上
+
+//    var storagenum = _Storage.AsQueryable()
+//            .InnerJoin<EG_WMS_InventoryDetail>((a, b) => a.StorageNum == b.StorageNum)
+//            .InnerJoin<EG_WMS_Inventory>((a, b, c) => b.InventoryNum == c.InventoryNum)
+//            .Where((a, b, c) => a.StorageType == 1 && a.StorageOccupy == 1 && a.StorageStatus == 0 && c.MaterielNum == materielnum)
+//            .OrderBy((a, b, c) => a.UpdateTime, OrderByType.Asc)
+//            .Select((a, b, c) => new { a.StorageNum, c.ICountAll })
+//            .ToList();
+
+//    if (storagenum == null)
+//    {
+//        return new List<string> { "当前没有合适的库位！" };
+//    }
+
+//    List<string> result = new List<string>();
+//    int? sumcount = 0;
+//    for (int i = 0; i < storagenum.Count; i++)
+//    {
+//        // 第一种情况（输入的数量恰好等于或大于第一个库位上的数量）
+//        if (storagenum[i].ICountAll >= quantity)
+//        {
+//            result.Clear();
+//            result.Add(storagenum[i].StorageNum.ToString());
+//            break;
+//        }
+//        else if (storagenum[i].ICountAll < quantity)
+//        {
+//            if (sumcount >= quantity)
+//            {
+//                break;
+//            }
+//            sumcount += storagenum[i].ICountAll;
+//            result.Add(storagenum[i].StorageNum.ToString());
+//        }
+//        else if (i == storagenum.Count - 1)
+//        {
+//            if (sumcount < quantity)
+//            {
+//                return new List<string> { "当前在库中该物料数量不足出库数量！" };
+//            }
+//        }
+//    }
+//    return result;
+//}
+
+
+#endregion

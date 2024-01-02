@@ -520,7 +520,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
             }
 
             // 目标点
-            string endpoint = "";
+             string endpoint = "";
             if (input.EndPoint == null || input.EndPoint == "")
             {
                 // 根据策略推荐
