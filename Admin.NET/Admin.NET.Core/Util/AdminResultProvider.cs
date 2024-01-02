@@ -114,7 +114,7 @@ public class AdminResultProvider : IUnifyResultProvider
 /// </summary>
 /// <typeparam name="T"></typeparam>
 public class AdminResult<T>
-{
+{   
     /// <summary>
     /// 状态码
     /// </summary>

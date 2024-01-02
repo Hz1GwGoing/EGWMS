@@ -39,6 +39,7 @@ public class AgvJoinDto
     /// <summary>
     /// 模版编号
     /// </summary>
+    [Required(ErrorMessage = "模版编号不能为空")]
     public string ModelNo { get; set; }
 
     /// <summary>

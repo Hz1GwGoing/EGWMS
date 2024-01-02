@@ -73,6 +73,10 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
             {
                 // 判断用户输入的是否符合逻辑
                 var storageGroup = _Storage.GetFirstAsync(x => x.StorageNum == input.EndPoint);
+                if (storageGroup == null)
+                {
+                    throw Oops.Oh("没有查找到该目标点的库位编号！");
+                }
                 var selectData = _Storage.AsQueryable()
                      .Where(x => x.StorageGroup == storageGroup.Result.StorageGroup && x.StorageOccupy == 1)
                      .OrderBy(x => x.StorageNum, OrderByType.Asc)
@@ -520,7 +524,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
             }
 
             // 目标点
-             string endpoint = "";
+            string endpoint = "";
             if (input.EndPoint == null || input.EndPoint == "")
             {
                 // 根据策略推荐
@@ -536,6 +540,10 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
             {
                 // 判断用户输入的是否符合逻辑
                 var storageGroup = _Storage.GetFirst(x => x.StorageNum == input.EndPoint);
+                if (storageGroup == null)
+                {
+                    throw Oops.Oh("没有查找到该目标点的库位编号！");
+                }
                 var selectData = _Storage.AsQueryable()
                      .Where(x => x.StorageGroup == storageGroup.StorageGroup && x.StorageOccupy == 1)
                      .OrderBy(x => x.StorageNum, OrderByType.Asc)
@@ -618,6 +626,10 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
             {
                 // 判断用户输入的是否符合逻辑
                 var storageGroup = _Storage.GetFirst(x => x.StorageNum == input.StartPoint);
+                if (storageGroup == null)
+                {
+                    throw Oops.Oh("没有查找到该起始点的库位编号！");
+                }
                 var selectData = _Storage.AsQueryable()
                      .Where(x => x.StorageGroup == storageGroup.StorageGroup && x.StorageOccupy == 1)
                      .OrderBy(x => x.StorageNum, OrderByType.Asc)
@@ -1260,9 +1272,12 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
 
         try
         {
+            // 判断用户输入的库位编号是否合法
+            var isvstorage = _Storage.GetFirst(x => x.StorageNum == input.EndPoint) ?? throw Oops.Oh("没有查找到该库位编号！");
+
             // 得到区域和仓库编号
-            string regionnum = InAndOutBoundMessage.GetStorageWhereRegion(input.EndPoint);
-            string whnum = InAndOutBoundMessage.GetRegionWhereWHNum(regionnum);
+            string regionnum = InAndOutBoundMessage.GetStorageWhereRegion(input.EndPoint) ?? throw Oops.Oh("当前库位查询不到区域编号！");
+            string whnum = InAndOutBoundMessage.GetRegionWhereWHNum(regionnum) ?? throw Oops.Oh("当前区域查询不到仓库编号！");
 
             // 得到这个区域绑定的是哪种物料编号
             EG_WMS_Region regiondata = await _Region.GetFirstAsync(x => x.RegionNum == regionnum);
@@ -1455,8 +1470,11 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
             // 扫库位，得到这个库位上所有的料箱，所有的料箱全部都出
             // 得到pda扫到的库位上所有的料箱（根据库位得到这个库位上所有的料箱(从库存中得到)）
 
-            string regionnum = InAndOutBoundMessage.GetStorageWhereRegion(input.StorageNum);
-            string whnum = InAndOutBoundMessage.GetRegionWhereWHNum(regionnum);
+            // 判断用户输入的库位是否合法
+            var isvstorage = _Storage.GetFirst(x => x.StorageNum == input.StorageNum) ?? throw Oops.Oh("没有查找到该库位编号！");
+
+            string regionnum = InAndOutBoundMessage.GetStorageWhereRegion(input.StorageNum) ?? throw Oops.Oh("当前库位查询不到区域编号！");
+            string whnum = InAndOutBoundMessage.GetRegionWhereWHNum(regionnum) ?? throw Oops.Oh("当前区域查询不到仓库编号！");
 
             // 1.得到这个库位上所有的数据
             List<EG_WMS_InventoryDetail> dataList = _InventoryDetail.AsQueryable()
