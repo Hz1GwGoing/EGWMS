@@ -9,6 +9,11 @@ public class EGOutBoundDto
     public string StorageNum { get; set; }
 
     /// <summary>
+    /// 出库人
+    /// </summary>
+    public string? OutBoundUser { get; set; }
+
+    /// <summary>
     /// 备注
     /// </summary>
     public string? Remake { get; set; }

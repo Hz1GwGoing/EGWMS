@@ -175,7 +175,7 @@ public class EGRelocationService : IDynamicApiController, ITransient
         // 查询当前和目标库位上有没有数据
         var inventoryStart = _Inventory.AsQueryable()
                                .InnerJoin<EG_WMS_InventoryDetail>((a, b) => a.InventoryNum == b.InventoryNum)
-                               .Where((a, b) => b.StorageNum == input.StartPoint)
+                               .Where((a, b) => b.StorageNum == input.StartPoint && a.OutboundStatus == 0)
                                .Select((a, b) => new
                                {
                                    a.ICountAll,
@@ -237,20 +237,43 @@ public class EGRelocationService : IDynamicApiController, ITransient
                 {
                     sumcount += inventoryStart[i].ICountAll;
 
+                    // 临时表也需要操作
+                    await _InventoryTem.AsUpdateable()
+                                       .SetColumns(it => new EG_WMS_Tem_Inventory
+                                       {
+                                           InventoryRemake = (inventoryStart[i].InventoryRemake ?? "") + remake,
+                                           UpdateTime = DateTime.Now,
+                                       })
+                                       .Where(x => x.InventoryNum == inventoryStart[i].InventoryNum)
+                                       .ExecuteCommandAsync();
+
+                    await _InventoryDetailTem.AsUpdateable()
+                                         .SetColumns(it => new EG_WMS_Tem_InventoryDetail
+                                         {
+                                             RegionNum = newregionnum,
+                                             WHNum = newwhnum,
+                                             StorageNum = input.GoEndPoint,
+                                             UpdateTime = DateTime.Now,
+                                         })
+                                         .Where(x => x.InventoryNum == inventoryStart[i].InventoryNum)
+                                         .ExecuteCommandAsync();
+
                     await _Inventory.AsUpdateable()
-                         .SetColumns(it => new EG_WMS_Inventory
-                         {
-                             InventoryRemake = inventoryStart[i].InventoryRemake + remake
-                         })
-                         .Where(x => x.InventoryNum == inventoryStart[i].InventoryNum)
-                         .ExecuteCommandAsync();
+                                    .SetColumns(it => new EG_WMS_Inventory
+                                    {
+                                        InventoryRemake = (inventoryStart[i].InventoryRemake ?? "") + remake,
+                                        UpdateTime = DateTime.Now,
+                                    })
+                                    .Where(x => x.InventoryNum == inventoryStart[i].InventoryNum)
+                                    .ExecuteCommandAsync();
 
                     await _InventoryDetail.AsUpdateable()
                                           .SetColumns(it => new EG_WMS_InventoryDetail
                                           {
                                               RegionNum = newregionnum,
                                               WHNum = newwhnum,
-                                              StorageNum = input.GoEndPoint
+                                              StorageNum = input.GoEndPoint,
+                                              UpdateTime = DateTime.Now,
                                           })
                                           .Where(x => x.InventoryNum == inventoryStart[i].InventoryNum)
                                           .ExecuteCommandAsync();
@@ -281,7 +304,8 @@ public class EGRelocationService : IDynamicApiController, ITransient
                               .SetColumns(it => new EG_WMS_Storage
                               {
                                   StorageOccupy = 0,
-                                  StorageProductionDate = null
+                                  StorageProductionDate = null,
+                                  UpdateTime = DateTime.Now
                               })
                               .Where(x => x.StorageNum == input.StartPoint)
                               .ExecuteCommandAsync();
@@ -291,7 +315,8 @@ public class EGRelocationService : IDynamicApiController, ITransient
                               .SetColumns(it => new EG_WMS_Storage
                               {
                                   StorageOccupy = 1,
-                                  StorageProductionDate = storagePrimitive.StorageProductionDate
+                                  StorageProductionDate = storagePrimitive.StorageProductionDate,
+                                  UpdateTime = DateTime.Now,
                               })
                               .Where(x => x.StorageNum == input.GoEndPoint)
                               .ExecuteCommandAsync();
@@ -301,7 +326,7 @@ public class EGRelocationService : IDynamicApiController, ITransient
             catch (Exception ex)
             {
                 scope.Dispose();
-                throw Oops.Oh("错误：" + ex);
+                throw Oops.Oh("错误：" + ex.Message);
             }
         }
 

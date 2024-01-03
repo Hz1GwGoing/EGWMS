@@ -295,10 +295,10 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
 
     #endregion
 
-    #region AGV入库（需要前往等待点）（密集库）
+    #region 潜伏举升AGV入库（需要前往等待点，到达等待点再获取库位点）
 
     /// <summary>
-    ///  AGV入库（需要前往等待点，到达等待点再获取库位点）（密集库）（潜伏举升）
+    /// 潜伏举升AGV入库（需要前往等待点，到达等待点再获取库位点）
     /// </summary>
     /// <param name="input"></param>
     /// <returns></returns>
@@ -502,7 +502,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
 
     #endregion
 
-    #region AGV入库（入库WMS自动推荐库位）（封装）（密集库）
+    #region 潜伏举升AGV入库（入库WMS自动推荐库位）
     /// <summary>
     /// AGV入库（入库WMS自动推荐库位）（封装）（密集库）
     /// </summary>
@@ -586,10 +586,10 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
 
     #endregion
 
-    #region AGV出库（两点位）（出库WMS自动推荐库位）（密集库）
+    #region 潜伏举升AGV出库（出库WMS自动推荐库位）
 
     /// <summary>
-    /// AGV出库（两点位）（出库WMS自动推荐库位）（密集库）
+    /// 潜伏举升AGV出库（出库WMS自动推荐库位）
     /// </summary>
     /// <param name="input"></param>
     /// <returns></returns>
@@ -1256,9 +1256,9 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
 
     #endregion
 
-    #region 人工入库（已完成）
+    #region 人工入库（密集库）
     /// <summary>
-    /// 人工入库
+    /// 人工入库（密集库）
     /// </summary>
     /// <param name="input"></param>
     /// <returns></returns>
@@ -1447,10 +1447,10 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
 
     #endregion
 
-    #region 人工出库（已完成）（人工扫描库位库位上所有的料箱都出）
+    #region 人工出库（密集库）（人工扫描库位库位上所有的料箱都出）
 
     /// <summary>
-    /// 人工出库（人工扫描库位库位上所有的料箱都出）
+    /// 人工出库（密集库）（人工扫描库位库位上所有的料箱都出）
     /// </summary>
     /// <param name="input"></param>
     /// <returns></returns>
@@ -1502,6 +1502,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                         InAndOutBoundTime = DateTime.Now,
                         InAndOutBoundRemake = input.Remake,
                         CreateTime = DateTime.Now,
+                        InAndOutBoundUser = input.OutBoundUser,
                     };
                     EG_WMS_InAndOutBoundDetail inandoutbounddetail = new EG_WMS_InAndOutBoundDetail
                     {
