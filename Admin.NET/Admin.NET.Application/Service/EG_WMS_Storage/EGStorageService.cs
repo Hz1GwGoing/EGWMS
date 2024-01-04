@@ -240,7 +240,7 @@ public class EGStorageService : IDynamicApiController, ITransient
     public async Task<List<QueryStorageOccupancyDto>> QueryTheOccupancyOfStorageSpace()
     {
         return await _rep.AsQueryable()
-             .Where(x => x.StorageType == 0 && x.RegionNum == "nearwc")
+             .Where(x => x.StorageType == 0 && x.RegionNum == "nearwc" && x.StorageGroup != null)
              .OrderBy(x => x.StorageNum, OrderByType.Desc)
              .Select(x => new QueryStorageOccupancyDto
              {
