@@ -5,7 +5,7 @@
 /// </summary>
 [SugarTable("EG_WMS_WorkBin", "料箱信息表")]
 // 唯一索引，设置true即设置为唯一索引
-[SugarIndex("Index_WorkBinNum_Only", nameof(EG_WMS_WorkBin.WorkBinNum), OrderByType.Desc, true)]
+//[SugarIndex("Index_WorkBinNum_Only", nameof(EG_WMS_WorkBin.WorkBinNum), OrderByType.Desc, true)]
 public class EG_WMS_WorkBin : EntityBase
 {
     /// <summary>

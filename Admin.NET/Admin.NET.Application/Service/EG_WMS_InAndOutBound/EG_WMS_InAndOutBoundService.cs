@@ -42,7 +42,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
     /// <param name="input"></param>
     /// <returns></returns>
     [HttpPost]
-    [ApiDescriptionSettings(Name = "AgvJoinBoundTask", Order = 50)]
+    [ApiDescriptionSettings(Name = "AgvJoinBoundTask", Order = 1)]
     public async Task AgvJoinBoundTask(AgvJoinDto input)
     {
         try
@@ -76,6 +76,10 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                 if (storageGroup == null)
                 {
                     throw Oops.Oh("没有查找到该目标点的库位编号！");
+                }
+                else if (storageGroup.Result.StorageOccupy == 1 || storageGroup.Result.StorageOccupy == 2)
+                {
+                    throw Oops.Oh("目标库位已被占用！");
                 }
                 var selectData = _Storage.AsQueryable()
                      .Where(x => x.StorageGroup == storageGroup.Result.StorageGroup && x.StorageOccupy == 1)
@@ -304,8 +308,8 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
     /// <returns></returns>
     /// <exception cref="Exception"></exception>
     [HttpPost]
-    [ApiDescriptionSettings(Name = "AgvJoinBoundTaskGOPoint")]
-    public async Task AgvJoinBoundTaskGOPoint(AgvJoinDto input)
+    [ApiDescriptionSettings(Name = "AgvJoinBoundTaskGOPoint", Order = 97)]
+    public async Task<string> AgvJoinBoundTaskGOPoint(AgvJoinDto input)
     {
         try
         {
@@ -479,6 +483,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
 
                         // 提交事务
                         scope.Complete();
+                        return "下发AGV前往等待点任务成功！";
                     }
                     catch (Exception ex)
                     {
@@ -490,7 +495,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
             }
             else
             {
-                throw Oops.Oh("下达AGV任务失败");
+                throw Oops.Oh("下发AGV前往等待点任务失败！");
             }
         }
         catch (Exception ex)
@@ -504,13 +509,13 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
 
     #region 潜伏举升AGV入库（入库WMS自动推荐库位）
     /// <summary>
-    /// AGV入库（入库WMS自动推荐库位）（封装）（密集库）
+    /// 潜伏举升AGV入库（入库WMS自动推荐库位）
     /// </summary>
     /// <param name="input"></param>
     /// <returns></returns>
     [HttpPost]
-    [ApiDescriptionSettings(Name = "AgvJoinBoundTasks", Order = 50)]
-    public async Task AgvJoinBoundTasks(AgvJoinDto input)
+    [ApiDescriptionSettings(Name = "AgvJoinBoundTasks", Order = 99)]
+    public async Task<string> AgvJoinBoundTasks(AgvJoinDto input)
     {
         try
         {
@@ -533,7 +538,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                 if (input.EndPoint == "没有合适的库位")
                 {
                     await InAndOutBoundMessage.NotStorageAddStagingTask(input, joinboundnum);
-                    return;
+                    return "添加AGV入库暂存任务成功！";
                 }
             }
             else
@@ -543,6 +548,10 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                 if (storageGroup == null)
                 {
                     throw Oops.Oh("没有查找到该目标点的库位编号！");
+                }
+                else if (storageGroup.StorageOccupy == 1 || storageGroup.StorageOccupy == 2)
+                {
+                    throw Oops.Oh("目标库位已被占用！");
                 }
                 var selectData = _Storage.AsQueryable()
                      .Where(x => x.StorageGroup == storageGroup.StorageGroup && x.StorageOccupy == 1)
@@ -571,10 +580,11 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
             if (item.code == 1000)
             {
                 await InAndOutBoundMessage.ProcessInbound(input, joinboundnum);
+                return "下发AGV入库任务成功！";
             }
             else
             {
-                throw Oops.Oh("下达AGV任务失败");
+                throw Oops.Oh("下发AGV入库任务失败！");
             }
         }
         catch (Exception ex)
@@ -595,8 +605,8 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
     /// <returns></returns>
     /// <exception cref="Exception"></exception>
     [HttpPost]
-    [ApiDescriptionSettings(Name = "AgvOutBoundTask", Order = 45)]
-    public async Task AgvOutBoundTask(AgvBoundDto input)
+    [ApiDescriptionSettings(Name = "AgvOutBoundTask", Order = 98)]
+    public async Task<string> AgvOutBoundTask(AgvBoundDto input)
     {
         // 生成当前时间时间戳
         string outboundnum = _TimeStamp.GetTheCurrentTimeTimeStamp("EGCK");
@@ -619,7 +629,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                 {
                     // 添加出库暂存任务
                     await InAndOutBoundMessage.NotBoundNotStorageAddStagingTask(input, outboundnum);
-                    return;
+                    return "添加AGV出库暂存任务成功！";
                 }
             }
             else
@@ -629,6 +639,10 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                 if (storageGroup == null)
                 {
                     throw Oops.Oh("没有查找到该起始点的库位编号！");
+                }
+                else if (storageGroup.StorageOccupy != 1)
+                {
+                    throw Oops.Oh("当前库位上不存在库存！");
                 }
                 var selectData = _Storage.AsQueryable()
                      .Where(x => x.StorageGroup == storageGroup.StorageGroup && x.StorageOccupy == 1)
@@ -672,8 +686,6 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                           })
                           .Where(x => x.StorageNum == input.StartPoint)
                           .ExecuteCommandAsync();
-
-
                 #region 生成出库
 
                 // 生成出库单
@@ -772,10 +784,11 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                      .ExecuteCommandAsync();
 
                 #endregion
+                return "下发AGV出库任务成功！";
             }
             else
             {
-                throw Oops.Oh("下达agv任务失败");
+                throw Oops.Oh("下发AGV出库任务失败！");
             }
         }
         catch (Exception ex)
@@ -1264,8 +1277,8 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
     /// <returns></returns>
 
     [HttpPost]
-    [ApiDescriptionSettings(Name = "ArtificialJoinBoundAdd", Order = 40)]
-    public async Task ArtificialJoinBoundAdd(EGInBoundDto input)
+    [ApiDescriptionSettings(Name = "ArtificialJoinBoundAdd", Order = 96)]
+    public async Task<string> ArtificialJoinBoundAdd(EGInBoundDto input)
     {
         // 生成当前时间时间戳
         string joinboundnum = _TimeStamp.GetTheCurrentTimeTimeStamp("EGRK");
@@ -1274,7 +1287,10 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
         {
             // 判断用户输入的库位编号是否合法
             var isvstorage = _Storage.GetFirst(x => x.StorageNum == input.EndPoint) ?? throw Oops.Oh("没有查找到该库位编号！");
-
+            if (isvstorage.StorageOccupy == 1 || isvstorage.StorageOccupy == 2)
+            {
+                throw Oops.Oh("目标库位已被占用！");
+            }
             // 得到区域和仓库编号
             string regionnum = InAndOutBoundMessage.GetStorageWhereRegion(input.EndPoint) ?? throw Oops.Oh("当前库位查询不到区域编号！");
             string whnum = InAndOutBoundMessage.GetRegionWhereWHNum(regionnum) ?? throw Oops.Oh("当前区域查询不到仓库编号！");
@@ -1435,6 +1451,8 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                       })
                       .Where(x => x.StorageNum == input.EndPoint)
                       .ExecuteCommandAsync();
+
+            return "人工入库成功！";
         }
         catch (Exception ex)
         {
@@ -1457,10 +1475,9 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
     /// <exception cref="Exception"></exception>
 
     [HttpPost]
-    [ApiDescriptionSettings(Name = "ArtificialOutBoundAdd", Order = 35)]
-    public async Task ArtificialOutBoundAdd(EGOutBoundDto input)
+    [ApiDescriptionSettings(Name = "ArtificialOutBoundAdd", Order = 95)]
+    public async Task<string> ArtificialOutBoundAdd(EGOutBoundDto input)
     {
-
         // 生成当前时间时间戳
         string outboundnum = _TimeStamp.GetTheCurrentTimeTimeStamp("EGCK");
 
@@ -1472,7 +1489,10 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
 
             // 判断用户输入的库位是否合法
             var isvstorage = _Storage.GetFirst(x => x.StorageNum == input.StorageNum) ?? throw Oops.Oh("没有查找到该库位编号！");
-
+            if (isvstorage.StorageOccupy != 1)
+            {
+                throw Oops.Oh("当前库位上不存在库存！");
+            }
             string regionnum = InAndOutBoundMessage.GetStorageWhereRegion(input.StorageNum) ?? throw Oops.Oh("当前库位查询不到区域编号！");
             string whnum = InAndOutBoundMessage.GetRegionWhereWHNum(regionnum) ?? throw Oops.Oh("当前区域查询不到仓库编号！");
 
@@ -1595,6 +1615,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                                   .Where(x => x.StorageNum == input.StorageNum)
                                   .ExecuteCommandAsync();
                     scope.Complete();
+                    return "人工出库成功！";
                 }
                 catch (Exception ex)
                 {
@@ -1602,7 +1623,6 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                     throw Oops.Oh("错误：" + ex.Message);
                 }
             }
-
         }
         catch (Exception ex)
         {
