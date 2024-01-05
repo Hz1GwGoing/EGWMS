@@ -19,22 +19,22 @@ public class AgvJoinDto
     /// <summary>
     /// 任务编号
     /// </summary>
-    public string TaskNo { get; set; }
+    public string? TaskNo { get; set; }
 
     /// <summary>
     /// 任务名称
     /// </summary>
-    public string TaskName { get; set; }
+    public string? TaskName { get; set; }
 
     /// <summary>
     /// 优先级
     /// </summary>
-    public string Priority { get; set; } = "6";
+    public string? Priority { get; set; } = "6";
 
     /// <summary>
     /// 来源
     /// </summary>
-    public string Source { get; set; }
+    public string? Source { get; set; }
 
     /// <summary>
     /// 模版编号
@@ -50,7 +50,7 @@ public class AgvJoinDto
     /// <summary>
     /// 任务下达人
     /// </summary>
-    public string AddName { get; set; }
+    public string? AddName { get; set; }
 
     /// <summary>
     /// 出入库备注
@@ -60,6 +60,7 @@ public class AgvJoinDto
     /// <summary>
     /// 绑定料箱，物料
     /// </summary>
-    public List<MaterielWorkBin>? materielWorkBins { get; set; }
+    [Required(ErrorMessage = "入库数据不能为空")]
+    public List<MaterielWorkBin> materielWorkBins { get; set; }
 
 }

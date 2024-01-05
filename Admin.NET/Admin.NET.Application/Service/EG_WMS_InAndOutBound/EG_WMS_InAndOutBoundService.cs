@@ -1421,6 +1421,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                                     // 只会有一种物料
                                     MaterielNum = item[0].MaterielNum,
                                     WorkBinNum = wbnum,
+                                    UpdateTime = DateTime.Now
                                 })
                                 .Where(u => u.InAndOutBoundNum == joinboundnum)
                                 .ExecuteCommandAsync();
@@ -1434,6 +1435,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                       InAndOutBoundCount = sumcount,
                       InAndOutBoundStatus = 1,
                       SuccessOrNot = 0,
+                      UpdateTime = DateTime.Now
                   })
                   .Where(u => u.InAndOutBoundNum == joinboundnum)
                   .ExecuteCommandAsync();
@@ -1448,6 +1450,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                           StorageOccupy = 1,
                           // 得到日期最大的生产日期
                           StorageProductionDate = datetime.Max(),
+                          UpdateTime = DateTime.Now
                       })
                       .Where(x => x.StorageNum == input.EndPoint)
                       .ExecuteCommandAsync();
@@ -1497,9 +1500,16 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
             string whnum = InAndOutBoundMessage.GetRegionWhereWHNum(regionnum) ?? throw Oops.Oh("当前区域查询不到仓库编号！");
 
             // 1.得到这个库位上所有的数据
-            List<EG_WMS_InventoryDetail> dataList = _InventoryDetail.AsQueryable()
-                                        .InnerJoin<EG_WMS_Inventory>((a, b) => a.InventoryNum == b.InventoryNum)
-                                        .Where((a, b) => a.StorageNum == input.StorageNum && b.OutboundStatus == 0)
+            var dataList = _Inventory.AsQueryable()
+                                        .InnerJoin<EG_WMS_InventoryDetail>((a, b) => a.InventoryNum == b.InventoryNum)
+                                        .Where((a, b) => b.StorageNum == input.StorageNum && a.OutboundStatus == 0)
+                                        .Select((a, b) => new
+                                        {
+                                            a.MaterielNum,
+                                            a.InventoryNum,
+                                            b.StorageNum,
+                                            b.WorkBinNum
+                                        })
                                         .ToList();
 
             if (dataList.Count == 0)
@@ -1523,6 +1533,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                         InAndOutBoundRemake = input.Remake,
                         CreateTime = DateTime.Now,
                         InAndOutBoundUser = input.OutBoundUser,
+                        StartPoint = input.StorageNum
                     };
                     EG_WMS_InAndOutBoundDetail inandoutbounddetail = new EG_WMS_InAndOutBoundDetail
                     {
@@ -1567,6 +1578,8 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                                            .SetColumns(it => new EG_WMS_Tem_Inventory
                                            {
                                                OutboundStatus = 1,
+                                               OutBoundNum = outboundnum,
+                                               UpdateTime = DateTime.Now,
                                            })
                                            .Where(it => it.InventoryNum == dataList[i].InventoryNum)
                                            .ExecuteCommandAsync();
@@ -1577,6 +1590,8 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                                    .SetColumns(u => new EG_WMS_Inventory
                                    {
                                        OutboundStatus = 1,
+                                       OutBoundNum = outboundnum,
+                                       UpdateTime = DateTime.Now
                                    })
                                    .Where(it => it.InventoryNum == dataList[i].InventoryNum)
                                    .ExecuteCommandAsync();
@@ -1589,7 +1604,8 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                              InAndOutBoundStatus = 3,
                              // 出入库数量
                              InAndOutBoundCount = sumcount,
-
+                             SuccessOrNot = 0,
+                             UpdateTime = DateTime.Now
                          })
                          .Where(it => it.InAndOutBoundNum == outboundnum)
                          .ExecuteCommandAsync();
@@ -1600,6 +1616,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                                               {
                                                   MaterielNum = dataList[0].MaterielNum,
                                                   WorkBinNum = wbnum,
+                                                  UpdateTime = DateTime.Now
                                               })
                                               .ExecuteCommandAsync();
                     // 修改库位表中的信息
@@ -1611,6 +1628,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                                       StorageOccupy = 0,
                                       TaskNo = null,
                                       StorageProductionDate = null,
+                                      UpdateTime = DateTime.Now
                                   })
                                   .Where(x => x.StorageNum == input.StorageNum)
                                   .ExecuteCommandAsync();
