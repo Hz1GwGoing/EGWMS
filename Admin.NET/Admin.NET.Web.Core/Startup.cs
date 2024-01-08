@@ -60,6 +60,10 @@ public class Startup : AppStartup
             // 堆高车自动任务
             options.AddJob(JobBuilder.Create<AddAgvHighJoinBoundTaskM001>().SetIncludeAnnotations(true));
             options.AddJob(JobBuilder.Create<AddAgvHighJoinBoundTaskM002>().SetIncludeAnnotations(true));
+            // 暂存任务
+            options.AddJob(JobBuilder.Create<AddAgvStagingInBoundTask>().SetIncludeAnnotations(true));
+            options.AddJob(JobBuilder.Create<AddAgvStagingOutBoundTask>().SetIncludeAnnotations(true));
+
         });
         // 脱敏检测
         services.AddSensitiveDetection();

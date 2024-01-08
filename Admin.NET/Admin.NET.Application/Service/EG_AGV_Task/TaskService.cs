@@ -906,6 +906,7 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
                                      TaskNo = null,
                                      // 料箱生产时间
                                      StorageProductionDate = null,
+                                     UpdateTime = DateTime.Now,
                                  })
                                  .Where(x => x.TaskNo == acceptDTO.orderId)
                                  .ExecuteCommandAsync();

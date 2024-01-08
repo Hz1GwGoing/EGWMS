@@ -4,7 +4,8 @@
 /// 再次请求AGV入库暂存任务
 /// </summary>
 [JobDetail("trigger_AgvInBoundTaskJob", Description = "再次请求AGV入库暂存任务", GroupName = "AGVTask", Concurrent = false)]
-[Daily(TriggerId = "trigger_repeatAgvInBoundTaskJob", Description = "再次请求AGV入库暂存任务")]
+//[Daily(TriggerId = "trigger_repeatAgvInBoundTaskJob", Description = "再次请求AGV入库暂存任务")]
+[PeriodMinutes(1, TriggerId = "trigger_AgvInBoundTaskJob", StartNow = true, RunOnStart = false)]
 public class AddAgvStagingInBoundTask : IJob
 {
     #region 关系注入
@@ -82,6 +83,7 @@ public class AddAgvStagingInBoundTask : IJob
                                        EndPoint = endStorage,
                                        // 现在任务下发才是入库中的状态
                                        InAndOutBoundStatus = 4,
+                                       UpdateTime = DateTime.Now,
                                    })
                                    .Where(x => x.InAndOutBoundNum == taskstaging.InAndOutBoundNum)
                                    .ExecuteCommandAsync();
@@ -92,6 +94,7 @@ public class AddAgvStagingInBoundTask : IJob
                                                   StorageNum = endStorage,
                                                   WHNum = _regionWHNum,
                                                   RegionNum = _storageRegionNum,
+                                                  UpdateTime = DateTime.Now,
                                               })
                                               .Where(x => x.InAndOutBoundNum == taskstaging.InAndOutBoundNum)
                                               .ExecuteCommandAsync();
@@ -99,7 +102,8 @@ public class AddAgvStagingInBoundTask : IJob
                     await _WorkBin.AsUpdateable()
                           .SetColumns(it => new EG_WMS_WorkBin
                           {
-                              StorageNum = endStorage
+                              StorageNum = endStorage,
+                              UpdateTime = DateTime.Now,
                           })
                           .Where(x => x.InAndOutBoundNum == taskstaging.InAndOutBoundNum)
                           .ExecuteCommandAsync();
@@ -110,6 +114,7 @@ public class AddAgvStagingInBoundTask : IJob
                                        .SetColumns(it => new TaskStagingEntity
                                        {
                                            StagingStatus = 1,
+                                           UpdateTime = DateTime.Now,
                                        })
                                        .Where(x => x.InAndOutBoundNum == taskstaging.InAndOutBoundNum)
                                        .ExecuteCommandAsync();
@@ -135,6 +140,7 @@ public class AddAgvStagingInBoundTask : IJob
                                                      StorageNum = endStorage,
                                                      WHNum = _regionWHNum,
                                                      RegionNum = _storageRegionNum,
+                                                     UpdateTime = DateTime.Now,
                                                  })
                                                  .Where(x => x.InventoryNum == datas[i].InventoryNum)
                                                  .ExecuteCommandAsync();

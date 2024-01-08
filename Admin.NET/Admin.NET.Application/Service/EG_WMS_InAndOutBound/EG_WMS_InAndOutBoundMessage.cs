@@ -96,6 +96,7 @@ public class EG_WMS_InAndOutBoundMessage
                       TaskNo = datatask.TaskNo,
                       // 得到日期最大的生产日期
                       StorageProductionDate = datetime.Max(),
+                      UpdateTime = DateTime.Now,
                   })
                   .Where(x => x.StorageNum == input.EndPoint)
                   .ExecuteCommandAsync();
@@ -134,6 +135,7 @@ public class EG_WMS_InAndOutBoundMessage
                       TaskNo = datatask.TaskNo,
                       // 得到日期最大的生产日期
                       StorageProductionDate = datetime.Max(),
+                      UpdateTime = DateTime.Now,
                   })
                   .Where(x => x.StorageNum == EndPoint)
                   .ExecuteCommandAsync();
@@ -220,6 +222,7 @@ public class EG_WMS_InAndOutBoundMessage
                                  WHNum = whnum,
                                  WorkBinNum = workbin,
                                  MaterielNum = materienum,
+                                 UpdateTime = DateTime.Now,
                              })
                              .Where(u => u.InAndOutBoundNum == joinboundnum)
                              .ExecuteCommandAsync();
@@ -231,6 +234,7 @@ public class EG_WMS_InAndOutBoundMessage
              {
                  InAndOutBoundCount = sumcount,
                  InAndOutBoundStatus = 4,
+                 UpdateTime = DateTime.Now
              })
              .Where(u => u.InAndOutBoundNum == joinboundnum)
              .ExecuteCommandAsync();

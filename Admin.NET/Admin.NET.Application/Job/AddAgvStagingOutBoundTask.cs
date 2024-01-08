@@ -4,7 +4,9 @@
 /// 再次请求AGV出库暂存任务
 /// </summary>
 [JobDetail("trigger_AgvOutBoundTaskJob", Description = "再次请求AGV出库暂存任务", GroupName = "AGVTask", Concurrent = false)]
-[Daily(TriggerId = "trigger_repeatAgvOutBoundTaskJob", Description = "再次请求AGV出库暂存任务")]
+//[Daily(TriggerId = "trigger_repeatAgvOutBoundTaskJob", Description = "再次请求AGV出库暂存任务")]
+[PeriodMinutes(1, TriggerId = "trigger_AgvOutBoundTaskJob", StartNow = true, RunOnStart = false)]
+
 public class AddAgvStagingOutBoundTask : IJob
 {
     #region 关系注入
@@ -113,6 +115,8 @@ public class AddAgvStagingOutBoundTask : IJob
                                   // 预占用
                                   StorageOccupy = 2,
                                   TaskNo = taskstaging.TaskNo,
+                                  UpdateTime = DateTime.Now,
+
                               })
                               .Where(x => x.StorageNum == requestStorage)
                               .ExecuteCommandAsync();
@@ -129,7 +133,9 @@ public class AddAgvStagingOutBoundTask : IJob
                                             InAndOutBoundCount = sumcount,
                                             // 出库中
                                             InAndOutBoundStatus = 5,
-                                            StartPoint = requestStorage
+                                            StartPoint = requestStorage,
+                                            UpdateTime = DateTime.Now,
+
                                         })
                                         .Where(x => x.InAndOutBoundNum == taskstaging.InAndOutBoundNum)
                                         .ExecuteCommandAsync();
@@ -141,6 +147,8 @@ public class AddAgvStagingOutBoundTask : IJob
                                                   RegionNum = regionnum,
                                                   WHNum = whnum,
                                                   WorkBinNum = wbnum,
+                                                  UpdateTime = DateTime.Now,
+
                                               })
                                               .Where(x => x.InAndOutBoundNum == taskstaging.InAndOutBoundNum)
                                               .ExecuteCommandAsync();
@@ -150,6 +158,8 @@ public class AddAgvStagingOutBoundTask : IJob
                                        .SetColumns(it => new TaskStagingEntity
                                        {
                                            StagingStatus = 1,
+                                           UpdateTime = DateTime.Now,
+
                                        })
                                        .Where(x => x.InAndOutBoundNum == taskstaging.InAndOutBoundNum)
                                        .ExecuteCommandAsync();
@@ -159,7 +169,7 @@ public class AddAgvStagingOutBoundTask : IJob
                 catch (Exception ex)
                 {
                     scope.Dispose();
-                    throw Oops.Oh("错误" + ex);
+                    throw Oops.Oh("错误：" + ex);
                 }
             }
         }

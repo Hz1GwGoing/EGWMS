@@ -413,13 +413,13 @@ public class BaseService : IDynamicApiController, ITransient
         // 根据物料编号，得到这个物料属于那个区域
         var dataRegion = _Region.AsQueryable().Where(x => x.RegionMaterielNum == materielNum).ToList();
 
+        if (dataRegion == null || dataRegion.Count == 0)
+        {
+            throw Oops.Oh("区域未绑定物料");
+        }
+
         for (int k = 0; k < dataRegion.Count; k++)
         {
-
-            if (dataRegion == null || dataRegion.Count == 0)
-            {
-                throw Oops.Oh("区域未绑定物料");
-            }
 
             #region 用于新区域时，第一次入库推荐使用（可能需要修改）
 
@@ -591,15 +591,12 @@ public class BaseService : IDynamicApiController, ITransient
         var dataRegion = _Region.AsQueryable().Where(x => x.RegionMaterielNum == materielNum).ToList();
         // 用于保存每个区域里面的数据
         List<string> datastring = new List<string>();
-
+        if (dataRegion == null || dataRegion.Count == 0)
+        {
+            throw Oops.Oh("区域未绑定物料");
+        }
         for (int k = 0; k < dataRegion.Count; k++)
         {
-
-            if (dataRegion == null || dataRegion.Count == 0)
-            {
-                throw Oops.Oh("区域未绑定物料");
-            }
-
             // 查询是否有正在进行中的任务库位的组别
 
             var dataStorageGroup = _Storage.AsQueryable()
@@ -620,28 +617,31 @@ public class BaseService : IDynamicApiController, ITransient
 
             // 查询所有的组别（排除不符合条件的组别）
             var getGroup = _Storage.AsQueryable()
-                            .Where(x => !strings.Contains(x.StorageGroup))
+                            .Where(x => !strings.Contains(x.StorageGroup) && x.StorageType == 0 &&
+                                   x.StorageGroup != null && x.RegionNum == dataRegion[k].RegionNum)
                             .Distinct()
-                            .Select(x => new
-                            {
-                                x.StorageGroup
-                            })
+                            .Select(x => x.StorageGroup)
                             .ToList();
 
-            // 如果这一组的最后一个的时间还没有达到，则这一组都用不了
+            // 如果这一组的最后一个的时间还没有达到，则这一组都用不了 
             string[] stringss = new string[getGroup.Count];
+            var storagenum = new Entity.EG_WMS_Storage();
             for (int i = 0; i < getGroup.Count; i++)
             {
                 var notStorageGroup = _Storage.AsQueryable()
-                                     .Where(x => x.StorageGroup == getGroup[i].StorageGroup)
-                                     .OrderBy(x => x.StorageGroup, OrderByType.Asc)
-                                     .ToList()
-                                     .Last();
+                                     .Where(x => x.StorageGroup == getGroup[i] && x.StorageOccupy == 1)
+                                     .OrderBy(x => x.StorageNum, OrderByType.Desc)
+                                     .ToList();
+
+                if (notStorageGroup.Count != 0)
+                {
+                    storagenum = notStorageGroup.Last();
+                }
 
                 // 这个组的最后一条数据不符合条件，把这个组别保存下来
-                if (notStorageGroup.StorageProductionDate.ToDateTime().AddHours(48) > DateTime.Now)
+                if (storagenum.StorageProductionDate.ToDateTime().AddHours(48) > DateTime.Now)
                 {
-                    stringss[i] = notStorageGroup.StorageGroup.ToString();
+                    stringss[i] = storagenum.StorageGroup.ToString();
                 }
 
             }
@@ -703,13 +703,13 @@ public class BaseService : IDynamicApiController, ITransient
         // 用于保存每个区域里面的数据
         List<string> datastring = new List<string>();
 
+        if (dataRegion == null || dataRegion.Count == 0)
+        {
+            throw Oops.Oh("区域未绑定物料");
+        }
+
         for (int k = 0; k < dataRegion.Count; k++)
         {
-            if (dataRegion == null || dataRegion.Count == 0)
-            {
-                throw Oops.Oh("区域未绑定物料");
-            }
-
             // 查询是否有正在进行中的任务库位的组别
 
             var dataStorageGroup = _Storage.AsQueryable()

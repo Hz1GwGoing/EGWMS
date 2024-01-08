@@ -683,6 +683,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                               // 预占用
                               StorageOccupy = 2,
                               TaskNo = datatask.TaskNo,
+                              UpdateTime = DateTime.Now,
                           })
                           .Where(x => x.StorageNum == input.StartPoint)
                           .ExecuteCommandAsync();
