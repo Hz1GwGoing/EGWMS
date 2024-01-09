@@ -678,7 +678,8 @@ public class BaseService : IDynamicApiController, ITransient
         dataInt.Sort();
         if (dataInt == null || dataInt.Count == 0)
         {
-            throw Oops.Oh("没有合适的库位");
+            //throw Oops.Oh("没有合适的库位");
+            return "没有合适的库位";
         }
 
         return dataInt[0].ToString();

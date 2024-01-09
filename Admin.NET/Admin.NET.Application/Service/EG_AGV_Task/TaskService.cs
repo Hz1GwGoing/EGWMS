@@ -770,6 +770,7 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
                                      .Where(x => x.TaskNo == acceptDTO.orderId)
                                      .ExecuteCommandAsync();
 
+                            // TODO:这里可以判断需不需要把取消或者失败的任务里面的临时数据给删除，根据实现来讨论
 
                         }
                         catch (Exception ex)
@@ -809,6 +810,17 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
                                      .Where(x => x.TaskNo == acceptDTO.orderId)
                                      .ExecuteCommandAsync();
 
+                            // 将临时表里面的数据修改回去
+                            await _TemInventory.AsUpdateable()
+                                          .AS("EG_WMS_Tem_Inventory")
+                                          .SetColumns(it => new EG_WMS_Tem_Inventory
+                                          {
+                                              OutboundStatus = 0,
+                                              OutBoundNum = null,
+                                              UpdateTime= DateTime.Now,
+                                          })
+                                          .Where(x => x.OutBoundNum == listInBoundData[0].InAndOutBoundNum)
+                                          .ExecuteCommandAsync();
                         }
                         catch (Exception ex)
                         {

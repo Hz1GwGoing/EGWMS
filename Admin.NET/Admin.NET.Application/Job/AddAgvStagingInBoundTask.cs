@@ -5,7 +5,7 @@
 /// </summary>
 [JobDetail("trigger_AgvInBoundTaskJob", Description = "再次请求AGV入库暂存任务", GroupName = "AGVTask", Concurrent = false)]
 //[Daily(TriggerId = "trigger_repeatAgvInBoundTaskJob", Description = "再次请求AGV入库暂存任务")]
-[PeriodMinutes(1, TriggerId = "trigger_AgvInBoundTaskJob", StartNow = true, RunOnStart = false)]
+[PeriodMinutes(1, TriggerId = "trigger_AgvInBoundTaskJob", StartNow = true, RunOnStart = true)]
 public class AddAgvStagingInBoundTask : IJob
 {
     #region 关系注入

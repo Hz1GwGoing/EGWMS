@@ -624,7 +624,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
             if (input.StartPoint == null || input.StartPoint == "")
             {
                 // 根据策略推荐
-                input.StartPoint = BaseService.AGVStrategyReturnRecommendStorageOutBound(input.MaterielNum);
+                input.StartPoint = BaseService.AGVStrategyReturnRecommendStorageOutBoundJudgeTime(input.MaterielNum);
                 if (input.StartPoint == "没有合适的库位")
                 {
                     // 添加出库暂存任务
