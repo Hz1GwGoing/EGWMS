@@ -152,6 +152,15 @@ public class EGRegionService : IDynamicApiController, ITransient
     public async Task Delete(long id)
     {
         var entity = await _rep.GetFirstAsync(u => u.Id == id) ?? throw Oops.Oh(ErrorCodeEnum.D1002);
+        // 根据这个区域去查询这个区域下有没有库位，有库位不能删除
+        var regionstoragecount = _Storage.AsQueryable()
+                                    .Where(x => x.RegionNum == entity.RegionNum)
+                                    .Count();
+        if (regionstoragecount != 0)
+        {
+            throw Oops.Oh("当前区域下有库位，无法删除这个区域！");
+        }
+
         await _rep.FakeDeleteAsync(entity);   //假删除
     }
     #endregion
@@ -178,19 +187,7 @@ public class EGRegionService : IDynamicApiController, ITransient
                            .ExecuteCommandAsync();
     }
     #endregion
-    [HttpGet]
-    [ApiDescriptionSettings(Name = "EGWareHouseWHNameDropdown")]
-    public async Task<dynamic> EGWareHouseWHNumDropdown()
-    {
-        return await _rep.Context.Queryable<EG_WMS_WareHouse>()
-                .Select(u => new
-                {
-                    
-                    ISWareHouse = u.WHName,
-                    Value = u.Id
-                }
-                ).ToListAsync();
-    }
+
 }
 
 //-------------------------------------//-------------------------------------//
@@ -200,6 +197,18 @@ public class EGRegionService : IDynamicApiController, ITransient
 ///// 获取仓库名称列表
 ///// </summary>
 ///// <returns></returns>
+//[HttpGet]
+//[ApiDescriptionSettings(Name = "EGWareHouseWHNameDropdown")]
+//public async Task<dynamic> EGWareHouseWHNumDropdown()
+//{
+//    return await _rep.Context.Queryable<EG_WMS_WareHouse>()
+//            .Select(u => new
+//            {
 
+//                ISWareHouse = u.WHName,
+//                Value = u.Id
+//            }
+//            ).ToListAsync();
+//}
 
 #endregion
