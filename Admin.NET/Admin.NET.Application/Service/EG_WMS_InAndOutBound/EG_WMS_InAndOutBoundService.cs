@@ -1664,9 +1664,10 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
     {
         var query = _rep.AsQueryable()
                         .InnerJoin<EG_WMS_InAndOutBoundDetail>((a, b) => a.InAndOutBoundNum == b.InAndOutBoundNum)
+                        .InnerJoin<EG_WMS_Materiel>((a, b, c) => b.MaterielNum == c.MaterielNum)
+                        .WhereIF(!string.IsNullOrWhiteSpace(input.MaterielName), (a, b, c) => c.MaterielName.Contains(input.MaterielName))
                         .WhereIF(!string.IsNullOrWhiteSpace(input.MaterielNum), (a, b) => b.MaterielNum == input.MaterielNum)
                         .WhereIF(!string.IsNullOrWhiteSpace(input.InAndOutBoundNum), (a, b) => a.InAndOutBoundNum.Contains(input.InAndOutBoundNum.Trim()))
-                        .WhereIF(input.InAndOutBoundType > 0, (a, b) => a.InAndOutBoundType == input.InAndOutBoundType)
                         .WhereIF(input.InAndOutBoundStatus > 0, (a, b) => a.InAndOutBoundStatus == input.InAndOutBoundStatus)
                         .WhereIF(!string.IsNullOrWhiteSpace(input.InAndOutBoundUser), (a, b) => a.InAndOutBoundUser.Contains(input.InAndOutBoundUser.Trim()))
                     // 倒序
@@ -1688,22 +1689,6 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
         query = query.OrderBuilder(input);
         return await query.ToPagedListAsync(input.Page, input.PageSize);
     }
-    #endregion
-
-    #region 删除出入库信息
-    /// <summary>
-    /// 删除出入库信息
-    /// </summary>
-    /// <param name="input"></param>
-    /// <returns></returns>
-    [HttpPost]
-    [ApiDescriptionSettings(Name = "Delete", Order = 25)]
-    public async Task Delete(DeleteEG_WMS_InAndOutBoundInput input)
-    {
-        var entity = await _rep.GetFirstAsync(u => u.Id == input.Id) ?? throw Oops.Oh(ErrorCodeEnum.D1002);
-        await _rep.FakeDeleteAsync(entity);   //假删除
-    }
-
     #endregion
 
     #region 获取出入库信息
@@ -1736,4 +1721,19 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
 
     //-------------------------------------//-------------------------------------// 
 
+    #region 删除出入库信息
+    ///// <summary>
+    ///// 删除出入库信息
+    ///// </summary>
+    ///// <param name="input"></param>
+    ///// <returns></returns>
+    //[HttpPost]
+    //[ApiDescriptionSettings(Name = "Delete", Order = 25)]
+    //public async Task Delete(DeleteEG_WMS_InAndOutBoundInput input)
+    //{
+    //    var entity = await _rep.GetFirstAsync(u => u.Id == input.Id) ?? throw Oops.Oh(ErrorCodeEnum.D1002);
+    //    await _rep.FakeDeleteAsync(entity);   //假删除
+    //}
+
+    #endregion
 }

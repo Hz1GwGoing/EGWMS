@@ -41,21 +41,6 @@ public class EGTakeStockService : IDynamicApiController, ITransient
     }
     #endregion
 
-    #region 删除盘点信息
-    /// <summary>
-    /// 删除盘点信息
-    /// </summary>
-    /// <param name="input"></param>
-    /// <returns></returns>
-    [HttpPost]
-    [ApiDescriptionSettings(Name = "Delete")]
-    public async Task Delete(DeleteEGTakeStockInput input)
-    {
-        var entity = await _rep.GetFirstAsync(u => u.Id == input.Id) ?? throw Oops.Oh(ErrorCodeEnum.D1002);
-        await _rep.FakeDeleteAsync(entity);   //假删除
-    }
-    #endregion
-
     #region 分页查询盘点信息
     /// <summary>
     /// 分页查询盘点信息
@@ -1754,3 +1739,17 @@ public class EGTakeStockService : IDynamicApiController, ITransient
     #endregion
 }
 
+#region 删除盘点信息
+///// <summary>
+///// 删除盘点信息
+///// </summary>
+///// <param name="input"></param>
+///// <returns></returns>
+//[HttpPost]
+//[ApiDescriptionSettings(Name = "Delete")]
+//public async Task Delete(DeleteEGTakeStockInput input)
+//{
+//    var entity = await _rep.GetFirstAsync(u => u.Id == input.Id) ?? throw Oops.Oh(ErrorCodeEnum.D1002);
+//    await _rep.FakeDeleteAsync(entity);   //假删除
+//}
+#endregion

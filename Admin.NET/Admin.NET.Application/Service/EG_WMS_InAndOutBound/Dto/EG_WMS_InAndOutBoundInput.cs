@@ -55,6 +55,10 @@ public class EG_WMS_InAndOutBoundInput : BasePageInput
     /// </summary>
     public string MaterielNum { get; set; }
 
+    /// <summary>
+    /// 物料编号
+    /// </summary>
+    public string MaterielName { get; set; }
 
     /// <summary>
     /// 出入库编号
@@ -72,12 +76,6 @@ public class EG_WMS_InAndOutBoundInput : BasePageInput
     /// </summary>
     public int? InAndOutBoundStatus { get; set; }
 
-    /// <summary>
-    /// 出入库数量
-    /// </summary>
-    public int? InAndOutBoundCount { get; set; }
-
-    /// <summary>
     /// 出入库人员
     /// </summary>
     public string? InAndOutBoundUser { get; set; }
@@ -91,10 +89,6 @@ public class EG_WMS_InAndOutBoundInput : BasePageInput
     /// 出入库时间范围
     /// </summary>
     public List<DateTime?> InAndOutBoundTimeRange { get; set; }
-    /// <summary>
-    /// 出入库备注
-    /// </summary>
-    public string? InAndOutBoundRemake { get; set; }
 
 }
 

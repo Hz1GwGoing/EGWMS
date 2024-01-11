@@ -402,21 +402,6 @@ public class EGRelocationService : IDynamicApiController, ITransient
 
     #endregion
 
-    #region 删除移库信息
-    /// <summary>
-    /// 删除移库信息
-    /// </summary>
-    /// <param name="input"></param>
-    /// <returns></returns>
-    [HttpPost]
-    [ApiDescriptionSettings(Name = "Delete")]
-    public async Task Delete(DeleteEGRelocationInput input)
-    {
-        var entity = await _Relocation.GetFirstAsync(u => u.Id == input.Id) ?? throw Oops.Oh(ErrorCodeEnum.D1002);
-        await _Relocation.FakeDeleteAsync(entity);   //假删除
-    }
-    #endregion
-
     #region 联表查询类
 
     /// <summary>
@@ -553,4 +538,19 @@ public class EGRelocationService : IDynamicApiController, ITransient
 //            #endregion
 //        }
 //    }
+#endregion
+
+#region 删除移库信息
+///// <summary>
+///// 删除移库信息
+///// </summary>
+///// <param name="input"></param>
+///// <returns></returns>
+//[HttpPost]
+//[ApiDescriptionSettings(Name = "Delete")]
+//public async Task Delete(DeleteEGRelocationInput input)
+//{
+//    var entity = await _Relocation.GetFirstAsync(u => u.Id == input.Id) ?? throw Oops.Oh(ErrorCodeEnum.D1002);
+//    await _Relocation.FakeDeleteAsync(entity);   //假删除
+//}
 #endregion
