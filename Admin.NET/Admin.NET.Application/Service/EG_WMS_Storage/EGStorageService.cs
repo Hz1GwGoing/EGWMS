@@ -281,7 +281,6 @@ public class EGStorageService : IDynamicApiController, ITransient
 
     #endregion
 
-
     #region 增加库位
     /// <summary>
     /// 增加库位
@@ -308,6 +307,10 @@ public class EGStorageService : IDynamicApiController, ITransient
     public async Task Delete(DeleteEGStorageInput input)
     {
         var entity = await _rep.GetFirstAsync(u => u.Id == input.Id) ?? throw Oops.Oh(ErrorCodeEnum.D1002);
+        if (entity.StorageOccupy == 1 || entity.StorageOccupy == 2)
+        {
+            throw Oops.Oh("当前库位上有存放物料，无法删除该库位！");
+        }
         await _rep.FakeDeleteAsync(entity);   //假删除
     }
 
