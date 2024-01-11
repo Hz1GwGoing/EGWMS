@@ -106,6 +106,14 @@ public class EGWareHouseService : IDynamicApiController, ITransient
     public async Task Delete(long id)
     {
         var entity = await _rep.GetFirstAsync(u => u.Id == id) ?? throw Oops.Oh(ErrorCodeEnum.D1002);
+        // 查找这个仓库下面有没有区域，有区域则无法删除
+        var whregioncount = _region.AsQueryable()
+                .Where(x => x.WHNum == entity.WHNum)
+                .Count();
+        if (whregioncount != 0)
+        {
+            throw Oops.Oh("当前仓库下有区域，无法删除这个仓库！");
+        }
         await _rep.FakeDeleteAsync(entity);   //假删除
     }
 
