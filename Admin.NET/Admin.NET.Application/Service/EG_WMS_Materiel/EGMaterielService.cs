@@ -73,7 +73,7 @@ public class EGMaterielService : IDynamicApiController, ITransient
         {
             // 查询在库数据
             int? invmaterielcount = _Inventory.AsQueryable()
-                                             .Where(x => x.MaterielNum == materieldata[i].MaterielNum)
+                                             .Where(x => x.MaterielNum == materieldata[i].MaterielNum && x.OutboundStatus == 0)
                                              .Sum(x => x.ICountAll);
 
             if (invmaterielcount < materieldata[i].QuantityNeedCount || invmaterielcount == null)

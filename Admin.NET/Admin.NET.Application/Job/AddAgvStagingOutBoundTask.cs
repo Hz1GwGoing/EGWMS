@@ -5,7 +5,7 @@
 /// </summary>
 [JobDetail("trigger_AgvOutBoundTaskJob", Description = "再次请求AGV出库暂存任务", GroupName = "AGVTask", Concurrent = false)]
 //[Daily(TriggerId = "trigger_repeatAgvOutBoundTaskJob", Description = "再次请求AGV出库暂存任务")]
-[PeriodMinutes(1, TriggerId = "trigger_AgvOutBoundTaskJob", StartNow = true, RunOnStart = true)]
+[PeriodMinutes(1, TriggerId = "trigger_AgvOutBoundTaskJob", StartNow = false, RunOnStart = false)]
 
 public class AddAgvStagingOutBoundTask : IJob
 {

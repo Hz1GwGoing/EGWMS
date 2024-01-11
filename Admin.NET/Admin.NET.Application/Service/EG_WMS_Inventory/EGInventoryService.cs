@@ -166,17 +166,6 @@ public class EGInventoryService : IDynamicApiController, ITransient
 
     #endregion
 
-    #region 查询库存在库时间
-
-    //public async Task a()
-    //{
-
-
-
-    //}
-
-    #endregion
-
     //-------------------------------------//-------------------------------------//
 
     #region 模糊查询（根据物料编号和物料名称和物料规格查询）
