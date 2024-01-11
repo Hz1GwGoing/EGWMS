@@ -76,6 +76,7 @@ public class EG_WMS_InAndOutBoundInput : BasePageInput
     /// </summary>
     public int? InAndOutBoundStatus { get; set; }
 
+    /// <summary>
     /// 出入库人员
     /// </summary>
     public string? InAndOutBoundUser { get; set; }

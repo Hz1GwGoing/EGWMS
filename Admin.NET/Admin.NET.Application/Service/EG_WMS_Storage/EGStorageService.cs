@@ -53,7 +53,7 @@ public class EGStorageService : IDynamicApiController, ITransient
 
     #endregion
 
-    #region 批量修改库位的所属区域（需要修改）
+    #region 批量修改库位的所属区域
 
     /// <summary>
     /// 批量修改库位的所属区域
@@ -74,17 +74,36 @@ public class EGStorageService : IDynamicApiController, ITransient
             throw Oops.Oh("不存在该区域！");
         }
 
+        bool hasInvalidStorage = false;
+
         for (int i = 0; i < input.storagenum.Length; i++)
         {
-            await _rep.AsUpdateable()
-                     .SetColumns(it => new Entity.EG_WMS_Storage
-                     {
-                         RegionNum = input.regionnum,
-                         UpdateTime = DateTime.Now,
-                     })
-                     .Where(x => x.StorageNum == input.storagenum.GetValue(i).ToString())
-                     .ExecuteCommandAsync();
+            // 查询库位占用情况  
+            var storagenum = _rep.GetFirst(x => x.StorageNum == input.storagenum.GetValue(i).ToString());
+            if (storagenum.StorageOccupy == 1)
+            {
+                hasInvalidStorage = true;
+                break; // 跳出循环，不再检查其他存储编号  
+            }
+        }
 
+        if (hasInvalidStorage)
+        {
+            throw Oops.Oh("当前输入的参数里有库位已被占用，请清除占用后重新移动！");
+        }
+        else
+        {
+            for (int i = 0; i < input.storagenum.Length; i++)
+            {
+                await _rep.AsUpdateable()
+                          .SetColumns(it => new Entity.EG_WMS_Storage
+                          {
+                              RegionNum = input.regionnum,
+                              UpdateTime = DateTime.Now,
+                          })
+                          .Where(x => x.StorageNum == input.storagenum.GetValue(i).ToString())
+                          .ExecuteCommandAsync();
+            }
         }
 
 
