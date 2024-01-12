@@ -1,4 +1,6 @@
-﻿namespace Admin.NET.Application;
+﻿using Admin.NET.Application.StrategyMode;
+
+namespace Admin.NET.Application;
 
 /// <summary>
 /// 出入库接口服务（agv、人工）
@@ -6,6 +8,7 @@
 [ApiDescriptionSettings(ApplicationConst.GroupName, Order = 100)]
 public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
 {
+    //private readonly StrategyClient strategyClient = new StrategyClient();
     #region 关系注入
     // agv接口
     private static readonly TaskService taskService = new TaskService();
@@ -512,10 +515,11 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
     /// 潜伏举升AGV入库（入库WMS自动推荐库位）
     /// </summary>
     /// <param name="input"></param>
+    /// <param name="type"></param>
     /// <returns></returns>
     [HttpPost]
     [ApiDescriptionSettings(Name = "AgvJoinBoundTasks", Order = 99)]
-    public async Task<string> AgvJoinBoundTasks(AgvJoinDto input)
+    public async Task<string> AgvJoinBoundTasks(AgvJoinDto input, string? type = "InA")
     {
         try
         {
@@ -533,6 +537,8 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
             if (input.EndPoint == null || input.EndPoint == "")
             {
                 // 根据策略推荐
+                //input.EndPoint = strategyClient.ContextInterface(type, input.materielWorkBins[0].MaterielNum).ToString();
+
                 input.EndPoint = BaseService.AGVStrategyReturnRecommEndStorage(input.materielWorkBins[0].MaterielNum);
                 // 添加暂存任务
                 if (input.EndPoint == "没有合适的库位")
@@ -560,7 +566,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                      .ToList();
                 if (storageGroup.StorageNum.ToInt() > selectData[0].ToInt())
                 {
-                    throw Oops.Oh("当前选择的这个库位，入库时有库位阻挡，请重新选择库位！");
+                    throw Oops.Oh("当前这个库位，入库时有库位阻挡，请重新选择库位！");
                 }
             }
             endpoint = input.EndPoint;
@@ -651,7 +657,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                      .ToList();
                 if (storageGroup.StorageNum.ToInt() > selectData[0].ToInt())
                 {
-                    throw Oops.Oh("当前选择的这个库位，出库时有库位阻挡，请重新选择库位！");
+                    throw Oops.Oh("当前这个库位，出库时有库位阻挡，请重新选择库位！");
                 }
             }
             startpoint = input.StartPoint;
