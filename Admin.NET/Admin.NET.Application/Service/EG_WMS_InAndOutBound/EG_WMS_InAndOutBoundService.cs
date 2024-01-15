@@ -1,4 +1,5 @@
-﻿using Admin.NET.Application.StrategyMode;
+﻿using Admin.NET.Application.Strategy;
+using Admin.NET.Application.StrategyMode;
 
 namespace Admin.NET.Application;
 
@@ -8,7 +9,7 @@ namespace Admin.NET.Application;
 [ApiDescriptionSettings(ApplicationConst.GroupName, Order = 100)]
 public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
 {
-    //private readonly StrategyClient strategyClient = new StrategyClient();
+
     #region 关系注入
     // agv接口
     private static readonly TaskService taskService = new TaskService();
@@ -519,7 +520,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
     /// <returns></returns>
     [HttpPost]
     [ApiDescriptionSettings(Name = "AgvJoinBoundTasks", Order = 99)]
-    public async Task<string> AgvJoinBoundTasks(AgvJoinDto input, string? type = "InA")
+    public async Task<string> AgvJoinBoundTasks(AgvJoinDto input, string? type = "LatentLiftInA")
     {
         try
         {
@@ -536,10 +537,18 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
             string endpoint = "";
             if (input.EndPoint == null || input.EndPoint == "")
             {
-                // 根据策略推荐
-                //input.EndPoint = strategyClient.ContextInterface(type, input.materielWorkBins[0].MaterielNum).ToString();
+                // 动态切换策略
+                switch (type)
+                {
+                    case "LatentLiftInA":
+                        StrategyClient strategyClient = new StrategyClient(new AGVStrategyReturnRecommEndStorage());
+                        input.EndPoint = strategyClient.ContextInterface(input.materielWorkBins[0].MaterielNum);
+                        break;
+                    default:
+                        input.EndPoint = BaseService.AGVStrategyReturnRecommEndStorage(input.materielWorkBins[0].MaterielNum);
+                        break;
+                }
 
-                input.EndPoint = BaseService.AGVStrategyReturnRecommEndStorage(input.materielWorkBins[0].MaterielNum);
                 // 添加暂存任务
                 if (input.EndPoint == "没有合适的库位")
                 {
@@ -608,11 +617,12 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
     /// 潜伏举升AGV出库（出库WMS自动推荐库位）
     /// </summary>
     /// <param name="input"></param>
+    /// <param name="type"></param>
     /// <returns></returns>
     /// <exception cref="Exception"></exception>
     [HttpPost]
     [ApiDescriptionSettings(Name = "AgvOutBoundTask", Order = 98)]
-    public async Task<string> AgvOutBoundTask(AgvBoundDto input)
+    public async Task<string> AgvOutBoundTask(AgvBoundDto input, string? type = "LatentLiftOutA")
     {
         // 生成当前时间时间戳
         string outboundnum = _TimeStamp.GetTheCurrentTimeTimeStamp("EGCK");
@@ -629,8 +639,22 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
             string startpoint = "";
             if (input.StartPoint == null || input.StartPoint == "")
             {
-                // 根据策略推荐
-                input.StartPoint = BaseService.AGVStrategyReturnRecommendStorageOutBoundJudgeTime(input.MaterielNum);
+                // 动态切换策略
+                switch (type)
+                {
+                    case "LatentLiftOutA":
+                        StrategyClient strategyClient = new StrategyClient(new AGVStrategyReturnRecommendStorageOutBoundJudgeTime());
+                        input.EndPoint = strategyClient.ContextInterface(input.MaterielNum);
+                        break;
+                    case "LatentLiftOutB":
+                        StrategyClient strategyclient = new StrategyClient(new AGVStrategyReturnRecommendStorageOutBound());
+                        input.EndPoint = strategyclient.ContextInterface(input.MaterielNum);
+                        break;
+                    default:
+                        input.StartPoint = BaseService.AGVStrategyReturnRecommendStorageOutBoundJudgeTime(input.MaterielNum);
+                        break;
+                }
+
                 if (input.StartPoint == "没有合适的库位")
                 {
                     // 添加出库暂存任务

@@ -8,6 +8,10 @@ namespace Admin.NET.Application;
 /// </summary>
 public class EGStorageBaseInput
 {
+
+    public int page { get; set; }
+    public int pageSize { get; set; }
+
     /// <summary>
     /// 库位编号
     /// </summary>
@@ -26,7 +30,7 @@ public class EGStorageBaseInput
     /// <summary>
     /// 库位类别
     /// </summary>
-    public virtual string? StorageType { get; set; }
+    public virtual int? StorageType { get; set; }
 
     /// <summary>
     /// 库位状态
@@ -34,70 +38,14 @@ public class EGStorageBaseInput
     public virtual int? StorageStatus { get; set; }
 
     /// <summary>
-    /// 仓库名称
-    /// </summary>
-    public virtual string? WareHouseName { get; set; }
-
-    /// <summary>
-    /// 库位长
-    /// </summary>
-    public virtual decimal? StorageLong { get; set; }
-
-    /// <summary>
-    /// 库位宽
-    /// </summary>
-    public virtual decimal? StorageWidth { get; set; }
-
-    /// <summary>
-    /// 库位高
-    /// </summary>
-    public virtual decimal? StorageHigh { get; set; }
-
-    /// <summary>
     /// 是否占用
     /// </summary>
-    public virtual string? StorageOccupy { get; set; }
-
-    /// <summary>
-    /// 备注
-    /// </summary>
-    public virtual string? StorageRemake { get; set; }
-
-    /// <summary>
-    /// 创建者姓名
-    /// </summary>
-    public virtual string? CreateUserName { get; set; }
-
-    /// <summary>
-    /// 修改者姓名
-    /// </summary>
-    public virtual string? UpdateUserName { get; set; }
-
-    /// <summary>
-    /// 巷道号
-    /// </summary>
-    public virtual int? RoadwayNum { get; set; }
-
-    /// <summary>
-    /// 货架号
-    /// </summary>
-    public virtual int? ShelfNum { get; set; }
-
-    /// <summary>
-    /// 层号
-    /// </summary>
-    public virtual int? FloorNumber { get; set; }
-
-    /// <summary>
-    /// 仓库编号
-    /// </summary>
-    public virtual string? WHNum { get; set; }
+    public virtual int? StorageOccupy { get; set; }
 
     /// <summary>
     /// 区域编号
     /// </summary>
     public virtual string? RegionNum { get; set; }
-
 
     /// <summary>
     /// 组别

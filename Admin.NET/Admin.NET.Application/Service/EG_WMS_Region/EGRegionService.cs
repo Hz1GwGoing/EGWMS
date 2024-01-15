@@ -27,42 +27,116 @@ public class EGRegionService : IDynamicApiController, ITransient
     }
     #endregion
 
-    #region 分页查询区域
+    #region 可根据条件筛选区域内容分页
+
     /// <summary>
-    /// 分页查询区域
+    /// 可根据条件筛选区域内容分页
     /// </summary>
     /// <param name="input"></param>
     /// <returns></returns>
+
     [HttpPost]
-    [ApiDescriptionSettings(Name = "Page")]
-    public async Task<SqlSugarPagedList<EGRegionOutput>> Page(EGRegionInput input)
+    [ApiDescriptionSettings(Name = "SelectRegionStorageCount")]
+    public async Task<SqlSugarPagedList<SelectRegionStorageCountDto>> SelectRegionStorageCount(EGRegionInput input)
     {
-        var query = _rep.AsQueryable()
-                    .WhereIF(!string.IsNullOrWhiteSpace(input.RegionNum), u => u.RegionNum.Contains(input.RegionNum.Trim()))
-                    .WhereIF(!string.IsNullOrWhiteSpace(input.RegionName), u => u.RegionName.Contains(input.RegionName.Trim()))
-                    .WhereIF(input.RegionStatus > 0, u => u.RegionStatus == input.RegionStatus)
-                    .WhereIF(!string.IsNullOrWhiteSpace(input.CreateUserName), u => u.CreateUserName.Contains(input.CreateUserName.Trim()))
-                    .WhereIF(!string.IsNullOrWhiteSpace(input.UpdateUserName), u => u.UpdateUserName.Contains(input.UpdateUserName.Trim()))
-                    .WhereIF(!string.IsNullOrWhiteSpace(input.RegionRemake), u => u.RegionRemake.Contains(input.RegionRemake.Trim()))
-                    .WhereIF(!string.IsNullOrWhiteSpace(input.WHNum), u => u.WHNum.Contains(input.WHNum.Trim()))
-                    //处理外键和TreeSelector相关字段的连接
-                    .LeftJoin<EG_WMS_WareHouse>((u, whnum) => u.WHNum == whnum.WHNum)
-                    .Select((u, whnum) => new EGRegionOutput
-                    {
-                        Id = u.Id,
-                        RegionNum = u.RegionNum,
-                        RegionName = u.RegionName,
-                        RegionStatus = u.RegionStatus,
-                        CreateUserName = u.CreateUserName,
-                        UpdateUserName = u.UpdateUserName,
-                        RegionRemake = u.RegionRemake,
-                        WHNum = u.WHNum,
-                        EGWareHouseWHNum = whnum.WHNum,
-                    })
-;
-        query = query.OrderBuilder(input);
-        return await query.ToPagedListAsync(input.Page, input.PageSize);
+
+        var data = _rep.AsQueryable()
+                       .LeftJoin<Entity.EG_WMS_Storage>((a, b) => a.RegionNum == b.RegionNum)
+                       .InnerJoin<Entity.EG_WMS_WareHouse>((a, b, c) => a.WHNum == c.WHNum)
+                       .GroupBy(a => a.RegionNum)
+                       .WhereIF(!string.IsNullOrWhiteSpace(input.RegionNum), (a, b, c) => a.RegionNum.Contains(input.RegionNum.Trim()))
+                       .WhereIF(!string.IsNullOrWhiteSpace(input.RegionName), (a, b, c) => a.RegionName.Contains(input.RegionName.Trim()))
+                       .WhereIF(input.RegionStatus >= 0, (a, b, c) => a.RegionStatus == input.RegionStatus)
+                       .WhereIF(!string.IsNullOrWhiteSpace(input.WHNum), (a, b, c) => a.WHNum.Contains(input.WHNum.Trim()))
+                       .Select((a, b, c) => new SelectRegionStorageCountDto
+                       {
+                           id = a.Id,
+                           RegionNum = a.RegionNum,
+                           RegionName = a.RegionName,
+                           WHNum = c.WHNum,
+                           WHName = c.WHName,
+                           TotalStorage = SqlFunc.AggregateCount(b.StorageNum),
+                           //EnabledStorage = SqlFunc.AggregateCount(b.StorageStatus == 0 && b.StorageOccupy == 0),
+                           EnabledStorage = SqlFunc.Subqueryable<Entity.EG_WMS_Storage>()
+                                                   .Where(x => x.StorageOccupy == 0 && x.StorageStatus == 0 && x.RegionNum == a.RegionNum)
+                                                   .Select(x => SqlFunc.AggregateCount(x.StorageNum)),
+                           UsedStorage = SqlFunc.AggregateSum(SqlFunc.IIF(b.StorageOccupy == 1, 1, 0)),
+                           Remake = b.StorageRemake,
+                           CreateUserName = a.CreateUserName,
+                           UpdateUserName = a.UpdateUserName,
+                           // 区域绑定物料
+                           RegionMaterielNum = a.RegionMaterielNum,
+                       });
+
+        return await data.ToPagedListAsync(input.page, input.pageSize);
+
     }
+
+
+    #endregion
+
+    #region 根据区域查询已占用的库位
+
+    /// <summary>
+    /// 根据区域查询已占用的库位
+    /// </summary>
+    /// <param name="regionnum">区域编号</param>
+    /// <param name="page">页数</param>
+    /// <param name="pageSize">每页容量</param>
+    /// <returns></returns>
+    [HttpPost]
+    [ApiDescriptionSettings(Name = "ReasonRegionSelectStorage")]
+    public async Task<SqlSugarPagedList<SelectStorageDto>> ReasonRegionSelectStorage(string regionnum, int page, int pageSize)
+    {
+
+        var data = _Storage.AsQueryable()
+                           .Where(x => x.RegionNum == regionnum && x.StorageOccupy == 1)
+                           .Select(x => new SelectStorageDto
+                           {
+                               StorageNum = x.StorageNum,
+                               StorageName = x.StorageName,
+                               StorageOccupy = (int)x.StorageOccupy,
+                               StorageStatus = (int)x.StorageStatus,
+                           });
+
+        return await data.ToPagedListAsync(page, pageSize);
+
+
+    }
+
+
+    #endregion
+
+    #region 根据区域查询未占用的库位
+
+    /// <summary>
+    /// 根据区域查询未占用的库位
+    /// </summary>
+    /// <param name="regionnum">区域编号</param>
+    /// <param name="page">页数</param>
+    /// <param name="pageSize">每页容量</param>
+    /// <returns></returns>
+    [HttpPost]
+    [ApiDescriptionSettings(Name = "ReasonRegionSelectNotStorage")]
+    public async Task<SqlSugarPagedList<SelectStorageDto>> ReasonRegionSelectNotStorage(string regionnum, int page, int pageSize)
+    {
+
+        var data = _Storage.AsQueryable()
+                           .Where(x => x.RegionNum == regionnum && x.StorageOccupy == 0)
+                           .Select(x => new SelectStorageDto
+                           {
+                               StorageNum = x.StorageNum,
+                               StorageName = x.StorageName,
+                               StorageOccupy = (int)x.StorageOccupy,
+                               StorageStatus = (int)x.StorageStatus,
+                           });
+
+        return await data.ToPagedListAsync(page, pageSize);
+
+
+    }
+
+
     #endregion
 
     #region 查询一共有多少个区域
@@ -211,4 +285,39 @@ public class EGRegionService : IDynamicApiController, ITransient
 //            ).ToListAsync();
 //}
 
+#endregion
+
+#region 分页查询区域
+//    /// <summary>
+//    /// 分页查询区域
+//    /// </summary>
+//    /// <param name="input"></param>
+//    /// <returns></returns>
+//    [HttpPost]
+//    [ApiDescriptionSettings(Name = "Page")]
+//    public async Task<SqlSugarPagedList<EGRegionOutput>> Page(EGRegionInput input)
+//    {
+//        var query = _rep.AsQueryable()
+//                    .WhereIF(!string.IsNullOrWhiteSpace(input.RegionNum), u => u.RegionNum.Contains(input.RegionNum.Trim()))
+//                    .WhereIF(!string.IsNullOrWhiteSpace(input.RegionName), u => u.RegionName.Contains(input.RegionName.Trim()))
+//                    .WhereIF(input.RegionStatus >= 0, u => u.RegionStatus == input.RegionStatus)
+//                    .WhereIF(!string.IsNullOrWhiteSpace(input.WHNum), u => u.WHNum.Contains(input.WHNum.Trim()))
+//                    //处理外键和TreeSelector相关字段的连接
+//                    .LeftJoin<EG_WMS_WareHouse>((u, whnum) => u.WHNum == whnum.WHNum)
+//                    .Select((u, whnum) => new EGRegionOutput
+//                    {
+//                        Id = u.Id,
+//                        RegionNum = u.RegionNum,
+//                        RegionName = u.RegionName,
+//                        RegionStatus = u.RegionStatus,
+//                        CreateUserName = u.CreateUserName,
+//                        UpdateUserName = u.UpdateUserName,
+//                        RegionRemake = u.RegionRemake,
+//                        WHNum = u.WHNum,
+//                        EGWareHouseWHNum = whnum.WHNum,
+//                    })
+//;
+//        query = query.OrderBuilder(input);
+//        return await query.ToPagedListAsync(input.Page, input.PageSize);
+//    }
 #endregion

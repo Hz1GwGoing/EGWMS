@@ -8,29 +8,21 @@ namespace Admin.NET.Application;
 /// </summary>
 internal class StrategyClient
 {
-    InAndOutBoundStrategy strategy;
+    InAndOutBoundStrategy _strategy;
 
     public StrategyClient(InAndOutBoundStrategy strategy)
     {
-        this.strategy = strategy;
+        this._strategy = strategy;
     }
 
     /// <summary>
     /// 动态实现接口
     /// </summary>
-    /// <param name="type">指定参数</param>
     /// <param name="materielnum">物料编号</param>
     /// <returns></returns>
-    public InAndOutBoundStrategy ContextInterface(string type, string materielnum)
+    public string ContextInterface(string materielnum)
     {
-        switch (type)
-        {
-            case "INA":
-                return new AGVStrategyReturnRecommEndStorage(materielnum);
-            default:
-                return null;
-
-        }
+        return _strategy.AlgorithmInterface(materielnum);
     }
 
 

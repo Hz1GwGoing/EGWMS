@@ -112,67 +112,30 @@ public class EGStorageService : IDynamicApiController, ITransient
 
     #endregion
 
-    #region 得到每个区域下有多少个库位
+    #region 可根据条件筛选库位内容分页
 
     /// <summary>
-    /// 得到每个区域下有多少个库位
+    /// 可根据条件筛选库位内容分页
     /// </summary>
-    /// <param name="page">页数</param>
-    /// <param name="pageSize">每页容量</param>
+    /// <param name="input"></param>
     /// <returns></returns>
-
-    [HttpPost]
-    [ApiDescriptionSettings(Name = "SelectRegionStorageCount")]
-    public async Task<SqlSugarPagedList<SelectRegionStorageCountDto>> SelectRegionStorageCount(int page, int pageSize)
-    {
-
-        var data = _region.AsQueryable()
-                       .LeftJoin<Entity.EG_WMS_Storage>((a, b) => a.RegionNum == b.RegionNum)
-                       .InnerJoin<Entity.EG_WMS_WareHouse>((a, b, c) => a.WHNum == c.WHNum)
-                       .GroupBy(a => a.RegionNum)
-                       .Select((a, b, c) => new SelectRegionStorageCountDto
-                       {
-                           id = a.Id,
-                           RegionNum = a.RegionNum,
-                           RegionName = a.RegionName,
-                           WHNum = c.WHNum,
-                           WHName = c.WHName,
-                           TotalStorage = SqlFunc.AggregateCount(b.StorageNum),
-                           //EnabledStorage = SqlFunc.AggregateCount(b.StorageStatus == 0 && b.StorageOccupy == 0),
-                           EnabledStorage = SqlFunc.Subqueryable<Entity.EG_WMS_Storage>()
-                                                   .Where(x => x.StorageOccupy == 0 && x.StorageStatus == 0 && x.RegionNum == a.RegionNum)
-                                                   .Select(x => SqlFunc.AggregateCount(x.StorageNum)),
-                           UsedStorage = SqlFunc.AggregateSum(SqlFunc.IIF(b.StorageOccupy == 1, 1, 0)),
-                           Remake = b.StorageRemake,
-                           CreateUserName = a.CreateUserName,
-                           UpdateUserName = a.UpdateUserName,
-                           // 区域绑定物料
-                           RegionMaterielNum = a.RegionMaterielNum,
-                       });
-
-        return await data.ToPagedListAsync(page, pageSize);
-
-    }
-
-
-    #endregion
-
-    #region 分页查询库位表所有内容（联表：区域、仓库）
-
-    /// <summary>
-    /// 分页查询库位表所有内容（联表：区域、仓库）
-    /// </summary>
-    /// <param name="page">页数</param>
-    /// <param name="pageSize">每页容量</param>
-    /// <returns></returns>
+    /// 
     [HttpPost]
     [ApiDescriptionSettings(Name = "GetStorageRegionAndWH")]
-    public async Task<SqlSugarPagedList<StorageRegionAndWhDto>> GetStorageRegionAndWH(int page, int pageSize)
+    public async Task<SqlSugarPagedList<StorageRegionAndWhDto>> GetStorageRegionAndWH(EGStorageBaseInput input)
     {
         var query = _rep.AsQueryable()
                         .InnerJoin<Entity.EG_WMS_Region>((a, b) => a.RegionNum == b.RegionNum)
                         .InnerJoin<Entity.EG_WMS_WareHouse>((a, b, c) => b.WHNum == c.WHNum)
                         .OrderBy(a => a.StorageNum, OrderByType.Asc)
+                        .WhereIF(!string.IsNullOrWhiteSpace(input.StorageNum), (a, b, c) => a.StorageNum.Contains(input.StorageNum))
+                        .WhereIF(!string.IsNullOrWhiteSpace(input.StorageName), (a, b, c) => a.StorageName.Contains(input.StorageName))
+                        .WhereIF(!string.IsNullOrWhiteSpace(input.StorageAddress), (a, b, c) => a.StorageAddress.Contains(input.StorageAddress))
+                        .WhereIF(!string.IsNullOrWhiteSpace(input.StorageGroup), (a, b, c) => a.StorageGroup.Contains(input.StorageGroup))
+                        .WhereIF(!string.IsNullOrWhiteSpace(input.RegionNum), (a, b, c) => b.RegionNum.Contains(input.RegionNum))
+                        .WhereIF(input.StorageOccupy >= 0, (a, b, c) => a.StorageOccupy == input.StorageOccupy)
+                        .WhereIF(input.StorageStatus >= 0, (a, b, c) => a.StorageStatus == input.StorageStatus)
+                        .WhereIF(input.StorageType >= 0, (a, b, c) => a.StorageType == input.StorageType)
                         .Select((a, b, c) => new StorageRegionAndWhDto
                         {
                             // 库位id
@@ -196,7 +159,7 @@ public class EGStorageService : IDynamicApiController, ITransient
                         });
 
 
-        return await query.ToPagedListAsync(page, pageSize);
+        return await query.ToPagedListAsync(input.page, input.pageSize);
 
     }
 

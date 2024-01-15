@@ -189,38 +189,6 @@ public class BaseService : IDynamicApiController, ITransient
 
     #endregion
 
-    #region 根据区域查询库位
-
-    /// <summary>
-    /// 根据区域查询库位
-    /// </summary>
-    /// <param name="regionnum">区域编号</param>
-    /// <param name="page">页数</param>
-    /// <param name="pageSize">每页容量</param>
-    /// <returns></returns>
-    [HttpPost]
-    [ApiDescriptionSettings(Name = "ReasonRegionSelectStorage")]
-    public async Task<SqlSugarPagedList<SelectStorageDto>> ReasonRegionSelectStorage(string regionnum, int page, int pageSize)
-    {
-
-        var data = _Storage.AsQueryable()
-                           .Where(x => x.RegionNum == regionnum)
-                           .Select(x => new SelectStorageDto
-                           {
-                               StorageNum = x.StorageNum,
-                               StorageName = x.StorageName,
-                               StorageOccupy = (int)x.StorageOccupy,
-                               StorageStatus = (int)x.StorageStatus,
-                           });
-
-        return await data.ToPagedListAsync(page, pageSize);
-
-
-    }
-
-
-    #endregion
-
     #region 展示有库存的库位信息
 
     /// <summary>

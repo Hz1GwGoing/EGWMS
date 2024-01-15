@@ -22,23 +22,27 @@ public class EGWareHouseService : IDynamicApiController, ITransient
 
     #endregion
 
-    #region 获得仓库列表包括仓库下面所有的数据
+    #region 可根据条件筛选仓库内容分页
 
     /// <summary>
-    /// 获得仓库列表包括仓库下面所有的数据
+    /// 可根据条件筛选仓库内容分页
     /// </summary>
-    /// <param name="page">页码</param>
-    /// <param name="pageSize">每页容量</param>
+    /// <param name="input"></param>
     /// <returns></returns>
 
     [HttpPost]
     [ApiDescriptionSettings(Name = "GetWareHouseDataAll")]
-    public async Task<SqlSugarPagedList<GetWareHouseDataDto>> GetWareHouseDataAll(int page = 1, int pageSize = 10)
+    public async Task<SqlSugarPagedList<GetWareHouseDataDto>> GetWareHouseDataAll(EGWareHouseInput input)
     {
 
         var data = _region.AsQueryable()
              .RightJoin<Entity.EG_WMS_WareHouse>((a, b) => a.WHNum == b.WHNum)
              .LeftJoin<Entity.EG_WMS_Storage>((a, b, c) => a.RegionNum == c.RegionNum)
+             .WhereIF(!string.IsNullOrWhiteSpace(input.WHNum), (a, b, c) => b.WHNum.Contains(input.WHNum))
+             .WhereIF(!string.IsNullOrWhiteSpace(input.WHName), (a, b, c) => b.WHName.Contains(input.WHName))
+             .WhereIF(!string.IsNullOrWhiteSpace(input.WHAddress), (a, b, c) => b.WHAddress.Contains(input.WHAddress))
+             .WhereIF(input.WHStatus >= 0, (a, b, c) => b.WHStatus == input.WHStatus)
+             .WhereIF(input.WHType >= 0, (a, b, c) => b.WHType == input.WHType)
              .Select((a, b, c) => new GetWareHouseDataDto
              {
                  Id = b.Id,
@@ -70,7 +74,7 @@ public class EGWareHouseService : IDynamicApiController, ITransient
              })
              .GroupBy(a => a.WHNum);
 
-        return await data.ToPagedListAsync(page, pageSize);
+        return await data.ToPagedListAsync(input.page, input.pageSize);
 
 
     }
@@ -148,9 +152,11 @@ public class EGWareHouseService : IDynamicApiController, ITransient
     }
     #endregion
 
+
 }
 
 //-------------------------------------/归档/-------------------------------------//
+
 
 #region 分页查询仓库
 
@@ -167,9 +173,9 @@ public class EGWareHouseService : IDynamicApiController, ITransient
 //        var query = _rep.AsQueryable()
 //                    .WhereIF(!string.IsNullOrWhiteSpace(input.WHNum), u => u.WHNum.Contains(input.WHNum.Trim()))
 //                    .WhereIF(!string.IsNullOrWhiteSpace(input.WHName), u => u.WHName.Contains(input.WHName.Trim()))
-//                    .WhereIF(input.WHType > 0, u => u.WHType == input.WHType)
+//                    .WhereIF(input.WHType >= 0, u => u.WHType == input.WHType)
 //                    .WhereIF(!string.IsNullOrWhiteSpace(input.WHAddress), u => u.WHAddress.Contains(input.WHAddress.Trim()))
-//                    .WhereIF(input.WHStatus > 0, u => u.WHStatus == input.WHStatus)
+//                    .WhereIF(input.WHStatus >= 0, u => u.WHStatus == input.WHStatus)
 
 //                    // 获取创建日期
 //                    .WhereIF(input.CreateTime > DateTime.MinValue, u => u.CreateTime >= input.CreateTime)

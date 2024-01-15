@@ -9,11 +9,6 @@ public class AGVStrategyReturnRecommEndStorage : InAndOutBoundStrategy
     private readonly SqlSugarRepository<Entity.EG_WMS_Region> _Region = App.GetService<SqlSugarRepository<Entity.EG_WMS_Region>>();
     private readonly SqlSugarRepository<Entity.EG_WMS_Storage> _Storage = App.GetService<SqlSugarRepository<Entity.EG_WMS_Storage>>();
 
-    public AGVStrategyReturnRecommEndStorage(string MarterielNum)
-    {
-        AlgorithmInterface(MarterielNum);
-    }
-
     /// <summary>
     /// （策略）（密集库）AGV入库WMS自动推荐的库位
     /// </summary>

@@ -43,8 +43,12 @@ public class EGWareHouseBaseInput
 /// <summary>
 /// EGWareHouse分页查询输入参数
 /// </summary>
-public class EGWareHouseInput : BasePageInput
+public class EGWareHouseInput
 {
+
+    public int page { get; set; }
+    public int pageSize { get; set; }
+
     /// <summary>
     /// 仓库编号
     /// </summary>
@@ -69,42 +73,6 @@ public class EGWareHouseInput : BasePageInput
     /// 仓库状态
     /// </summary>
     public int? WHStatus { get; set; }
-
-    /// <summary>
-    /// 区域数量
-    /// </summary>
-    public int? RegionCount { get; set; } = 0;
-
-    /// <summary>
-    /// 库位总数
-    /// </summary>
-    public int? StoreroomCount { get; set; } = 0;
-
-    /// <summary>
-    /// 可用库位
-    /// </summary>
-    public int? StoreroomUsable { get; set; } = 0;
-
-    /// <summary>
-    /// 创建者姓名
-    /// </summary>
-    public string CreateUserName { get; set; }
-
-    /// <summary>
-    /// 修改者姓名
-    /// </summary>
-    public string UpdateUserName { get; set; }
-
-    /// <summary>
-    /// 备注
-    /// </summary>
-    public string WHRemake { get; set; }
-
-
-    /// <summary>
-    /// 创建时间
-    /// </summary>
-    public virtual DateTime? CreateTime { get; set; }
 }
 
 /// <summary>

@@ -49,8 +49,12 @@ public class EGRegionBaseInput
 /// <summary>
 /// EGRegion分页查询输入参数
 /// </summary>
-public class EGRegionInput : BasePageInput
+public class EGRegionInput
 {
+
+    public int page { get; set; }
+
+    public int pageSize { get; set; }
     /// <summary>
     /// 区域编号
     /// </summary>
@@ -65,21 +69,6 @@ public class EGRegionInput : BasePageInput
     /// 区域状态
     /// </summary>
     public int? RegionStatus { get; set; }
-
-    /// <summary>
-    /// 创建者姓名
-    /// </summary>
-    public string? CreateUserName { get; set; }
-
-    /// <summary>
-    /// 修改者姓名
-    /// </summary>
-    public string? UpdateUserName { get; set; }
-
-    /// <summary>
-    /// 备注
-    /// </summary>
-    public string? RegionRemake { get; set; }
 
     /// <summary>
     /// 仓库编号
