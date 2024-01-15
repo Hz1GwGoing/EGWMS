@@ -895,7 +895,7 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
                         // 修改料箱表里面的出入库编号
                         await _WorkBin.AsUpdateable()
                                  .AS("EG_WMS_WorkBin")
-                                 .SetColumns(it => new EG_WMS_WorkBin
+                                 .SetColumns(it => new Entity.EG_WMS_WorkBin
                                  {
                                      InAndOutBoundNum = null,
                                  })

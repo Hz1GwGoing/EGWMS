@@ -199,6 +199,59 @@ public class EGRegionService : IDynamicApiController, ITransient
 
     #endregion
 
+    #region 当前区域下所有库位
+
+    /// <summary>
+    /// 当前区域下所有库位
+    /// </summary>
+    /// <param name="regionnum">区域编号</param>
+    /// <param name="page">页码</param>
+    /// <param name="pagesize">每页容量</param>
+    /// <returns></returns>
+
+    [HttpPost]
+    [ApiDescriptionSettings(Name = "AllLocationsUnderStorage")]
+    public async Task<SqlSugarPagedList<SelectStorageDto>> AllLocationsUnderStorage(string regionnum, int page, int pagesize)
+    {
+        var data = _rep.AsQueryable()
+                       .InnerJoin<EG_WMS_Storage>((a, b) => a.RegionNum == b.RegionNum)
+                       .OrderBy((a, b) => b.StorageNum, OrderByType.Desc)
+                       .Where(a => a.RegionNum == regionnum)
+                       .Select<SelectStorageDto>();
+
+        return await data.ToPagedListAsync(page, pagesize);
+
+    }
+
+
+    #endregion
+
+    #region 所有未占用库位
+
+    /// <summary>
+    /// 所有未占用库位
+    /// </summary>
+    /// <param name="page">页码</param>
+    /// <param name="pagesize">每页容量</param>
+    /// <returns></returns>
+
+    [HttpPost]
+    [ApiDescriptionSettings(Name = "AllUnoccupiedStorage")]
+    public async Task<SqlSugarPagedList<SelectStorageDto>> AllUnoccupiedStorage(int page, int pagesize)
+    {
+
+        var data = _Storage.AsQueryable()
+                           .Where(x => x.StorageType == 0 && x.StorageOccupy == 0)
+                           .OrderBy(x => x.StorageNum, OrderByType.Desc)
+                           .Select<SelectStorageDto>();
+
+        return await data.ToPagedListAsync(page, pagesize);
+
+    }
+
+
+    #endregion
+
     #region 增加区域
     /// <summary>
     /// 增加区域

@@ -52,7 +52,7 @@ public class BaseService : IDynamicApiController, ITransient
                     .InnerJoin<Entity.EG_WMS_Storage>((o, cus, ml, age) => cus.StorageNum == age.StorageNum)
                     .InnerJoin<Entity.EG_WMS_Region>((o, cus, ml, age, ion) => age.RegionNum == ion.RegionNum)
                     .InnerJoin<Entity.EG_WMS_WareHouse>((o, cus, ml, age, ion, wh) => ion.WHNum == wh.WHNum)
-                    .InnerJoin<EG_WMS_WorkBin>((o, cus, ml, age, ion, wh, wb) => cus.WorkBinNum == wb.WorkBinNum)
+                    .InnerJoin<Entity.EG_WMS_WorkBin>((o, cus, ml, age, ion, wh, wb) => cus.WorkBinNum == wb.WorkBinNum)
                     .OrderBy(o => o.Id)
                     .Select((o, cus, ml, age, ion, wh, wb) => new GetAllInventoryData
                     {
@@ -95,7 +95,7 @@ public class BaseService : IDynamicApiController, ITransient
                       .InnerJoin<EG_WMS_Tem_Inventory>((a, b, c) => c.InBoundNum == b.InAndOutBoundNum)
                       .InnerJoin<Entity.EG_WMS_Materiel>((a, b, c, d) => d.MaterielNum == c.MaterielNum)
                       .InnerJoin<EG_WMS_Tem_InventoryDetail>((a, b, c, d, e) => e.InventoryNum == c.InventoryNum)
-                      .InnerJoin<EG_WMS_WorkBin>((a, b, c, d, e, f) => e.WorkBinNum == f.WorkBinNum)
+                      .InnerJoin<Entity.EG_WMS_WorkBin>((a, b, c, d, e, f) => e.WorkBinNum == f.WorkBinNum)
                       .InnerJoin<Entity.EG_WMS_Region>((a, b, c, d, e, f, g) => g.RegionNum == e.RegionNum)
                       .InnerJoin<Entity.EG_WMS_WareHouse>((a, b, c, d, e, f, g, h) => h.WHNum == e.WHNum)
                       .InnerJoin<Entity.EG_WMS_Storage>((a, b, c, d, e, f, g, h, i) => i.StorageNum == e.StorageNum)
@@ -976,7 +976,7 @@ public class BaseService : IDynamicApiController, ITransient
                 // 修改料箱的库位信息
 
                 _WorkBin.AsUpdateable()
-                        .SetColumns(x => new EG_WMS_WorkBin
+                        .SetColumns(x => new Entity.EG_WMS_WorkBin
                         {
                             StorageNum = malnum,
                         })

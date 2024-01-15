@@ -17,7 +17,7 @@ public class EG_WMS_InAndOutBoundMessage
     private readonly SqlSugarRepository<EG_WMS_InventoryDetail> _InventoryDetail = App.GetService<SqlSugarRepository<EG_WMS_InventoryDetail>>();
     private readonly SqlSugarRepository<Entity.EG_WMS_Storage> _Storage = App.GetService<SqlSugarRepository<Entity.EG_WMS_Storage>>();
     private readonly SqlSugarRepository<Entity.EG_WMS_Region> _Region = App.GetService<SqlSugarRepository<Entity.EG_WMS_Region>>();
-    private readonly SqlSugarRepository<EG_WMS_WorkBin> _workbin = App.GetService<SqlSugarRepository<EG_WMS_WorkBin>>();
+    private readonly SqlSugarRepository<Entity.EG_WMS_WorkBin> _workbin = App.GetService<SqlSugarRepository<Entity.EG_WMS_WorkBin>>();
     private readonly SqlSugarRepository<EG_WMS_Tem_Inventory> _InventoryTem = App.GetService<SqlSugarRepository<EG_WMS_Tem_Inventory>>();
     private readonly SqlSugarRepository<EG_WMS_Tem_InventoryDetail> _InventoryDetailTem = App.GetService<SqlSugarRepository<EG_WMS_Tem_InventoryDetail>>();
     private readonly SqlSugarRepository<TaskEntity> _TaskEntity = App.GetService<SqlSugarRepository<TaskEntity>>();
@@ -111,7 +111,7 @@ public class EG_WMS_InAndOutBoundMessage
     public async Task ModifyInventoryLocationOccupancy(string inandoutboundnum, string EndPoint)
     {
         // 得到入库的数据
-        List<EG_WMS_WorkBin> list = _workbin.AsQueryable()
+        List<Entity.EG_WMS_WorkBin> list = _workbin.AsQueryable()
                  .Where(x => x.InAndOutBoundNum == inandoutboundnum)
                  .ToList();
 
@@ -292,7 +292,7 @@ public class EG_WMS_InAndOutBoundMessage
             };
 
             // 料箱表 将料箱内容保存到料箱表中
-            EG_WMS_WorkBin addWorkBin = new EG_WMS_WorkBin()
+            Entity.EG_WMS_WorkBin addWorkBin = new Entity.EG_WMS_WorkBin()
             {
                 WorkBinNum = workbinnum,
                 ProductCount = productcount,
@@ -569,7 +569,7 @@ public class EG_WMS_InAndOutBoundMessage
             };
 
             // 料箱表 将料箱内容保存到料箱表中
-            EG_WMS_WorkBin addWorkBin = new EG_WMS_WorkBin()
+            Entity.EG_WMS_WorkBin addWorkBin = new Entity.EG_WMS_WorkBin()
             {
                 WorkBinNum = workbinnum,
                 ProductCount = productcount,

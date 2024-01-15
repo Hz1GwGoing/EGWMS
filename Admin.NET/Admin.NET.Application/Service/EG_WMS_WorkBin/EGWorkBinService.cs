@@ -115,10 +115,38 @@ public class EGWorkBinService : IDynamicApiController, ITransient
     }
     #endregion
 
-    #region 料箱回溯（待完成）
+    #region 料箱回溯
+
+    /// <summary>
+    /// 料箱回溯
+    /// </summary>
+    /// <param name="workbinnum">料箱编号</param>
+    /// <param name="page">页数</param>
+    /// <param name="pagesize">每页容量</param>
+    /// <returns></returns>
+    [HttpPost]
+    [ApiDescriptionSettings(Name = "WorkBinBackTracKing")]
+    public async Task<SqlSugarPagedList<WorkBinBacktrackingDto>> WorkBinBackTracKing(string workbinnum, int page, int pagesize)
+    {
+        // 避免转移错误
+        string string1 = Uri.UnescapeDataString(workbinnum);
+        var data = _rep.AsQueryable()
+                       .Where(x => x.WorkBinNum == string1 && x.WorkBinStatus == 0)
+                       .OrderBy(x => x.CreateTime, OrderByType.Desc)
+                       .Select(x => new WorkBinBacktrackingDto
+                       {
+                           IsCount = x.ProductCount
+                       }, true);
+
+
+        return await data.ToPagedListAsync(page, pagesize);
+
+    }
+
 
     #endregion
 }
+
 
 //-------------------------------------/归档/-------------------------------------//
 
