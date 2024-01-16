@@ -308,6 +308,7 @@ public class EGRegionService : IDynamicApiController, ITransient
                                RegionMaterielNum = input.RegionMaterielNum,
                                RegionName = input.RegionName,
                                RegionType = input.RegionType,
+                               WHNum = input.WHNum,
                                UpdateTime = DateTime.Now,
                            })
                            .Where(it => it.Id == input.Id)

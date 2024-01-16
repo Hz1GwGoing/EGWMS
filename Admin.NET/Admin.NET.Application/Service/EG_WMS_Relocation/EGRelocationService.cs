@@ -17,6 +17,7 @@ public class EGRelocationService : IDynamicApiController, ITransient
     private readonly SqlSugarRepository<EG_WMS_Inventory> _Inventory;
     private readonly SqlSugarRepository<EG_WMS_Tem_InventoryDetail> _InventoryDetailTem;
     private readonly SqlSugarRepository<EG_WMS_Storage> _Storage;
+    private readonly SqlSugarRepository<EG_WMS_Region> _Region;
 
     #endregion
 
@@ -29,7 +30,8 @@ public class EGRelocationService : IDynamicApiController, ITransient
          SqlSugarRepository<EG_WMS_Tem_Inventory> InventoryTem,
          SqlSugarRepository<EG_WMS_Inventory> Inventory,
          SqlSugarRepository<EG_WMS_Tem_InventoryDetail> InventoryDetailTem,
-         SqlSugarRepository<EG_WMS_Storage> Storage
+         SqlSugarRepository<EG_WMS_Storage> Storage,
+         SqlSugarRepository<EG_WMS_Region> Region
         )
     {
         _Relocation = Relocation;
@@ -39,123 +41,7 @@ public class EGRelocationService : IDynamicApiController, ITransient
         _Inventory = Inventory;
         _InventoryDetailTem = InventoryDetailTem;
         _Storage = Storage;
-    }
-    #endregion
-
-    #region 移库操作
-
-    /// <summary>
-    /// 移库（料箱）
-    /// </summary>
-    /// <param name="input"></param>
-    /// <returns></returns>
-    [HttpPost]
-    [ApiDescriptionSettings(Name = "PDARelocation")]
-    public async Task PDARelocation(RelocationDto input)
-    {
-        // 生成当前时间时间戳
-        string relacationnum = currentTime.GetTheCurrentTimeTimeStamp("EGYK");
-
-        try
-        {
-            // 得到需要移库的数据（料箱的编号）
-            // 将这个料箱里面有关于库位的数据给修改，给移动到具体的库位
-            // 通过料箱编号从库存中得到这个料箱的数据
-            List<ViewOrder> listData = _InventoryDetail.AsQueryable()
-                                           .InnerJoin<EG_WMS_Inventory>((o, cus) => o.InventoryNum == cus.InventoryNum)
-                                           .Where(o => o.WorkBinNum == input.WorkBinNum)
-                                           .Select((o, cus) => new ViewOrder
-                                           {
-                                               MaterielNum = cus.MaterielNum,
-                                               StorageNum = o.StorageNum,
-                                               ICountAll = (int)cus.ICountAll,
-                                           })
-                                           .ToList();
-            if (listData.Count == 0)
-            {
-                throw Oops.Oh("没有找到这条料箱");
-            }
-
-
-            // 获得到这个料箱起始库位的库位编号
-            string oldStorageNum = listData[0].StorageNum;
-
-            if (oldStorageNum == input.GOStorageNum)
-            {
-                throw Oops.Oh("移动的库位不能和当前库位相同");
-            }
-
-            // 生成一条移库记录
-            EG_WMS_Relocation _relocation = new EG_WMS_Relocation()
-            {
-                RelocatioNum = relacationnum,
-                OldStorageNum = oldStorageNum,
-                NewStorageNum = input.GOStorageNum,
-                RelocationCount = listData[0].ICountAll,
-                MaterielNum = listData[0].MaterielNum,
-                WorkBinNum = input.WorkBinNum,
-                RelocationRemake = input.RelocationRemake,
-                RelocationTime = DateTime.Now,
-                CreateTime = DateTime.Now,
-            };
-
-            string remake;
-
-            if (input.RelocationRemake == null || String.IsNullOrEmpty(input.RelocationRemake))
-            {
-                remake = $"此库存已从{oldStorageNum}库位，移动到当前库位";
-            }
-            else
-            {
-                remake = $"此库存已从{oldStorageNum}库位，移动到当前库位"
-                          + "," + input.RelocationRemake;
-            }
-            await _Relocation.InsertAsync(_relocation);
-
-            using (TransactionScope scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
-            {
-                try
-                {
-                    // 修改这个料箱的库存数据
-                    await _InventoryDetail.AsUpdateable()
-                                     .SetColumns(u => new EG_WMS_InventoryDetail
-                                     {
-                                         StorageNum = input.GOStorageNum,
-                                         UpdateTime = DateTime.Now,
-                                         InventoryDetailRemake = remake,
-                                     })
-                                     .Where(it => it.WorkBinNum == input.WorkBinNum)
-                                     .ExecuteCommandAsync();
-
-                    // 修改料箱表里面的数据
-
-                    await _WorkBin.AsUpdateable()
-                                  .SetColumns(it => new EG_WMS_WorkBin
-                                  {
-                                      StorageNum = input.GOStorageNum,
-                                      UpdateTime = DateTime.Now,
-                                      WorkBinRemake = remake,
-                                  })
-                                  .Where(u => u.WorkBinNum == input.WorkBinNum)
-                                  .ExecuteCommandAsync();
-
-                    // 修改库位占用
-                    // 旧库位取消占用（密集库单移料箱无意义）
-                }
-                catch (Exception)
-                {
-                    throw;
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-
-            throw Oops.Oh(ex.Message);
-        }
-
-
-
+        _Region = Region;
     }
     #endregion
 
@@ -200,8 +86,20 @@ public class EGRelocationService : IDynamicApiController, ITransient
             throw Oops.Oh("当前库位没有存放数据或目标库位上有数据！");
         }
 
+        // 判断移动后的库位能不能存放这个数据
         // 查询原始库位
         var storagePrimitive = await _Storage.GetFirstAsync(x => x.StorageNum == input.StartPoint);
+        // 得到原始库位所在区域能存放什么物料
+        var startRegion = await _Region.GetFirstAsync(x => x.RegionNum == storagePrimitive.RegionNum);
+        // 查询移动库位
+        var storageEnd = await _Storage.GetFirstAsync(x => x.StorageNum == input.GoEndPoint);
+        // 得到移动库位后所在区域能存放什么物料
+        var endRegion = await _Region.GetFirstAsync(x => x.RegionNum == storageEnd.RegionNum);
+        if (startRegion.RegionMaterielNum != endRegion.RegionMaterielNum)
+        {
+            throw Oops.Oh("移动前后区域所绑定的物料不一致，无法移动！");
+        }
+
 
         using (TransactionScope scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
         {
@@ -227,7 +125,7 @@ public class EGRelocationService : IDynamicApiController, ITransient
                 else
                 {
                     remake = $"此库存已从{input.StartPoint}库位，移动到当前库位"
-                              + "," + input.Remake;
+                              + "，" + input.Remake;
                 }
                 string newregionnum = messageApplication.GetStorageWhereRegion(input.GoEndPoint);
                 string newwhnum = messageApplication.GetRegionWhereWHNum(newregionnum);
@@ -241,7 +139,7 @@ public class EGRelocationService : IDynamicApiController, ITransient
                     await _InventoryTem.AsUpdateable()
                                        .SetColumns(it => new EG_WMS_Tem_Inventory
                                        {
-                                           InventoryRemake = (inventoryStart[i].InventoryRemake ?? "") + remake,
+                                           InventoryRemake = $"{inventoryStart[i].InventoryRemake} + {remake}",
                                            UpdateTime = DateTime.Now,
                                        })
                                        .Where(x => x.InventoryNum == inventoryStart[i].InventoryNum)
@@ -261,7 +159,7 @@ public class EGRelocationService : IDynamicApiController, ITransient
                     await _Inventory.AsUpdateable()
                                     .SetColumns(it => new EG_WMS_Inventory
                                     {
-                                        InventoryRemake = (inventoryStart[i].InventoryRemake ?? "") + remake,
+                                        InventoryRemake = $"{inventoryStart[i].InventoryRemake} + {remake}",
                                         UpdateTime = DateTime.Now,
                                     })
                                     .Where(x => x.InventoryNum == inventoryStart[i].InventoryNum)
@@ -368,38 +266,6 @@ public class EGRelocationService : IDynamicApiController, ITransient
         return await data.ToPagedListAsync(input.page, input.pageSize);
 
     }
-    #endregion
-
-    #region 分页查询移库信息
-    /// <summary>
-    /// 分页查询移库信息
-    /// </summary>
-    /// <param name="input"></param>
-    /// <returns></returns>
-    [HttpPost]
-    [ApiDescriptionSettings(Name = "Page")]
-    public async Task<SqlSugarPagedList<EGRelocationOutput>> Page(EGRelocationInput input)
-    {
-        var query = _Relocation.AsQueryable()
-                     .InnerJoin<EG_WMS_Materiel>((a, b) => a.MaterielNum == b.MaterielNum)
-                    // 获取创建日期
-                    .WhereIF(input.CreateTime > DateTime.MinValue, u => u.CreateTime >= input.CreateTime)
-                    .Select<EGRelocationOutput>();
-
-        if (input.RelocationTimeRange != null && input.RelocationTimeRange.Count > 0)
-        {
-            DateTime? start = input.RelocationTimeRange[0];
-            query = query.WhereIF(start.HasValue, u => u.RelocationTime > start);
-            if (input.RelocationTimeRange.Count > 1 && input.RelocationTimeRange[1].HasValue)
-            {
-                var end = input.RelocationTimeRange[1].Value.AddDays(1);
-                query = query.Where(u => u.RelocationTime < end);
-            }
-        }
-        query = query.OrderBuilder(input);
-        return await query.ToPagedListAsync(input.Page, input.PageSize);
-    }
-
     #endregion
 
     #region 联表查询类
@@ -553,4 +419,37 @@ public class EGRelocationService : IDynamicApiController, ITransient
 //    var entity = await _Relocation.GetFirstAsync(u => u.Id == input.Id) ?? throw Oops.Oh(ErrorCodeEnum.D1002);
 //    await _Relocation.FakeDeleteAsync(entity);   //假删除
 //}
+#endregion
+
+#region 分页查询移库信息
+///// <summary>
+///// 分页查询移库信息
+///// </summary>
+///// <param name="input"></param>
+///// <returns></returns>
+//[HttpPost]
+//[ApiDescriptionSettings(Name = "Page")]
+//public async Task<SqlSugarPagedList<EGRelocationOutput>> Page(EGRelocationInput input)
+//{
+//    var query = _Relocation.AsQueryable()
+//                 .InnerJoin<EG_WMS_Materiel>((a, b) => a.MaterielNum == b.MaterielNum)
+//                // 获取创建日期
+//                .WhereIF(input.CreateTime > DateTime.MinValue, u => u.CreateTime >= input.CreateTime)
+//                .OrderBy(x => x.CreateTime, OrderByType.Desc)
+//                .Select<EGRelocationOutput>();
+
+//    if (input.RelocationTimeRange != null && input.RelocationTimeRange.Count > 0)
+//    {
+//        DateTime? start = input.RelocationTimeRange[0];
+//        query = query.WhereIF(start.HasValue, u => u.RelocationTime > start);
+//        if (input.RelocationTimeRange.Count > 1 && input.RelocationTimeRange[1].HasValue)
+//        {
+//            var end = input.RelocationTimeRange[1].Value.AddDays(1);
+//            query = query.Where(u => u.RelocationTime < end);
+//        }
+//    }
+//    query = query.OrderBuilder(input);
+//    return await query.ToPagedListAsync(input.Page, input.PageSize);
+//}
+
 #endregion

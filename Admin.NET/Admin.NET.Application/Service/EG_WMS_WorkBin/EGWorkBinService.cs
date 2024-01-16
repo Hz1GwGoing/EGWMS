@@ -80,6 +80,14 @@ public class EGWorkBinService : IDynamicApiController, ITransient
     [ApiDescriptionSettings(Name = "Add")]
     public async Task Add(AddEGWorkBinInput input)
     {
+        int iscount = _rep.AsQueryable()
+                         .Where(x => x.WorkBinNum == input.WorkBinNum && x.IsDelete == false)
+                         .Count();
+
+        if (iscount > 0)
+        {
+            throw Oops.Oh("当前已有该料箱，请勿重复添加！");
+        }
         var entity = input.Adapt<EG_WMS_WorkBin>();
         await _rep.InsertAsync(entity);
     }

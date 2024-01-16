@@ -77,11 +77,6 @@ public class EGRelocationInput : BasePageInput
     public int? RelocationType { get; set; }
 
     /// <summary>
-    /// 移库数量
-    /// </summary>
-    public int? RelocationCount { get; set; }
-
-    /// <summary>
     /// 原库位
     /// </summary>
     public string OldStorage { get; set; }
@@ -106,15 +101,11 @@ public class EGRelocationInput : BasePageInput
     /// 移库时间范围
     /// </summary>
     public List<DateTime?> RelocationTimeRange { get; set; }
+
     /// <summary>
     /// 仓库编号
     /// </summary>
     public string? WHNum { get; set; }
-
-    /// <summary>
-    /// 栈板编号
-    /// </summary>
-    public string? PalletNum { get; set; }
 
     /// <summary>
     /// 料箱编号
@@ -122,15 +113,9 @@ public class EGRelocationInput : BasePageInput
     public string? WorkBinNum { get; set; }
 
     /// <summary>
-    /// 移库备注
-    /// </summary>
-    public string? RelocationRemake { get; set; }
-
-    /// <summary>
     /// 物料编号
     /// </summary>
     public string? MaterielNum { get; set; }
-
 
     /// <summary>
     /// 创建时间

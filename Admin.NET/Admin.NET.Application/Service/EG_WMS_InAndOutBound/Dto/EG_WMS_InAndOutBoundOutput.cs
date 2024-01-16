@@ -16,6 +16,11 @@ public class EG_WMS_InAndOutBoundOutput
     public string MaterielNum { get; set; }
 
     /// <summary>
+    /// 物料编号
+    /// </summary>
+    public string MaterielName { get; set; }
+
+    /// <summary>
     /// 料箱编号
     /// </summary>
     public string WorkBinNum { get; set; }

@@ -133,6 +133,8 @@ public class EGWareHouseService : IDynamicApiController, ITransient
     [ApiDescriptionSettings(Name = "Update")]
     public async Task Update(UpdateEGWareHouseInput input)
     {
+        
+
         var entity = input.Adapt<Entity.EG_WMS_WareHouse>();
         await _rep.AsUpdateable(entity).IgnoreColumns(ignoreAllNullColumns: true).ExecuteCommandAsync();
     }

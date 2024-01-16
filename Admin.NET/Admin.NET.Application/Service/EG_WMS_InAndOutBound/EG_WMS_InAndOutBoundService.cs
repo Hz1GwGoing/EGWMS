@@ -552,7 +552,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                 // 添加暂存任务
                 if (input.EndPoint == "没有合适的库位")
                 {
-                    await InAndOutBoundMessage.NotStorageAddStagingTask(input, joinboundnum);
+                    await InAndOutBoundMessage.NotStorageAddStagingTask(input, joinboundnum); 
                     return "添加AGV入库暂存任务成功！";
                 }
             }

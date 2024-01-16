@@ -122,6 +122,10 @@ public class UpdateEGRegionInput
     /// </summary>
     public string? RegionType { get; set; }
 
+    /// <summary>
+    /// 仓库编号
+    /// </summary>
+    public string? WHNum { get; set; }
 }
 
 /// <summary>
