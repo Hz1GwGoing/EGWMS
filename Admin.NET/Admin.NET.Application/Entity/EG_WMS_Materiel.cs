@@ -4,6 +4,8 @@
 /// 物料实体
 /// </summary>
 [SugarTable("EG_WMS_Materiel", "物料信息表")]
+// 唯一索引
+[SugarIndex("Index_MaterielNum_Only", nameof(EG_WMS_Materiel.MaterielNum), OrderByType.Desc, true)]
 public class EG_WMS_Materiel : EntityBase
 {
     /// <summary>

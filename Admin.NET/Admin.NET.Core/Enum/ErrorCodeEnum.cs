@@ -627,4 +627,10 @@ public enum ErrorCodeEnum
     /// </summary>
     [ErrorCodeItemMetadata("租户已禁用")]
     Z1003,
+
+    /// <summary>
+    /// 编号已存在
+    /// </summary>
+    [ErrorCodeItemMetadata("编号已存在")]
+    N1001,
 }

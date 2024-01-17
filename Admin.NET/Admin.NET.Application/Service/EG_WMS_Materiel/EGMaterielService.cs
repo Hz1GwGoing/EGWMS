@@ -293,6 +293,12 @@ public class EGMaterielService : IDynamicApiController, ITransient
     [ApiDescriptionSettings(Name = "Add")]
     public async Task Add(AddEGMaterielInput input)
     {
+        var data = await _rep.GetFirstAsync(x => x.MaterielNum == input.MaterielNum);
+        if (data != null)
+        {
+            throw Oops.Oh(ErrorCodeEnum.N1001);
+        }
+
         var entity = input.Adapt<EG_WMS_Materiel>();
         await _rep.InsertAsync(entity);
     }
