@@ -126,7 +126,7 @@ public class EGWorkBinService : IDynamicApiController, ITransient
     #region 料箱回溯
 
     /// <summary>
-    /// 料箱回溯
+    /// 料箱回溯（TODO:完善中，请勿使用）
     /// </summary>
     /// <param name="workbinnum">料箱编号</param>
     /// <param name="page">页数</param>
@@ -138,17 +138,30 @@ public class EGWorkBinService : IDynamicApiController, ITransient
     {
         // 避免转移错误
         string string1 = Uri.UnescapeDataString(workbinnum);
-        var data = _rep.AsQueryable()
-                       .Where(x => x.WorkBinNum == string1 && x.WorkBinStatus == 0)
-                       .OrderBy(x => x.CreateTime, OrderByType.Desc)
-                       .Select(x => new WorkBinBacktrackingDto
-                       {
-                           IsCount = x.ProductCount
-                       }, true);
+
+        // TODO：通过入库编号反推出库编号
 
 
-        return await data.ToPagedListAsync(page, pagesize);
+        //var data = _rep.AsQueryable()
+        //               .InnerJoin<EG_WMS_InAndOutBound>((a, b) => a.InAndOutBoundNum == b.InAndOutBoundNum)
+        //               .InnerJoin<EG_WMS_Inventory>((a, b, c) => a.InAndOutBoundNum == c.InBoundNum)
+        //               .Where((a, b, c) => a.WorkBinNum == string1 && a.WorkBinStatus == 0)
+        //               .WhereIF(
+        //               (a, b, c) =>
+        //               SqlFunc.Subqueryable<EG_WMS_Inventory>()
+        //               .InnerJoin<EG_WMS_InventoryDetail>((inv, invd) => inv.InventoryNum == invd.InventoryNum)
+        //               .Where(x => x.)
+        //               )
+        //               .OrderBy(x => x.CreateTime, OrderByType.Desc)
+        //               .Select(x => new WorkBinBacktrackingDto
+        //               {
+        //                   IsCount = x.ProductCount
 
+        //               }, true);
+
+
+        //return await data.ToPagedListAsync(page, pagesize);
+        return null;
     }
 
 

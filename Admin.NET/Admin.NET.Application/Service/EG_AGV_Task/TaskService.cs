@@ -21,7 +21,7 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
         private readonly SqlSugarRepository<Entity.EG_WMS_InAndOutBound> _InAndOutBound = App.GetService<SqlSugarRepository<Entity.EG_WMS_InAndOutBound>>();
         private readonly SqlSugarRepository<EG_WMS_Tem_Inventory> _TemInventory = App.GetService<SqlSugarRepository<EG_WMS_Tem_Inventory>>();
         private readonly SqlSugarRepository<EG_WMS_Tem_InventoryDetail> _TemInventoryDetail = App.GetService<SqlSugarRepository<EG_WMS_Tem_InventoryDetail>>();
-        private readonly SqlSugarRepository<EG_WMS_Inventory> _Inventory = App.GetService<SqlSugarRepository<EG_WMS_Inventory>>();
+        private readonly SqlSugarRepository<Entity.EG_WMS_Inventory> _Inventory = App.GetService<SqlSugarRepository<Entity.EG_WMS_Inventory>>();
         private readonly SqlSugarRepository<EG_WMS_InventoryDetail> _InventoryDetail = App.GetService<SqlSugarRepository<EG_WMS_InventoryDetail>>();
         private readonly SqlSugarRepository<EG_WMS_InAndOutBoundDetail> _InAndOutBoundDetail = App.GetService<SqlSugarRepository<EG_WMS_InAndOutBoundDetail>>();
         private readonly SqlSugarRepository<Entity.EG_WMS_Region> _Region = App.GetService<SqlSugarRepository<Entity.EG_WMS_Region>>();
@@ -816,7 +816,7 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
                                           .Where((a, b) => b.InBoundNum == listInBoundData[0].InAndOutBoundNum)
                                           .ToList();
 
-                        List<EG_WMS_Inventory> invDataList = listTemInvData.Adapt<List<EG_WMS_Inventory>>();
+                        List<Entity.EG_WMS_Inventory> invDataList = listTemInvData.Adapt<List<Entity.EG_WMS_Inventory>>();
                         List<EG_WMS_InventoryDetail> invdDataList = listTemInvDetailData.Adapt<List<EG_WMS_InventoryDetail>>();
 
                         _Inventory.InsertOrUpdate(invDataList);
@@ -872,7 +872,7 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
                                              .Select(x => x)
                                              .ToList());
 
-                        List<EG_WMS_Inventory> invData = dataTemInvtory.Adapt<List<EG_WMS_Inventory>>();
+                        List<Entity.EG_WMS_Inventory> invData = dataTemInvtory.Adapt<List<Entity.EG_WMS_Inventory>>();
 
                         _Inventory.InsertOrUpdate(invData);
 

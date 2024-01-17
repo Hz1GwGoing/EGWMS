@@ -16,7 +16,7 @@ public class BaseService : IDynamicApiController, ITransient
     private readonly SqlSugarRepository<Entity.EG_WMS_InAndOutBound> _InAndOutBound = App.GetService<SqlSugarRepository<Entity.EG_WMS_InAndOutBound>>();
     private readonly SqlSugarRepository<EG_WMS_Tem_Inventory> _TemInventory = App.GetService<SqlSugarRepository<EG_WMS_Tem_Inventory>>();
     private readonly SqlSugarRepository<EG_WMS_Tem_InventoryDetail> _TemInventoryDetail = App.GetService<SqlSugarRepository<EG_WMS_Tem_InventoryDetail>>();
-    private readonly SqlSugarRepository<EG_WMS_Inventory> _Inventory = App.GetService<SqlSugarRepository<EG_WMS_Inventory>>();
+    private readonly SqlSugarRepository<Entity.EG_WMS_Inventory> _Inventory = App.GetService<SqlSugarRepository<Entity.EG_WMS_Inventory>>();
     private readonly SqlSugarRepository<EG_WMS_InAndOutBoundDetail> _InAndOutBoundDetail = App.GetService<SqlSugarRepository<EG_WMS_InAndOutBoundDetail>>();
     private readonly SqlSugarRepository<Entity.EG_WMS_Region> _Region = App.GetService<SqlSugarRepository<Entity.EG_WMS_Region>>();
     private readonly SqlSugarRepository<Entity.EG_WMS_Storage> _Storage = App.GetService<SqlSugarRepository<Entity.EG_WMS_Storage>>();
@@ -266,7 +266,7 @@ public class BaseService : IDynamicApiController, ITransient
         //GROUP BY DATE_FORMAT(InAndOutBoundTime, '%Y-%m')
 
         return _InAndOutBound.AsQueryable()
-                     .Where(x => x.InAndOutBoundStatus == 1 && x.InAndOutBoundType == 0)
+                     .Where(x => x.InAndOutBoundStatus == 1 && x.InAndOutBoundType == 0 && x.SuccessOrNot == 0)
                      .GroupBy(x => SqlFunc.MappingColumn(x.InAndOutBoundTime.Value.ToString(), "DATE_FORMAT(InAndOutBoundTime, '%Y-%m')"))
                      .Select(x => new MonthlyInventoryQuantityDto
                      {
@@ -292,7 +292,7 @@ public class BaseService : IDynamicApiController, ITransient
     {
 
         return _InAndOutBound.AsQueryable()
-             .Where(x => x.InAndOutBoundStatus == 3 && x.InAndOutBoundType == 1)
+             .Where(x => x.InAndOutBoundStatus == 3 && x.InAndOutBoundType == 1 && x.SuccessOrNot == 0)
              .GroupBy(x => SqlFunc.MappingColumn(x.InAndOutBoundTime.Value.ToString(), "DATE_FORMAT(InAndOutBoundTime, '%Y-%m')"))
              .Select(x => new MonthlyInventoryQuantityDto
              {

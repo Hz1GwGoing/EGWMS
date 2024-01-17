@@ -8,14 +8,14 @@ public class EGStorageService : IDynamicApiController, ITransient
 {
     private readonly SqlSugarRepository<Entity.EG_WMS_Storage> _rep;
     private readonly SqlSugarRepository<Entity.EG_WMS_Region> _region;
-    private readonly SqlSugarRepository<EG_WMS_Inventory> _inventory;
+    private readonly SqlSugarRepository<Entity.EG_WMS_Inventory> _inventory;
     private readonly SqlSugarRepository<EG_WMS_InventoryDetail> _inventoryDetail;
 
     public EGStorageService
     (
         SqlSugarRepository<Entity.EG_WMS_Storage> rep,
         SqlSugarRepository<Entity.EG_WMS_Region> region,
-        SqlSugarRepository<EG_WMS_Inventory> inventory,
+        SqlSugarRepository<Entity.EG_WMS_Inventory> inventory,
         SqlSugarRepository<EG_WMS_InventoryDetail> inventoryDetail
     )
     {

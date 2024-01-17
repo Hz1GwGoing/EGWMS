@@ -11,7 +11,16 @@ public class WorkBinBacktrackingDto
     public string MaterielNum { get; set; }
     public int IsCount { get; set; }
     public string ProductionLot { get; set; }
-    public string ProductionDate { get; set; }
+    public DateTime ProductionDate { get; set; }
     public string WorkBinRemake { get; set; }
 
+    /// <summary>
+    /// 入库时间
+    /// </summary>
+    public DateTime StorageTime { get; set; }
+
+    /// <summary>
+    /// 出库时间
+    /// </summary>
+    public DateTime OutBoundTime { get; set; }
 }

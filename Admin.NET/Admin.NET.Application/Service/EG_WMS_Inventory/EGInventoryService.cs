@@ -1,4 +1,12 @@
-﻿namespace Admin.NET.Application;
+﻿using Admin.NET.Application.Service.EG_WMS_InAndOutBound;
+using Admin.NET.Application.Service.EG_WMS_Inventory.Dto;
+using Nest;
+using OfficeOpenXml.FormulaParsing.Excel.Functions.DateTime;
+using OfficeOpenXml.FormulaParsing.Excel.Functions.Logical;
+using OfficeOpenXml.FormulaParsing.Excel.Functions.Math;
+using static SKIT.FlurlHttpClient.Wechat.TenpayV3.Models.CreateRefundDomesticRefundRequest.Types.Amount.Types;
+
+namespace Admin.NET.Application;
 /// <summary>
 /// 库存主表接口
 /// </summary>
@@ -10,6 +18,7 @@ public class EGInventoryService : IDynamicApiController, ITransient
 
     private readonly SqlSugarRepository<EG_WMS_Inventory> _rep;
     private readonly SqlSugarRepository<EG_WMS_Materiel> _materiel;
+    private readonly SqlSugarRepository<EG_WMS_InAndOutBound> _inandoutbound;
     #endregion
 
     #region 关系注入
@@ -17,12 +26,57 @@ public class EGInventoryService : IDynamicApiController, ITransient
     public EGInventoryService
         (
         SqlSugarRepository<EG_WMS_Inventory> rep,
-        SqlSugarRepository<EG_WMS_Materiel> materiel
+        SqlSugarRepository<EG_WMS_Materiel> materiel,
+        SqlSugarRepository<EG_WMS_InAndOutBound> inandoutbound
         )
     {
         _rep = rep;
         _materiel = materiel;
+        _inandoutbound = inandoutbound;
     }
+    #endregion
+
+    #region 当日的入库数量
+
+    /// <summary>
+    /// 当日的入库数量
+    /// </summary>
+    /// <returns></returns>
+    [HttpPost]
+    [ApiDescriptionSettings(Name = "DailyInOutBoundQuantity")]
+    public async Task<List<DailyInOutBoundQuantityDto>> DailyInOutBoundQuantity()
+    {
+
+        //string sql = "SELECT DATE_FORMAT(InAndOutBoundTime, '%Y-%m-%d %H') as time, SUM(InAndOutBoundCount) " +
+        //     "as count FROM eg_wms_inandoutbound WHERE InAndOutBoundTime >= CURDATE() AND InAndOutBoundTime<CURDATE() +INTERVAL 1 DAY GROUP BY time  ORDER BY  time";
+
+        //return await _inandoutbound.AsQueryable()
+        //.Where(x => x.InAndOutBoundStatus == 3 && x.InAndOutBoundType == 1 && x.SuccessOrNot == 0)
+        //.Where()
+        //.GroupBy(x => SqlFunc.MappingColumn(x.InAndOutBoundTime.Value.ToString(), "DATE_FORMAT(InAndOutBoundTime, '%Y-%m-%d %H')"))
+        //.Select(x => new DailyInOutBoundQuantityDto
+        //{
+        //    HourTime = SqlFunc.MappingColumn(x.InAndOutBoundTime.Value.ToString(), "DATE_FORMAT(InAndOutBoundTime, '%Y-%m-%d %H')"),
+        //    SumCount = (int)SqlFunc.AggregateSum(x.InAndOutBoundCount)
+        //})
+        //.ToListAsync();
+
+        return await _inandoutbound.AsQueryable()
+                                 .Where(x => x.InAndOutBoundStatus == 3 && x.InAndOutBoundType == 1 && x.SuccessOrNot == 0
+                                             && x.InAndOutBoundTime >= DateTime.Today && x.InAndOutBoundTime < DateTime.Today.AddDays(1))
+                                 .GroupBy(x => SqlFunc.MappingColumn(x.InAndOutBoundTime.Value.ToString(), "DATE_FORMAT(InAndOutBoundTime, '%Y-%m-%d %H')"))
+                                 .Select(x => new DailyInOutBoundQuantityDto
+                                 {
+                                     HourTime = SqlFunc.MappingColumn(x.InAndOutBoundTime.Value.ToString(), "DATE_FORMAT(InAndOutBoundTime, '%Y-%m-%d %H')"),
+                                     SumCount = (int)SqlFunc.AggregateSum(x.InAndOutBoundCount)
+                                 })
+                                 .ToListAsync();
+
+
+
+
+    }
+
     #endregion
 
     #region 分页查询库存主表

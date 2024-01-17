@@ -57,17 +57,17 @@ public class EGMaterielService : IDynamicApiController, ITransient
     /// <returns></returns>
     [HttpGet]
     [ApiDescriptionSettings(Name = "MaterialSafetyInventory")]
-    public List<InventoryEarlyWarningDto> MaterialSafetyInventory()
+    public async Task<SqlSugarPagedList<InventoryEarlyWarningDto>> MaterialSafetyInventory(int page, int pagesize)
     {
         List<InventoryEarlyWarningDto> inventories = new List<InventoryEarlyWarningDto>();
 
         // 查询每种物料的需在库数量
-        var materieldata = _rep.AsQueryable()
+        var materieldata = await _rep.AsQueryable()
                                .Where(x => x.IsDelete == false && x.QuantityNeedCount != null)
                                .GroupBy(x => x.MaterielNum)
                                .Distinct()
                                .Select(x => new { x.MaterielNum, x.MaterielName, x.MaterielSpecs, x.QuantityNeedCount })
-                               .ToList();
+                               .ToListAsync();
 
         for (int i = 0; i < materieldata.Count; i++)
         {
@@ -92,7 +92,8 @@ public class EGMaterielService : IDynamicApiController, ITransient
                 inventories.Add(invEarlyData);
             }
         }
-        return inventories;
+        var inventoriesPage = inventories.ToPagedListAsync(page, pagesize);
+        return inventoriesPage;
     }
 
     #endregion
@@ -105,7 +106,7 @@ public class EGMaterielService : IDynamicApiController, ITransient
     /// <returns></returns>
     [HttpGet]
     [ApiDescriptionSettings(Name = "EarlyWarningTimeOfMaterielStorage")]
-    public async Task<List<MaterielStorageTimeWarringDto>> EarlyWarningTimeOfMaterielStorage()
+    public async Task<SqlSugarPagedList<MaterielStorageTimeWarringDto>> EarlyWarningTimeOfMaterielStorage(int page, int pagesize)
     {
         List<MaterielStorageTimeWarringDto> datas = new List<MaterielStorageTimeWarringDto>();
         // 查询在库数据
@@ -155,7 +156,8 @@ public class EGMaterielService : IDynamicApiController, ITransient
                 datas.Add(materieldata);
             }
         }
-        return datas;
+        var pagedata = datas.ToPagedListAsync(page, pagesize);
+        return pagedata;
     }
 
 
@@ -170,7 +172,7 @@ public class EGMaterielService : IDynamicApiController, ITransient
     /// <returns></returns>
     [HttpGet]
     [ApiDescriptionSettings(Name = "MaterialInStockTimeControlExceed")]
-    public async Task<List<MaterielStorageTimeWarringDto>> MaterialInStockTimeControlExceed()
+    public async Task<SqlSugarPagedList<MaterielStorageTimeWarringDto>> MaterialInStockTimeControlExceed(int page, int pagesize)
     {
         List<MaterielStorageTimeWarringDto> datas = new List<MaterielStorageTimeWarringDto>();
         // 查询在库数据
@@ -217,7 +219,8 @@ public class EGMaterielService : IDynamicApiController, ITransient
                 datas.Add(materieldata);
             }
         }
-        return datas;
+        var datapage = datas.ToPagedListAsync(page, pagesize);
+        return datapage;
     }
 
 

@@ -552,7 +552,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                 // 添加暂存任务
                 if (input.EndPoint == "没有合适的库位")
                 {
-                    await InAndOutBoundMessage.NotStorageAddStagingTask(input, joinboundnum); 
+                    await InAndOutBoundMessage.NotStorageAddStagingTask(input, joinboundnum);
                     return "添加AGV入库暂存任务成功！";
                 }
             }
@@ -1682,9 +1682,9 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
 
     #endregion
 
-    #region 分页查询出入库信息
+    #region 分页查询出入库信息（成功）
     /// <summary>
-    /// 分页查询出入库信息
+    /// 分页查询出入库信息（成功）
     /// </summary>
     /// <param name="input"></param>
     /// <returns></returns>
@@ -1695,15 +1695,58 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
         var query = _rep.AsQueryable()
                         .InnerJoin<EG_WMS_InAndOutBoundDetail>((a, b) => a.InAndOutBoundNum == b.InAndOutBoundNum)
                         .InnerJoin<EG_WMS_Materiel>((a, b, c) => b.MaterielNum == c.MaterielNum)
-                        .WhereIF(!string.IsNullOrWhiteSpace(input.MaterielName), (a, b, c) => c.MaterielName.Contains(input.MaterielName))
+                        .WhereIF(!string.IsNullOrWhiteSpace(input.MaterielName), (a, b, c) => c.MaterielName.Contains(input.MaterielName.Trim()))
                         .WhereIF(!string.IsNullOrWhiteSpace(input.MaterielNum), (a, b) => b.MaterielNum == input.MaterielNum)
                         .WhereIF(!string.IsNullOrWhiteSpace(input.InAndOutBoundNum), (a, b) => a.InAndOutBoundNum.Contains(input.InAndOutBoundNum.Trim()))
-                        .WhereIF(input.InAndOutBoundStatus > 0, (a, b) => a.InAndOutBoundStatus == input.InAndOutBoundStatus)
+                        .WhereIF(input.InAndOutBoundStatus >= 0, (a, b) => a.InAndOutBoundStatus == input.InAndOutBoundStatus)
                         .WhereIF(!string.IsNullOrWhiteSpace(input.InAndOutBoundUser), (a, b) => a.InAndOutBoundUser.Contains(input.InAndOutBoundUser.Trim()))
                     // 倒序
-                    .Where(a => a.InAndOutBoundType == input.InAndOutBoundType && a.IsDelete == false)
+                    .Where(a => a.InAndOutBoundType == input.InAndOutBoundType && a.IsDelete == false && a.SuccessOrNot == 0)
                     .OrderBy(a => a.CreateTime, OrderByType.Desc)
                     .Select<EG_WMS_InAndOutBoundOutput>();
+
+        // 日期查询
+        if (input.InAndOutBoundTimeRange != null && input.InAndOutBoundTimeRange.Count > 0)
+        {
+            DateTime? start = input.InAndOutBoundTimeRange[0];
+            query = query.WhereIF(start.HasValue, a => a.InAndOutBoundTime > start);
+            if (input.InAndOutBoundTimeRange.Count > 1 && input.InAndOutBoundTimeRange[1].HasValue)
+            {
+                var end = input.InAndOutBoundTimeRange[1].Value.AddDays(1);
+                query = query.Where(a => a.InAndOutBoundTime < end);
+            }
+        }
+        query = query.OrderBuilder(input);
+        return await query.ToPagedListAsync(input.Page, input.PageSize);
+    }
+    #endregion
+
+    #region 分页查询出入库信息（失败）
+    /// <summary>
+    /// 分页查询出入库信息（失败）
+    /// </summary>
+    /// <param name="input"></param>
+    /// <returns></returns>
+    [HttpPost]
+    [ApiDescriptionSettings(Name = "PageFail", Order = 29)]
+    public async Task<SqlSugarPagedList<EG_WMS_InAndOutBoundOutputAGV>> PageFail(EG_WMS_InAndOutBoundInput input)
+    {
+        var query = _rep.AsQueryable()
+                        .InnerJoin<EG_WMS_InAndOutBoundDetail>((a, b) => a.InAndOutBoundNum == b.InAndOutBoundNum)
+                        .InnerJoin<EG_WMS_Materiel>((a, b, c) => b.MaterielNum == c.MaterielNum)
+                        .InnerJoin<TaskEntity>((a, b, c, d) => a.InAndOutBoundNum == d.InAndOutBoundNum)
+                        .WhereIF(!string.IsNullOrWhiteSpace(input.MaterielName), (a, b, c) => c.MaterielName.Contains(input.MaterielName.Trim()))
+                        .WhereIF(!string.IsNullOrWhiteSpace(input.MaterielNum), (a, b) => b.MaterielNum == input.MaterielNum)
+                        .WhereIF(!string.IsNullOrWhiteSpace(input.InAndOutBoundNum), (a, b) => a.InAndOutBoundNum.Contains(input.InAndOutBoundNum.Trim()))
+                        .WhereIF(input.InAndOutBoundStatus >= 0, (a, b) => a.InAndOutBoundStatus == input.InAndOutBoundStatus)
+                        .WhereIF(!string.IsNullOrWhiteSpace(input.InAndOutBoundUser), (a, b) => a.InAndOutBoundUser.Contains(input.InAndOutBoundUser.Trim()))
+                    // 倒序
+                    .Where(a => a.InAndOutBoundType == input.InAndOutBoundType && a.IsDelete == false && a.SuccessOrNot == 1)
+                    .OrderBy(a => a.CreateTime, OrderByType.Desc)
+                    .Select((a, b, c, d) => new EG_WMS_InAndOutBoundOutputAGV
+                    {
+
+                    }, true);
 
         // 日期查询
         if (input.InAndOutBoundTimeRange != null && input.InAndOutBoundTimeRange.Count > 0)
@@ -1749,21 +1792,26 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
     }
     #endregion
 
-    //-------------------------------------//-------------------------------------// 
+    #region 得到正在进行中的任务列表
 
-    #region 删除出入库信息
-    ///// <summary>
-    ///// 删除出入库信息
-    ///// </summary>
-    ///// <param name="input"></param>
-    ///// <returns></returns>
-    //[HttpPost]
-    //[ApiDescriptionSettings(Name = "Delete", Order = 25)]
-    //public async Task Delete(DeleteEG_WMS_InAndOutBoundInput input)
-    //{
-    //    var entity = await _rep.GetFirstAsync(u => u.Id == input.Id) ?? throw Oops.Oh(ErrorCodeEnum.D1002);
-    //    await _rep.FakeDeleteAsync(entity);   //假删除
-    //}
+    /// <summary>
+    /// 得到正在进行中的任务列表
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet(Name = "GetInoutBoundAndAGVInforMation")]
+    public List<InoutBoundAndAGVInforMationDto> GetInoutBoundAndAGVInforMation()
+    {
+        return _rep.AsQueryable()
+              .InnerJoin<TaskEntity>((inoutbound, agvtask) => inoutbound.InAndOutBoundNum == agvtask.InAndOutBoundNum)
+              .InnerJoin<EG_WMS_InAndOutBoundDetail>(((inoutbound, agvtask, inoutbounddetail) => inoutbound.InAndOutBoundNum == inoutbounddetail.InAndOutBoundNum))
+              .Where(inoutbound => inoutbound.InAndOutBoundStatus == 4 || inoutbound.InAndOutBoundStatus == 5)
+              .Select<InoutBoundAndAGVInforMationDto>()
+              .ToList();
+
+    }
+
 
     #endregion
+
+    //-------------------------------------//-------------------------------------// 
 }

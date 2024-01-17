@@ -333,7 +333,7 @@ public class EGTakeStockService : IDynamicApiController, ITransient
         // 根据这条数据查询库存中库位相同的数据
         return _model.AsQueryable()
                 .InnerJoin<EG_WMS_InventoryDetail>((a, b) => a.InventoryNum == b.InventoryNum)
-                .Where((a, b) => b.StorageNum == takestockstoragenum)
+                .Where((a, b) => b.StorageNum == takestockstoragenum && a.OutboundStatus == 0)
                 .Select((a, b) => new ViewTaskStock
                 {
                     InventoryNum = a.InventoryNum,

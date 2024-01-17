@@ -72,7 +72,7 @@ public class EG_WMS_InAndOutBoundInput : BasePageInput
     public int? InAndOutBoundType { get; set; }
 
     /// <summary>
-    /// 出入库状态（0-未入库，1-已入库，2-未出库，3-已出库）
+    /// 出入库状态（出入库状态（0-未入库，1-已入库，2-未出库，3-已出库，4-入库中，5-出库中）
     /// </summary>
     public int? InAndOutBoundStatus { get; set; }
 

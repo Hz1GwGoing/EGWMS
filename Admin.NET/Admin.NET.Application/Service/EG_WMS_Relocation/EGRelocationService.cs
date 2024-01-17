@@ -1,4 +1,6 @@
-﻿namespace Admin.NET.Application;
+﻿using Microsoft.AspNetCore.Http;
+
+namespace Admin.NET.Application;
 
 /// <summary>
 /// 移库信息接口
