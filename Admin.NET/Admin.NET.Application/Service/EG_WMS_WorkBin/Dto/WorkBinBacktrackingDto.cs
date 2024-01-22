@@ -6,13 +6,24 @@
 public class WorkBinBacktrackingDto
 {
     public string WorkBinNum { get; set; }
-    public string WorkBinName { get; set; }
     public string StorageNum { get; set; }
-    public string MaterielNum { get; set; }
-    public int IsCount { get; set; }
+    public string MaterielName { get; set; }
+    public int ICountAll { get; set; }
+
+    /// <summary>
+    /// 是否出库
+    /// </summary>
+    public int OutBoundStatus { get; set; }
+
+    /// <summary>
+    /// 生产批次
+    /// </summary>
     public string ProductionLot { get; set; }
+
+    /// <summary>
+    /// 生产日期
+    /// </summary>
     public DateTime ProductionDate { get; set; }
-    public string WorkBinRemake { get; set; }
 
     /// <summary>
     /// 入库时间

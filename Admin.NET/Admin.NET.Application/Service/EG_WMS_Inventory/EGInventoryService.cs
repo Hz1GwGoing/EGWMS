@@ -50,20 +50,11 @@ public class EGInventoryService : IDynamicApiController, ITransient
         //string sql = "SELECT DATE_FORMAT(InAndOutBoundTime, '%Y-%m-%d %H') as time, SUM(InAndOutBoundCount) " +
         //     "as count FROM eg_wms_inandoutbound WHERE InAndOutBoundTime >= CURDATE() AND InAndOutBoundTime<CURDATE() +INTERVAL 1 DAY GROUP BY time  ORDER BY  time";
 
-        //return await _inandoutbound.AsQueryable()
-        //.Where(x => x.InAndOutBoundStatus == 3 && x.InAndOutBoundType == 1 && x.SuccessOrNot == 0)
-        //.Where()
-        //.GroupBy(x => SqlFunc.MappingColumn(x.InAndOutBoundTime.Value.ToString(), "DATE_FORMAT(InAndOutBoundTime, '%Y-%m-%d %H')"))
-        //.Select(x => new DailyInOutBoundQuantityDto
-        //{
-        //    HourTime = SqlFunc.MappingColumn(x.InAndOutBoundTime.Value.ToString(), "DATE_FORMAT(InAndOutBoundTime, '%Y-%m-%d %H')"),
-        //    SumCount = (int)SqlFunc.AggregateSum(x.InAndOutBoundCount)
-        //})
-        //.ToListAsync();
-
+        DateTime todayStart = DateTime.Today;
+        DateTime todayEnd = todayStart.AddDays(1);
         return await _inandoutbound.AsQueryable()
-                                 .Where(x => x.InAndOutBoundStatus == 3 && x.InAndOutBoundType == 1 && x.SuccessOrNot == 0)
-                                 .Where(x => x.InAndOutBoundTime > DateTime.Now && x.InAndOutBoundTime < DateTime.Now.AddDays(1))
+                                 .Where(x => x.InAndOutBoundStatus == 1 && x.InAndOutBoundType == 0 && x.SuccessOrNot == 0)
+                                 .Where(x => x.InAndOutBoundTime >= todayStart && x.InAndOutBoundTime < todayEnd)
                                  .GroupBy(x => SqlFunc.MappingColumn(x.InAndOutBoundTime.Value.ToString(), "DATE_FORMAT(InAndOutBoundTime, '%Y-%m-%d %H')"))
                                  .Select(x => new DailyInOutBoundQuantityDto
                                  {

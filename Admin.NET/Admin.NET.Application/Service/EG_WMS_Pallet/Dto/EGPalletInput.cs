@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
-namespace Admin.NET.Application;
+namespace Admin.NET.Application.Service.EG_WMS_Pallet.Dto;
 
 /// <summary>
 /// EGPallet基础输入参数
@@ -17,12 +17,12 @@ public class EGPalletBaseInput
     /// <summary>
     /// 栈板名称
     /// </summary>
-    public virtual string? PalletName { get; set; }
+    public virtual string PalletName { get; set; }
 
     /// <summary>
     /// 栈板规格
     /// </summary>
-    public virtual string? PalletSpecs { get; set; }
+    public virtual string PalletSpecs { get; set; }
 
     /// <summary>
     /// 有效日期
@@ -37,17 +37,17 @@ public class EGPalletBaseInput
     /// <summary>
     /// 新增人
     /// </summary>
-    public virtual string? CreateUserName { get; set; }
+    public virtual string CreateUserName { get; set; }
 
     /// <summary>
     /// 备注
     /// </summary>
-    public virtual string? PalletRemake { get; set; }
+    public virtual string PalletRemake { get; set; }
 
     /// <summary>
     /// 库位编号
     /// </summary>
-    public virtual string? StorageNum { get; set; }
+    public virtual string StorageNum { get; set; }
 
 }
 
@@ -64,12 +64,12 @@ public class EGPalletInput : BasePageInput
     /// <summary>
     /// 栈板名称
     /// </summary>
-    public string? PalletName { get; set; }
+    public string PalletName { get; set; }
 
     /// <summary>
     /// 栈板规格
     /// </summary>
-    public string? PalletSpecs { get; set; }
+    public string PalletSpecs { get; set; }
 
     /// <summary>
     /// 有效日期
@@ -88,17 +88,17 @@ public class EGPalletInput : BasePageInput
     /// <summary>
     /// 新增人
     /// </summary>
-    public string? CreateUserName { get; set; }
+    public string CreateUserName { get; set; }
 
     /// <summary>
     /// 备注
     /// </summary>
-    public string? PalletRemake { get; set; }
+    public string PalletRemake { get; set; }
 
     /// <summary>
     /// 库位编号
     /// </summary>
-    public string? StorageNum { get; set; }
+    public string StorageNum { get; set; }
 
     public DateTime? CreateTime { get; set; }
 
@@ -151,5 +151,5 @@ public class QueryByIdEGPalletInput
     /// <summary>
     /// 栈板名称
     /// </summary>
-    public string? PalletName { get; set; }
+    public string PalletName { get; set; }
 }

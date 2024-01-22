@@ -1,6 +1,7 @@
 ﻿using Admin.NET.Application.IService.EG_WMS_Pallet;
+using Admin.NET.Application.Service.EG_WMS_Pallet.Dto;
 
-namespace Admin.NET.Application;
+namespace Admin.NET.Application.Service.EG_WMS_Pallet;
 /// <summary>
 /// 栈板管理接口
 /// </summary>
@@ -8,8 +9,8 @@ namespace Admin.NET.Application;
 public class EGPalletService : IDynamicApiController, ITransient, IEGPalletServics
 {
 
-    private readonly SqlSugarRepository<EG_WMS_Pallet> _rep;
-    public EGPalletService(SqlSugarRepository<EG_WMS_Pallet> rep)
+    private readonly SqlSugarRepository<Entity.EG_WMS_Pallet> _rep;
+    public EGPalletService(SqlSugarRepository<Entity.EG_WMS_Pallet> rep)
     {
         _rep = rep;
     }
@@ -61,7 +62,7 @@ public class EGPalletService : IDynamicApiController, ITransient, IEGPalletServi
     [ApiDescriptionSettings(Name = "Add")]
     public async Task Add(AddEGPalletInput input)
     {
-        var entity = input.Adapt<EG_WMS_Pallet>();
+        var entity = input.Adapt<Entity.EG_WMS_Pallet>();
         await _rep.InsertAsync(entity);
     }
     #endregion
@@ -91,7 +92,7 @@ public class EGPalletService : IDynamicApiController, ITransient, IEGPalletServi
     [ApiDescriptionSettings(Name = "Update")]
     public async Task Update(UpdateEGPalletInput input)
     {
-        var entity = input.Adapt<EG_WMS_Pallet>();
+        var entity = input.Adapt<Entity.EG_WMS_Pallet>();
         await _rep.AsUpdateable(entity).IgnoreColumns(ignoreAllNullColumns: true).ExecuteCommandAsync();
     }
     #endregion
@@ -104,7 +105,7 @@ public class EGPalletService : IDynamicApiController, ITransient, IEGPalletServi
     /// <returns></returns>
     [HttpGet]
     [ApiDescriptionSettings(Name = "Detail")]
-    public async Task<EG_WMS_Pallet> Get([FromQuery] QueryByIdEGPalletInput input)
+    public async Task<Entity.EG_WMS_Pallet> Get([FromQuery] QueryByIdEGPalletInput input)
     {
         //return await _rep.GetFirstAsync(u => u.Id == input.Id);
         // 模糊查询
@@ -124,6 +125,11 @@ public class EGPalletService : IDynamicApiController, ITransient, IEGPalletServi
     public async Task<List<EGPalletOutput>> List([FromQuery] EGPalletInput input)
     {
         return await _rep.AsQueryable().Select<EGPalletOutput>().ToListAsync();
+    }
+
+    Task<Entity.EG_WMS_Pallet> IEGPalletServics.Get(QueryByIdEGPalletInput input)
+    {
+        throw new NotImplementedException();
     }
     #endregion
 

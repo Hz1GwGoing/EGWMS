@@ -345,7 +345,7 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
                     .WhereIF(!string.IsNullOrWhiteSpace(input.TaskNo), u => u.TaskNo.Contains(input.TaskNo.Trim()))
                     .WhereIF(!string.IsNullOrWhiteSpace(input.Source), u => u.Source.Contains(input.Source.Trim()))
                     .WhereIF(input.CreateTime != null, p => p.CreateTime >= sTime && p.CreateTime <= eTime)
-                    .WhereIF(!string.IsNullOrWhiteSpace(input.Source), u => input.TaskState.Trim().Contains(u.TaskState.ToString()))
+                    .WhereIF(!string.IsNullOrWhiteSpace(input.TaskState), u => input.TaskState.Trim().Contains(u.TaskState.ToString()))
                     .OrderByDescending(p => p.Id)
                     .ToPagedListAsync(input.Page, input.PageSize);
                 return taskPageList;

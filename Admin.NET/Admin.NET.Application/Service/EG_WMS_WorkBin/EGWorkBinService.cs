@@ -1,4 +1,6 @@
-﻿namespace Admin.NET.Application;
+﻿using Admin.NET.Application.Entity;
+
+namespace Admin.NET.Application;
 
 /// <summary>
 /// 料箱信息接口
@@ -105,10 +107,10 @@ public class EGWorkBinService : IDynamicApiController, ITransient
     }
     #endregion
 
-    #region 料箱回溯
+    #region 料箱回溯功能
 
     /// <summary>
-    /// 料箱回溯（TODO:完善中，请勿使用）
+    /// 料箱回溯功能
     /// </summary>
     /// <param name="workbinnum">料箱编号</param>
     /// <param name="page">页数</param>
@@ -121,29 +123,36 @@ public class EGWorkBinService : IDynamicApiController, ITransient
         // 避免转移错误
         string string1 = Uri.UnescapeDataString(workbinnum);
 
-        // TODO：通过入库编号反推出库编号
+        #region SQL语句
+        // SELECT DISTINCT a.WorkBinNum,c.MaterielNum,c.ICountAll,a.ProductionLot,b.StorageNum,c.OutboundStatus,
+        // c.ProductionDate AS 生产时间,c.CreateTime AS 入库时间,c.UpdateTime AS 出库时间 FROM eg_wms_workbin AS a
+        // INNER JOIN eg_wms_inventorydetail AS b
+        // ON a.WorkBinNum = b.WorkBinNum
+        // INNER JOIN eg_wms_inventory AS c
+        // ON b.InventoryNum = c.InventoryNum
+        // 判断条件
+        // WHERE a.WorkBinNum = "1/22wb3"
+        // ORDER BY c.CreateTime DESC
+
+        #endregion
+
+        var data = _rep.AsQueryable()
+                       .InnerJoin<EG_WMS_InventoryDetail>((a, b) => a.WorkBinNum == b.WorkBinNum)
+                       .InnerJoin<EG_WMS_Inventory>((a, b, c) => b.InventoryNum == c.InventoryNum)
+                       .InnerJoin<EG_WMS_Materiel>((a, b, c, d) => d.MaterielNum == c.MaterielNum)
+                       .Where(a => a.WorkBinNum == string1)
+                       .OrderBy((a, b, c) => c.CreateTime, OrderByType.Desc)
+                       .Distinct()
+                       .Select((a, b, c, d) => new WorkBinBacktrackingDto
+                       {
+                           // 入库时间
+                           StorageTime = (DateTime)c.CreateTime,
+                           // 出库时间
+                           OutBoundTime = (DateTime)c.UpdateTime,
+                       }, true);
 
 
-        //var data = _rep.AsQueryable()
-        //               .InnerJoin<EG_WMS_InAndOutBound>((a, b) => a.InAndOutBoundNum == b.InAndOutBoundNum)
-        //               .InnerJoin<EG_WMS_Inventory>((a, b, c) => a.InAndOutBoundNum == c.InBoundNum)
-        //               .Where((a, b, c) => a.WorkBinNum == string1 && a.WorkBinStatus == 0)
-        //               .WhereIF(
-        //               (a, b, c) =>
-        //               SqlFunc.Subqueryable<EG_WMS_Inventory>()
-        //               .InnerJoin<EG_WMS_InventoryDetail>((inv, invd) => inv.InventoryNum == invd.InventoryNum)
-        //               .Where(x => x.)
-        //               )
-        //               .OrderBy(x => x.CreateTime, OrderByType.Desc)
-        //               .Select(x => new WorkBinBacktrackingDto
-        //               {
-        //                   IsCount = x.ProductCount
-
-        //               }, true);
-
-
-        //return await data.ToPagedListAsync(page, pagesize);
-        return null;
+        return await data.ToPagedListAsync(page, pagesize);
     }
 
 

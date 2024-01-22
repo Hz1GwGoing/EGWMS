@@ -1,4 +1,6 @@
-﻿namespace Admin.NET.Application.IService.EG_WMS_Pallet;
+﻿using Admin.NET.Application.Service.EG_WMS_Pallet.Dto;
+
+namespace Admin.NET.Application.IService.EG_WMS_Pallet;
 internal interface IEGPalletServics
 {
     /// <summary>
