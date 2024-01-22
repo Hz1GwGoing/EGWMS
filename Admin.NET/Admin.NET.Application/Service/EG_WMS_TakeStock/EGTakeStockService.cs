@@ -372,18 +372,16 @@ public class EGTakeStockService : IDynamicApiController, ITransient
     {
         try
         {
-            // 得到扫描的料箱数据
-            var listData = await _TakeStockData.GetFirstAsync(x => x.WorkBinNum == workbinnum && x.MaterielNum == materielnum);
-            //var taskStockData = await _rep.GetFirstAsync(x => x.TakeStockNum == listData.TakeStockNum);
+            // 避免转义错误
+            string string1 = Uri.UnescapeDataString(workbinnum);
 
+            // 得到扫描的料箱数据
+            var listData = await _TakeStockData.GetFirstAsync(x => x.WorkBinNum == string1 && x.MaterielNum == materielnum);
+            
             if (listData == null)
             {
                 throw Oops.Oh("找不到扫描的料箱数据");
             }
-            //else if (taskStockData.TakeStockStatus == 1)
-            //{
-            //    throw Oops.Oh("")
-            //}
 
             string invmaterienum = listData.MaterielNum;
             int invicountall = listData.ICountAll;

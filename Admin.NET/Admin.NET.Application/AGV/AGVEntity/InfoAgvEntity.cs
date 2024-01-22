@@ -24,7 +24,7 @@ public class InfoAgvEntity : EntityBase
     /// 设备负载状态
     /// </summary>
     [SugarColumn(ColumnDescription = " 设备负载状态")]
-    public string payLoad { get; set; }
+    public string? payLoad { get; set; } = null;
 
     /// <summary>
     /// 当前在执行的三方订单号
@@ -42,19 +42,19 @@ public class InfoAgvEntity : EntityBase
     /// 设备所在二维码的 x,y 坐标，前边的值是x，后边的是y
     /// </summary>
     [SugarColumn(ColumnDescription = "设备所在二维码的 x,y 坐标，前边的值是x，后边的是y", Length = 255)]
-    public string devicePostionRec { get; set; }
+    public string? devicePostionRec { get; set; }
 
     /// <summary>
     /// 设备当前位置
     /// </summary>
     [SugarColumn(ColumnDescription = "设备当前位置")]
-    public string devicePosition { get; set; }
+    public string? devicePosition { get; set; }
 
     /// <summary>
     /// 电池电量
     /// </summary>
     [SugarColumn(ColumnDescription = "电池电量")]
-    public string battery { get; set; }
+    public string? battery { get; set; }
 
     /// <summary>
     /// 设备名称

@@ -1,4 +1,5 @@
-﻿using Admin.NET.Application.Strategy;
+﻿using Admin.NET.Application.AGV.AGVEntity;
+using Admin.NET.Application.Strategy;
 using Admin.NET.Application.StrategyMode;
 
 namespace Admin.NET.Application;
@@ -27,6 +28,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
     private readonly SqlSugarRepository<EG_WMS_Tem_InventoryDetail> _InventoryDetailTem = App.GetService<SqlSugarRepository<EG_WMS_Tem_InventoryDetail>>();
     private readonly SqlSugarRepository<TaskEntity> _TaskEntity = App.GetService<SqlSugarRepository<TaskEntity>>();
     private readonly SqlSugarRepository<TemLogicEntity> _TemLogicEntity = App.GetService<SqlSugarRepository<TemLogicEntity>>();
+    private readonly SqlSugarRepository<TaskStagingEntity> _TaskStagingEntity = App.GetService<SqlSugarRepository<TaskStagingEntity>>();
 
 
     #endregion
@@ -511,16 +513,336 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
 
     #endregion
 
+    #region 潜伏举升AGV入库动态切换策略（入库WMS自动推荐库位）
+    ///// <summary>
+    ///// 潜伏举升AGV入库（入库WMS自动推荐库位）
+    ///// </summary>
+    ///// <param name="input"></param>
+    ///// <param name="type"></param>
+    ///// <returns></returns>
+    //[HttpPost]
+    //[ApiDescriptionSettings(Name = "AgvJoinBoundTasks", Order = 99)]
+    //public async Task<string> AgvJoinBoundTasks(AgvJoinDto input, string? type = "LatentLiftInA")
+    //{
+    //    try
+    //    {
+    //        // 生成当前时间时间戳
+    //        string joinboundnum = _TimeStamp.GetTheCurrentTimeTimeStamp("EGRK");
+    //        // 起始点
+    //        string startpoint = input.StartPoint;
+    //        if (startpoint == null || input.EndPoint == "")
+    //        {
+    //            throw Oops.Oh("起始点不可为空");
+    //        }
+
+    //        // 目标点
+    //        string endpoint = "";
+    //        if (input.EndPoint == null || input.EndPoint == "")
+    //        {
+    //            // 动态切换策略
+    //            switch (type)
+    //            {
+    //                case "LatentLiftInA":
+    //                    StrategyClient strategyClient = new StrategyClient(new AGVStrategyReturnRecommEndStorage());
+    //                    input.EndPoint = strategyClient.ContextInterface(input.materielWorkBins[0].MaterielNum);
+    //                    break;
+    //                default:
+    //                    input.EndPoint = BaseService.AGVStrategyReturnRecommEndStorage(input.materielWorkBins[0].MaterielNum);
+    //                    break;
+    //            }
+
+    //            // 添加暂存任务
+    //            if (input.EndPoint == "没有合适的库位")
+    //            {
+    //                // TODO：查找有没有重复暂存的任务
+
+    //                await InAndOutBoundMessage.NotStorageAddStagingTask(input, joinboundnum);
+    //                return "添加AGV入库暂存任务成功！";
+    //            }
+    //        }
+    //        else
+    //        {
+    //            // 判断用户输入的是否符合逻辑
+    //            var storageGroup = _Storage.GetFirst(x => x.StorageNum == input.EndPoint);
+    //            if (storageGroup == null)
+    //            {
+    //                throw Oops.Oh("没有查找到该目标点的库位编号！");
+    //            }
+    //            else if (storageGroup.StorageOccupy == 1 || storageGroup.StorageOccupy == 2)
+    //            {
+    //                throw Oops.Oh("目标库位已被占用！");
+    //            }
+    //            var selectData = _Storage.AsQueryable()
+    //                 .Where(x => x.StorageGroup == storageGroup.StorageGroup && x.StorageOccupy == 1)
+    //                 .OrderBy(x => x.StorageNum, OrderByType.Asc)
+    //                 .Select(x => x.StorageNum)
+    //                 .ToList();
+    //            if (storageGroup.StorageNum.ToInt() > selectData[0].ToInt())
+    //            {
+    //                throw Oops.Oh("当前这个库位，入库时有库位阻挡，请重新选择库位！");
+    //            }
+    //        }
+    //        endpoint = input.EndPoint;
+
+    //        // 任务点集
+    //        var positions = startpoint + "," + endpoint;
+
+    //        TaskEntity taskEntity = input.Adapt<TaskEntity>();
+    //        taskEntity.TaskPath = positions;
+    //        taskEntity.InAndOutBoundNum = joinboundnum;
+
+    //        // 下达agv任务
+
+    //        DHMessage item = await taskService.AddAsync(taskEntity);
+
+    //        // 下达agv任务成功
+    //        if (item.code == 1000)
+    //        {
+    //            await InAndOutBoundMessage.ProcessInbound(input, joinboundnum);
+    //            return "下发AGV入库任务成功！";
+    //        }
+    //        else
+    //        {
+    //            throw Oops.Oh("下发AGV入库任务失败！");
+    //        }
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        throw Oops.Oh(ex.Message);
+    //    }
+
+    //}
+
+    #endregion
+
+    #region 潜伏举升AGV出库动态切换策略（出库WMS自动推荐库位）
+
+    ///// <summary>
+    ///// 潜伏举升AGV出库（出库WMS自动推荐库位）
+    ///// </summary>
+    ///// <param name="input"></param>
+    ///// <param name="type"></param>
+    ///// <returns></returns>
+    ///// <exception cref="Exception"></exception>
+    //[HttpPost]
+    //[ApiDescriptionSettings(Name = "AgvOutBoundTask", Order = 98)]
+    //public async Task<string> AgvOutBoundTask(AgvBoundDto input, string? type = "LatentLiftOutA")
+    //{
+    //    // 生成当前时间时间戳
+    //    string outboundnum = _TimeStamp.GetTheCurrentTimeTimeStamp("EGCK");
+
+    //    try
+    //    {
+    //        // 目标点
+    //        if (input.EndPoint == null || input.EndPoint == "")
+    //        {
+    //            throw Oops.Oh("目标点不能为空");
+    //        }
+
+    //        // 起始点
+    //        string startpoint = "";
+    //        if (input.StartPoint == null || input.StartPoint == "")
+    //        {
+    //            // 动态切换策略
+    //            switch (type)
+    //            {
+    //                case "LatentLiftOutA":
+    //                    StrategyClient strategyClient = new StrategyClient(new AGVStrategyReturnRecommendStorageOutBoundJudgeTime());
+    //                    input.EndPoint = strategyClient.ContextInterface(input.MaterielNum);
+    //                    break;
+    //                case "LatentLiftOutB":
+    //                    StrategyClient strategyclient = new StrategyClient(new AGVStrategyReturnRecommendStorageOutBound());
+    //                    input.EndPoint = strategyclient.ContextInterface(input.MaterielNum);
+    //                    break;
+    //                default:
+    //                    input.StartPoint = BaseService.AGVStrategyReturnRecommendStorageOutBoundJudgeTime(input.MaterielNum);
+    //                    break;
+    //            }
+
+    //            if (input.StartPoint == "没有合适的库位")
+    //            {
+    //                // 添加出库暂存任务
+    //                await InAndOutBoundMessage.NotBoundNotStorageAddStagingTask(input, outboundnum);
+    //                return "添加AGV出库暂存任务成功！";
+    //            }
+    //        }
+    //        else
+    //        {
+    //            // 判断用户输入的是否符合逻辑
+    //            var storageGroup = _Storage.GetFirst(x => x.StorageNum == input.StartPoint);
+    //            if (storageGroup == null)
+    //            {
+    //                throw Oops.Oh("没有查找到该起始点的库位编号！");
+    //            }
+    //            else if (storageGroup.StorageOccupy != 1)
+    //            {
+    //                throw Oops.Oh("当前库位上不存在库存！");
+    //            }
+    //            var selectData = _Storage.AsQueryable()
+    //                 .Where(x => x.StorageGroup == storageGroup.StorageGroup && x.StorageOccupy == 1)
+    //                 .OrderBy(x => x.StorageNum, OrderByType.Asc)
+    //                 .Select(x => x.StorageNum)
+    //                 .ToList();
+    //            if (storageGroup.StorageNum.ToInt() > selectData[0].ToInt())
+    //            {
+    //                throw Oops.Oh("当前这个库位，出库时有库位阻挡，请重新选择库位！");
+    //            }
+    //        }
+    //        startpoint = input.StartPoint;
+    //        string endpoint = input.EndPoint;
+
+    //        // 任务点集
+    //        var positions = startpoint + "," + endpoint;
+
+    //        TaskEntity taskEntity = input.Adapt<TaskEntity>();
+    //        taskEntity.TaskPath = positions;
+    //        taskEntity.InAndOutBoundNum = outboundnum;
+
+    //        // 下达agv任务
+
+    //        DHMessage item = await taskService.AddAsync(taskEntity);
+
+    //        // 判断agv出库是否成功
+
+    //        if (item.code == 1000)
+    //        {
+    //            // 根据出库编号查询任务编号
+    //            var datatask = await _TaskEntity.GetFirstAsync(x => x.InAndOutBoundNum == outboundnum);
+
+    //            // 修改库位表中的状态为占用
+    //            await _Storage.AsUpdateable()
+    //                      .AS("EG_WMS_Storage")
+    //                      .SetColumns(it => new EG_WMS_Storage
+    //                      {
+    //                          // 预占用
+    //                          StorageOccupy = 2,
+    //                          TaskNo = datatask.TaskNo,
+    //                          UpdateTime = DateTime.Now,
+    //                      })
+    //                      .Where(x => x.StorageNum == input.StartPoint)
+    //                      .ExecuteCommandAsync();
+    //            #region 生成出库
+
+    //            // 生成出库单
+    //            EG_WMS_InAndOutBound outbound = new EG_WMS_InAndOutBound
+    //            {
+    //                InAndOutBoundNum = outboundnum,
+    //                InAndOutBoundType = 1,
+    //                InAndOutBoundTime = DateTime.Now,
+    //                InAndOutBoundUser = input.AddName,
+    //                InAndOutBoundRemake = input.InAndOutBoundRemake,
+    //                CreateTime = DateTime.Now,
+    //                StartPoint = startpoint,
+    //                EndPoint = endpoint,
+    //            };
+
+    //            // 查询库位编号所在的区域编号
+    //            var regionnum = InAndOutBoundMessage.GetStorageWhereRegion(startpoint);
+    //            var whnum = InAndOutBoundMessage.GetRegionWhereWHNum(regionnum);
+
+    //            // 生成出库详单
+    //            EG_WMS_InAndOutBoundDetail outbounddetail = new EG_WMS_InAndOutBoundDetail()
+    //            {
+    //                InAndOutBoundNum = outboundnum,
+    //                CreateTime = DateTime.Now,
+    //                MaterielNum = input.MaterielNum,
+    //                RegionNum = regionnum,
+    //                StorageNum = input.StartPoint,
+    //            };
+
+    //            await _rep.InsertAsync(outbound);
+    //            await _InAndOutBoundDetail.InsertAsync(outbounddetail);
+
+    //            // 得到这个库位上的库存信息（先修改临时表里面的信息）
+
+    //            var tem_InventoryDetails = _InventoryDetailTem.AsQueryable()
+    //                                .InnerJoin<EG_WMS_Tem_Inventory>((a, b) => a.InventoryNum == b.InventoryNum)
+    //                                .Where((a, b) => a.StorageNum == startpoint && b.OutboundStatus == 0 && a.IsDelete == false && b.IsDelete == false)
+    //                                .ToList();
+
+    //            string wbnum = "";
+    //            int sumcount = 0;
+    //            for (int i = 0; i < tem_InventoryDetails.Count; i++)
+    //            {
+    //                await _InventoryTem.AsUpdateable()
+    //                                .SetColumns(it => new EG_WMS_Tem_Inventory
+    //                                {
+    //                                    OutboundStatus = 1,
+    //                                    UpdateTime = DateTime.Now,
+    //                                    // 出库编号
+    //                                    OutBoundNum = outboundnum,
+    //                                })
+    //                                .Where(x => x.InventoryNum == tem_InventoryDetails[i].InventoryNum)
+    //                                .ExecuteCommandAsync();
+
+    //                // 查询库存数量
+    //                var invCount = _InventoryTem.AsQueryable()
+    //                             .Where(it => it.InventoryNum == tem_InventoryDetails[i].InventoryNum)
+    //                             .ToList();
+
+    //                // 计算总数
+    //                sumcount += invCount[0].ICountAll;
+
+    //                // 得到每个料箱编号
+    //                if (tem_InventoryDetails.Count > 1)
+    //                {
+    //                    wbnum = tem_InventoryDetails[i].WorkBinNum + "," + wbnum;
+    //                }
+    //                else
+    //                {
+    //                    wbnum = tem_InventoryDetails[i].WorkBinNum;
+    //                }
+
+    //            }
+    //            // 修改出库详情表里面的料箱编号和物料编号
+    //            await _InAndOutBoundDetail.AsUpdateable()
+    //                                 .AS("EG_WMS_InAndOutBoundDetail")
+    //                                 .SetColumns(it => new EG_WMS_InAndOutBoundDetail
+    //                                 {
+    //                                     WHNum = whnum,
+    //                                     WorkBinNum = wbnum,
+    //                                     MaterielNum = input.MaterielNum,
+    //                                 })
+    //                                 .Where(u => u.InAndOutBoundNum == outboundnum)
+    //                                 .ExecuteCommandAsync();
+    //            // 改变出库状态
+    //            await _rep.AsUpdateable()
+    //                 .AS("EG_WMS_InAndOutBound")
+    //                 .SetColumns(it => new EG_WMS_InAndOutBound
+    //                 {
+    //                     // 总数
+    //                     InAndOutBoundCount = sumcount,
+    //                     // 出库中
+    //                     InAndOutBoundStatus = 5,
+    //                 })
+    //                 .Where(u => u.InAndOutBoundNum == outboundnum)
+    //                 .ExecuteCommandAsync();
+
+    //            #endregion
+    //            return "下发AGV出库任务成功！";
+    //        }
+    //        else
+    //        {
+    //            throw Oops.Oh("下发AGV出库任务失败！");
+    //        }
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        throw Oops.Oh(ex.Message);
+    //    }
+    //}
+
+    #endregion
+
     #region 潜伏举升AGV入库（入库WMS自动推荐库位）
     /// <summary>
     /// 潜伏举升AGV入库（入库WMS自动推荐库位）
     /// </summary>
     /// <param name="input"></param>
-    /// <param name="type"></param>
     /// <returns></returns>
     [HttpPost]
     [ApiDescriptionSettings(Name = "AgvJoinBoundTasks", Order = 99)]
-    public async Task<string> AgvJoinBoundTasks(AgvJoinDto input, string? type = "LatentLiftInA")
+    public async Task<string> AgvJoinBoundTasks(AgvJoinDto input)
     {
         try
         {
@@ -537,21 +859,13 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
             string endpoint = "";
             if (input.EndPoint == null || input.EndPoint == "")
             {
-                // 动态切换策略
-                switch (type)
-                {
-                    case "LatentLiftInA":
-                        StrategyClient strategyClient = new StrategyClient(new AGVStrategyReturnRecommEndStorage());
-                        input.EndPoint = strategyClient.ContextInterface(input.materielWorkBins[0].MaterielNum);
-                        break;
-                    default:
-                        input.EndPoint = BaseService.AGVStrategyReturnRecommEndStorage(input.materielWorkBins[0].MaterielNum);
-                        break;
-                }
+                input.EndPoint = BaseService.AGVStrategyReturnRecommEndStorage(input.materielWorkBins[0].MaterielNum);
 
                 // 添加暂存任务
                 if (input.EndPoint == "没有合适的库位")
                 {
+                    // TODO：查找有没有重复暂存的任务
+
                     await InAndOutBoundMessage.NotStorageAddStagingTask(input, joinboundnum);
                     return "添加AGV入库暂存任务成功！";
                 }
@@ -617,12 +931,11 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
     /// 潜伏举升AGV出库（出库WMS自动推荐库位）
     /// </summary>
     /// <param name="input"></param>
-    /// <param name="type"></param>
     /// <returns></returns>
     /// <exception cref="Exception"></exception>
     [HttpPost]
     [ApiDescriptionSettings(Name = "AgvOutBoundTask", Order = 98)]
-    public async Task<string> AgvOutBoundTask(AgvBoundDto input, string? type = "LatentLiftOutA")
+    public async Task<string> AgvOutBoundTask(AgvBoundDto input)
     {
         // 生成当前时间时间戳
         string outboundnum = _TimeStamp.GetTheCurrentTimeTimeStamp("EGCK");
@@ -639,21 +952,7 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
             string startpoint = "";
             if (input.StartPoint == null || input.StartPoint == "")
             {
-                // 动态切换策略
-                switch (type)
-                {
-                    case "LatentLiftOutA":
-                        StrategyClient strategyClient = new StrategyClient(new AGVStrategyReturnRecommendStorageOutBoundJudgeTime());
-                        input.EndPoint = strategyClient.ContextInterface(input.MaterielNum);
-                        break;
-                    case "LatentLiftOutB":
-                        StrategyClient strategyclient = new StrategyClient(new AGVStrategyReturnRecommendStorageOutBound());
-                        input.EndPoint = strategyclient.ContextInterface(input.MaterielNum);
-                        break;
-                    default:
-                        input.StartPoint = BaseService.AGVStrategyReturnRecommendStorageOutBoundJudgeTime(input.MaterielNum);
-                        break;
-                }
+                input.StartPoint = BaseService.AGVStrategyReturnRecommendStorageOutBoundJudgeTime(input.MaterielNum);
 
                 if (input.StartPoint == "没有合适的库位")
                 {
@@ -1700,10 +1999,11 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                         .WhereIF(!string.IsNullOrWhiteSpace(input.InAndOutBoundNum), (a, b) => a.InAndOutBoundNum.Contains(input.InAndOutBoundNum.Trim()))
                         .WhereIF(input.InAndOutBoundStatus >= 0, (a, b) => a.InAndOutBoundStatus == input.InAndOutBoundStatus)
                         .WhereIF(!string.IsNullOrWhiteSpace(input.InAndOutBoundUser), (a, b) => a.InAndOutBoundUser.Contains(input.InAndOutBoundUser.Trim()))
-                    // 倒序
-                    .Where(a => a.InAndOutBoundType == input.InAndOutBoundType && a.IsDelete == false && a.SuccessOrNot == 0)
-                    .OrderBy(a => a.CreateTime, OrderByType.Desc)
-                    .Select<EG_WMS_InAndOutBoundOutput>();
+                        .WhereIF(input.InAndOutBoundType >= 0, (a, b) => a.InAndOutBoundType == input.InAndOutBoundType)
+                        .Where(a => a.IsDelete == false && a.SuccessOrNot == 0)
+                        // 倒序
+                        .OrderBy(a => a.CreateTime, OrderByType.Desc)
+                        .Select<EG_WMS_InAndOutBoundOutput>();
 
         // 日期查询
         if (input.InAndOutBoundTimeRange != null && input.InAndOutBoundTimeRange.Count > 0)
@@ -1739,9 +2039,10 @@ public class EG_WMS_InAndOutBoundService : IDynamicApiController, ITransient
                         .WhereIF(!string.IsNullOrWhiteSpace(input.MaterielNum), (a, b) => b.MaterielNum == input.MaterielNum)
                         .WhereIF(!string.IsNullOrWhiteSpace(input.InAndOutBoundNum), (a, b) => a.InAndOutBoundNum.Contains(input.InAndOutBoundNum.Trim()))
                         .WhereIF(input.InAndOutBoundStatus >= 0, (a, b) => a.InAndOutBoundStatus == input.InAndOutBoundStatus)
+                        .WhereIF(input.InAndOutBoundType >= 0, (a, b) => a.InAndOutBoundType == input.InAndOutBoundType)
                         .WhereIF(!string.IsNullOrWhiteSpace(input.InAndOutBoundUser), (a, b) => a.InAndOutBoundUser.Contains(input.InAndOutBoundUser.Trim()))
                     // 倒序
-                    .Where(a => a.InAndOutBoundType == input.InAndOutBoundType && a.IsDelete == false && a.SuccessOrNot == 1)
+                    .Where(a => a.IsDelete == false && a.SuccessOrNot == 1)
                     .OrderBy(a => a.CreateTime, OrderByType.Desc)
                     .Select((a, b, c, d) => new EG_WMS_InAndOutBoundOutputAGV
                     {

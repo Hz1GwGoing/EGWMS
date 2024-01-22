@@ -12,7 +12,7 @@ public class EG_WMS_Materiel : EntityBase
     /// 物料编号
     /// </summary>
     [SugarColumn(ColumnDescription = "物料编号", Length = 50)]
-    public string? MaterielNum { get; set; }
+    public string MaterielNum { get; set; }
 
     /// <summary>
     /// 物料名称
@@ -25,6 +25,12 @@ public class EG_WMS_Materiel : EntityBase
     /// </summary>
     [SugarColumn(ColumnDescription = "物料类别", Length = 100)]
     public string? MaterielType { get; set; }
+
+    /// <summary>
+    /// 物料级别编号
+    /// </summary>
+    [SugarColumn(ColumnDescription = "物料级别编号")]
+    public string? MaterielLevelNum { get; set; }
 
     /// <summary>
     /// 物料规格

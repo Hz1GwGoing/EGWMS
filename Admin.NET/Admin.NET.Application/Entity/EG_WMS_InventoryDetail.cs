@@ -6,12 +6,6 @@
 [SugarTable("EG_WMS_InventoryDetail", "库存明细表")]
 public class EG_WMS_InventoryDetail : EntityBase
 {
-    ///// <summary>
-    ///// 物料编号
-    ///// </summary>
-    [SugarColumn(ColumnDescription = "物料编号", Length = 50)]
-    public string? MaterielNum { get; set; }
-
     /// <summary>
     /// 库存编号
     /// </summary>
@@ -24,12 +18,6 @@ public class EG_WMS_InventoryDetail : EntityBase
     /// </summary>
     [SugarColumn(ColumnDescription = "生产批次", Length = 50)]
     public string? ProductionLot { get; set; }
-
-    /// <summary>
-    /// 当前数量
-    /// </summary>
-    [SugarColumn(ColumnDescription = "当前数量")]
-    public int? CurrentCount { get; set; }
 
     /// <summary>
     /// 库位编号

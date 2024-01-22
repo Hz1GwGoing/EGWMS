@@ -31,7 +31,34 @@ public class AGVStatusService : IDynamicApiController, ITransient
         return await data.ToPagedListAsync(input.page, input.pagesize);
     }
 
-    //public async Task<int> GetAGV
+
+    /// <summary>
+    /// 当前在线车辆平均电量百分比
+    /// </summary>
+    /// <returns></returns>
+    [HttpGet]
+    [ApiDescriptionSettings(Name = "GetAGVBatteryPercentage")]
+    public async Task<string> GetAGVBatteryPercentage()
+    {
+
+        var infoagemessage = await _InfoAgv.AsQueryable()
+                 .Where(x => x.state != "Offline")
+                 .Select(x => x)
+                 .ToListAsync();
+
+        int batterySum = 0;
+        for (int i = 0; i < infoagemessage.Count; i++)
+        {
+            // 所有车辆的总电量
+            batterySum += infoagemessage[i].battery.ToInt();
+        }
+
+        // 将电量除以现在有多少车辆在线
+
+        double avgbattery = batterySum / infoagemessage.Count;
+
+        return avgbattery + "%";
+    }
 
 
 

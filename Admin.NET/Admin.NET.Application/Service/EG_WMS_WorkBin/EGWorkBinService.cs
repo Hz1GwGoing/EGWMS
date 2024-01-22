@@ -12,7 +12,6 @@ public class EGWorkBinService : IDynamicApiController, ITransient
         _rep = rep;
     }
 
-
     #region 分页查询料箱信息
     /// <summary>
     /// 分页查询料箱信息
@@ -24,19 +23,12 @@ public class EGWorkBinService : IDynamicApiController, ITransient
     public async Task<SqlSugarPagedList<EGWorkBinOutput>> Page(EGWorkBinInput input)
     {
         var query = _rep.AsQueryable()
-                    .WhereIF(!string.IsNullOrWhiteSpace(input.WorkBinNum), u => u.WorkBinNum.Contains(input.WorkBinNum.Trim()))
+                    .WhereIF(!string.IsNullOrWhiteSpace(input.WorkBinNum), u => u.WorkBinNum == input.WorkBinNum.Trim())
                     .WhereIF(!string.IsNullOrWhiteSpace(input.WorkBinName), u => u.WorkBinName.Contains(input.WorkBinName.Trim()))
                     // 料箱规格
                     .WhereIF(!string.IsNullOrWhiteSpace(input.WorkBinSpecs), u => u.WorkBinSpecs.Contains(input.WorkBinSpecs.Trim()))
-                    .WhereIF(input.MachineNum > 0, u => u.MachineNum == input.MachineNum)
-                    .WhereIF(!string.IsNullOrWhiteSpace(input.Classes), u => u.Classes.Contains(input.Classes.Trim()))
-                    .WhereIF(!string.IsNullOrWhiteSpace(input.ProductionLot), u => u.ProductionLot.Contains(input.ProductionLot.Trim()))
-                    .WhereIF(!string.IsNullOrWhiteSpace(input.ProductionStaff), u => u.ProductionStaff.Contains(input.ProductionStaff.Trim()))
-                    .WhereIF(!string.IsNullOrWhiteSpace(input.Inspector), u => u.Inspector.Contains(input.Inspector.Trim()))
-                    .WhereIF(!string.IsNullOrWhiteSpace(input.Printer), u => u.Printer.Contains(input.Printer.Trim()))
-                    .WhereIF(input.WorkBinStatus > 0, u => u.WorkBinStatus == input.WorkBinStatus)
+                    .WhereIF(input.WorkBinStatus >= 0, u => u.WorkBinStatus == input.WorkBinStatus)
                     .WhereIF(!string.IsNullOrWhiteSpace(input.MaterielNum), u => u.MaterielNum == input.MaterielNum)
-                    .WhereIF(!string.IsNullOrWhiteSpace(input.WorkBinRemake), u => u.WorkBinRemake.Contains(input.WorkBinRemake.Trim()))
                     .WhereIF(!string.IsNullOrWhiteSpace(input.StorageNum), u => u.StorageNum.Contains(input.StorageNum.Trim()))
                     .WhereIF(!string.IsNullOrWhiteSpace(input.PalletNum), u => u.PalletNum.Contains(input.PalletNum.Trim()))
 
@@ -53,16 +45,6 @@ public class EGWorkBinService : IDynamicApiController, ITransient
             {
                 var end = input.ProductionDateRange[1].Value.AddDays(1);
                 query = query.Where(u => u.ProductionDate < end);
-            }
-        }
-        if (input.PrintTimeRange != null && input.PrintTimeRange.Count > 0)
-        {
-            DateTime? start = input.PrintTimeRange[0];
-            query = query.WhereIF(start.HasValue, u => u.PrintTime > start);
-            if (input.PrintTimeRange.Count > 1 && input.PrintTimeRange[1].HasValue)
-            {
-                var end = input.PrintTimeRange[1].Value.AddDays(1);
-                query = query.Where(u => u.PrintTime < end);
             }
         }
         query = query.OrderBuilder(input);

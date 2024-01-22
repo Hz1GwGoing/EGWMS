@@ -63,7 +63,8 @@ public class Startup : AppStartup
             // 暂存任务
             options.AddJob(JobBuilder.Create<AddAgvStagingInBoundTask>().SetIncludeAnnotations(true));
             options.AddJob(JobBuilder.Create<AddAgvStagingOutBoundTask>().SetIncludeAnnotations(true));
-
+            // 潜伏举升自动任务
+            options.AddJob(JobBuilder.Create<AgvLatentLiftInAndOutBoundTask>().SetIncludeAnnotations(true));
         });
         // 脱敏检测
         services.AddSensitiveDetection();

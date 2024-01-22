@@ -28,6 +28,7 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
         private readonly SqlSugarRepository<Entity.EG_WMS_Storage> _Storage = App.GetService<SqlSugarRepository<Entity.EG_WMS_Storage>>();
         private readonly SqlSugarRepository<Entity.EG_WMS_WorkBin> _WorkBin = App.GetService<SqlSugarRepository<Entity.EG_WMS_WorkBin>>();
         private readonly SqlSugarRepository<InfoAgvEntity> _InfoAgvEntity = App.GetService<SqlSugarRepository<InfoAgvEntity>>();
+        private readonly SqlSugarRepository<AlarmEntity> _AlarmEntity = App.GetService<SqlSugarRepository<AlarmEntity>>();
 
         #endregion
 
@@ -966,10 +967,18 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
             #endregion
             try
             {
+                string devicepostionrec = "";
                 for (int i = 0; i < input.Count; i++)
                 {
-                    // 将数组转换成string
-                    string devicepostionrec = string.Join(",", input[i].devicePostionRec);
+                    if (input[i].devicePostionRec == null)
+                    {
+                        devicepostionrec = 0.ToString();
+                    }
+                    else
+                    {
+                        // 将数组转换成string
+                        devicepostionrec = string.Join(",", input[i].devicePostionRec);
+                    }
                     InfoAgvEntity info = input[i].Adapt<InfoAgvEntity>();
                     info.devicePostionRec = devicepostionrec;
 
@@ -1011,6 +1020,36 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
 
 
         #endregion
+
+        #region 报警消息上报
+
+        /// <summary>
+        /// 报警消息上报
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        [HttpPost("/AGV/Task/AlarmInformationReporting")]
+        [AllowAnonymous]
+        [UnifyProvider("easygreat")]
+        public async Task AlarmInformationReporting(AlarmInformationModel input)
+        {
+            try
+            {
+                var data = input.Adapt<AlarmEntity>();
+
+                await _AlarmEntity.InsertAsync(data);
+
+            }
+            catch (Exception ex)
+            {
+
+                throw Oops.Oh(ex);
+            }
+        }
+
+
+        #endregion
+
     }
 
 

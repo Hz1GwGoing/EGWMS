@@ -68,7 +68,6 @@ public class EG_WMS_InAndOutBoundInput : BasePageInput
     /// <summary>
     /// 出入库类型（0-入库，1-出库）
     /// </summary>
-    [Required]
     public int? InAndOutBoundType { get; set; }
 
     /// <summary>

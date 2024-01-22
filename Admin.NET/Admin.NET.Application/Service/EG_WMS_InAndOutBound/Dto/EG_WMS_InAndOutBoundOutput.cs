@@ -148,6 +148,7 @@ public class EG_WMS_InAndOutBoundOutputAGV
     public string AGV { get; set; }
 
     /// <summary>
+    /// 
     /// 任务状态
     /// </summary>
     public int TaskState { get; set; }

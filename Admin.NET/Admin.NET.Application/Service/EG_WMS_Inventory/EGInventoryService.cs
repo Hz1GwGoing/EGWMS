@@ -62,8 +62,8 @@ public class EGInventoryService : IDynamicApiController, ITransient
         //.ToListAsync();
 
         return await _inandoutbound.AsQueryable()
-                                 .Where(x => x.InAndOutBoundStatus == 3 && x.InAndOutBoundType == 1 && x.SuccessOrNot == 0
-                                             && x.InAndOutBoundTime >= DateTime.Today && x.InAndOutBoundTime < DateTime.Today.AddDays(1))
+                                 .Where(x => x.InAndOutBoundStatus == 3 && x.InAndOutBoundType == 1 && x.SuccessOrNot == 0)
+                                 .Where(x => x.InAndOutBoundTime > DateTime.Now && x.InAndOutBoundTime < DateTime.Now.AddDays(1))
                                  .GroupBy(x => SqlFunc.MappingColumn(x.InAndOutBoundTime.Value.ToString(), "DATE_FORMAT(InAndOutBoundTime, '%Y-%m-%d %H')"))
                                  .Select(x => new DailyInOutBoundQuantityDto
                                  {
