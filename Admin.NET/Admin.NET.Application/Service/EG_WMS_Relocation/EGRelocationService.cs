@@ -261,8 +261,8 @@ public class EGRelocationService : IDynamicApiController, ITransient
                           RelocationTime = (DateTime)a.RelocationTime,
                           MaterielName = b.MaterielName,
                           MaterielSpecs = b.MaterielSpecs,
-                          OldStorage = SqlFunc.Subqueryable<EG_WMS_Storage>().Where(s => s.StorageNum == a.OldStorageNum).Select(a => a.StorageName).ToString(),
-                          NewStorage = SqlFunc.Subqueryable<EG_WMS_Storage>().Where(s => s.StorageNum == a.NewStorageNum).Select(a => a.StorageName).ToString()
+                          OldStorage = SqlFunc.Subqueryable<EG_WMS_Storage>().Where(s => s.StorageNum == a.OldStorageNum).Select(a => a.StorageNum).ToString(),
+                          NewStorage = SqlFunc.Subqueryable<EG_WMS_Storage>().Where(s => s.StorageNum == a.NewStorageNum).Select(a => a.StorageNum).ToString()
                       });
 
         return await data.ToPagedListAsync(input.page, input.pageSize);

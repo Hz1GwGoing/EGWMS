@@ -142,11 +142,6 @@ public class EGWorkBinInput : BasePageInput
     public string? StorageNum { get; set; }
 
     /// <summary>
-    /// 栈板编号
-    /// </summary>
-    public string? PalletNum { get; set; }
-
-    /// <summary>
     /// 创建时间
     /// </summary>
     public virtual DateTime? CreateTime { get; set; }

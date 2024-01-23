@@ -58,13 +58,13 @@ public class AlarmEntity : EntityBase
     /// 建议处理
     /// </summary>
     [SugarColumn(ColumnDescription = "建议处理")]
-    public string channelName { get; set; }
+    public string? channelName { get; set; }
 
     /// <summary>
-    /// 报警日期（时间戳？）
+    /// 报警日期
     /// </summary>
     [SugarColumn(ColumnDescription = "报警日期")]
-    public string alarmDate { get; set; }
+    public DateTime alarmDate { get; set; }
 
     /// <summary>
     /// 报警等级:0,1,2 数字越高越严重

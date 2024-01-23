@@ -20,6 +20,11 @@ public class PageLogInput : BasePageInput
     /// 结束时间
     /// </summary>
     public DateTime? EndTime { get; set; }
+
+    /// <summary>
+    /// 方法名称
+    /// </summary>
+    public string? ActionName { get; set; }
 }
 
 public class LogInput

@@ -1035,8 +1035,23 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
         {
             try
             {
-                var data = input.Adapt<AlarmEntity>();
+                 AlarmEntity data = new AlarmEntity()
+                {
+                    deviceNum = input.deviceNum,
+                    deviceName = input.deviceName,
+                    alarmDesc = input.alarmDesc,
+                    alarmType = input.alarmType,
+                    areaId = input.areaId,
+                    alarmReadFlag = input.alarmReadFlag,
+                    channelDeviceId = input.channelDeviceId,
+                    alarmSource = input.alarmSource,
+                    alarmGrade = input.alarmGrade,
 
+                };
+                long datetime = input.alarmDate.ToLong();
+                // 将时间戳转化成日期格式
+                DateTime times = DateTimeUtil.ToLocalTimeDateBySeconds(datetime);
+                data.alarmDate = times;
                 await _AlarmEntity.InsertAsync(data);
 
             }
