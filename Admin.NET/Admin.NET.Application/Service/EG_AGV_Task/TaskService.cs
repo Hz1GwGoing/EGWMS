@@ -705,8 +705,14 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
                 #region 判断是不是取消任务或则任务失败
                 if (AgvStatus == 3 || AgvStatus == 7)
                 {
+                    // 没有出入库单号
+                    if (listInBoundData.Count == 0 || listInBoundData == null)
+                    {
+                        await _TaskEntity.InsertOrUpdateAsync(item);
+                        return "上报成功";
+                    }
                     // 入库情况
-                    if (listInBoundData[0].InAndOutBoundType == 0)
+                    else if (listInBoundData[0].InAndOutBoundType == 0)
                     {
                         try
                         {
@@ -1035,7 +1041,7 @@ namespace Admin.NET.Application.Service.EG_AGV_Task
         {
             try
             {
-                 AlarmEntity data = new AlarmEntity()
+                AlarmEntity data = new AlarmEntity()
                 {
                     deviceNum = input.deviceNum,
                     deviceName = input.deviceName,

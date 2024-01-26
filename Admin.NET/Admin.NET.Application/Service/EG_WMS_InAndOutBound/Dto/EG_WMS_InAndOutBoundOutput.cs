@@ -154,6 +154,11 @@ public class EG_WMS_InAndOutBoundOutputAGV
     public int TaskState { get; set; }
 
     /// <summary>
+    /// 异常信息
+    /// </summary>
+    public string Message { get; set; }
+
+    /// <summary>
     /// 模板编号
     /// </summary>
     public string ModelNo { get; set; }

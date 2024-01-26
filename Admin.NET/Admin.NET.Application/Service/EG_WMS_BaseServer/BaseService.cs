@@ -1,4 +1,6 @@
-﻿namespace Admin.NET.Application.Service.EG_WMS_BaseServer;
+﻿using Microsoft.AspNetCore.Authorization;
+
+namespace Admin.NET.Application.Service.EG_WMS_BaseServer;
 
 /// <summary>
 /// 基础实用接口
@@ -832,20 +834,20 @@ public class BaseService : IDynamicApiController, ITransient
     /// <summary>
     /// （策略）（密集库）AGV请求任务点（到达等待点获取）
     /// </summary>
-    /// <param name="orderId">任务id</param>
-    /// <param name="modelProcessCode">模板编号</param>
+    /// <param name="input"></param>
     /// <returns></returns>
     [HttpPost]
+    [AllowAnonymous]
     [UnifyProvider("easygreat")]
     [ApiDescriptionSettings(Name = "AGVRequestsTaskPoint", Order = 995)]
-    public object AGVRequestsTaskPoint(string orderId, string modelProcessCode)
+    public object AGVRequestsTaskPoint(GetPointDto input)
     {
 
         // 找到这个任务编号相同和模板编号相同的这条数据
-        var taskData = _TaskEntity.GetFirst(x => x.TaskNo == orderId && x.ModelNo == modelProcessCode);
+        var taskData = _TaskEntity.GetFirst(x => x.TaskNo == input.orderId && x.ModelNo == input.modelProcessCode);
         if (taskData == null)
         {
-            throw Oops.Oh("没有找到相同的任务编号");
+            throw Oops.Oh("没有找到相同的任务编号或模板编号");
         }
 
         // 根据这个任务编号得到入库编号
@@ -875,8 +877,8 @@ public class BaseService : IDynamicApiController, ITransient
         {
             try
             {
-                // 修改agv任务表里面的库位点（需要测试）
-                var _taskdata = _TaskEntity.GetFirst(x => x.TaskNo == orderId);
+                // 修改agv任务表里面的库位点
+                var _taskdata = _TaskEntity.GetFirst(x => x.TaskNo == input.orderId);
 
                 string path = _taskdata.TaskPath;
                 string[] result = path.Split(',');
@@ -887,32 +889,32 @@ public class BaseService : IDynamicApiController, ITransient
                            {
                                TaskPath = taskpath,
                            })
-                           .Where(x => x.TaskNo == orderId)
+                           .Where(x => x.TaskNo == input.orderId)
                            .ExecuteCommand();
 
                 // 添加agv详情表里面的库位点
                 TaskDetailEntity entity = new TaskDetailEntity();
-                entity.TaskID = orderId.ToLong();
+                entity.TaskID = input.orderId.ToLong();
                 entity.TaskPath = malnum;
                 entity.CreateTime = DateTime.Now;
 
                 _TaskDetailEntity.Insert(entity);
 
+                // 得到入库的数据
 
-                // 得到入库料箱的数据
-
-                var workbinDate = _WorkBin.AsQueryable()
-                         .Where(x => x.InAndOutBoundNum == taskData.InAndOutBoundNum)
+                var temInvData = _TemInventory.AsQueryable()
+                         .Where(x => x.InBoundNum == taskData.InAndOutBoundNum)
                          .Select(x => new
                          {
                              x.ProductionDate
                          })
                          .ToList();
 
-                List<DateTime?> workbinTime = new List<DateTime?>();
-                for (int i = 0; i < workbinDate.Count; i++)
+                // 将生产日期保存
+                List<DateTime?> temInvTime = new List<DateTime?>();
+                for (int i = 0; i < temInvData.Count; i++)
                 {
-                    workbinTime.Add(workbinDate[i].ProductionDate);
+                    temInvTime.Add(temInvData[i].ProductionDate);
                 }
 
                 // 修改库位表中的状态为占用
@@ -924,7 +926,7 @@ public class BaseService : IDynamicApiController, ITransient
                              StorageOccupy = 2,
                              TaskNo = taskData.TaskNo,
                              // 得到日期最大的生产日期
-                             StorageProductionDate = workbinTime.Max(),
+                             StorageProductionDate = temInvTime.Max(),
                              StorageNum = malnum,
                          })
                          .Where(x => x.StorageNum == malnum)
@@ -973,15 +975,14 @@ public class BaseService : IDynamicApiController, ITransient
                                     .ExecuteCommand();
                 }
 
-                // 修改料箱的库位信息
-
-                _WorkBin.AsUpdateable()
-                        .SetColumns(x => new Entity.EG_WMS_WorkBin
-                        {
-                            StorageNum = malnum,
-                        })
-                        .Where(u => u.InAndOutBoundNum == taskData.InAndOutBoundNum)
-                        .ExecuteCommand();
+                // 修改料箱的库位信息（宇翔没有料箱）
+                //_WorkBin.AsUpdateable()
+                //        .SetColumns(x => new Entity.EG_WMS_WorkBin
+                //        {
+                //            StorageNum = malnum,   
+                //        })
+                //        .Where(u => u.InAndOutBoundNum == taskData.InAndOutBoundNum)
+                //        .ExecuteCommand();
 
                 // 提交事务
                 scope.Complete();
@@ -990,7 +991,7 @@ public class BaseService : IDynamicApiController, ITransient
             {
                 // 回滚事务
                 scope.Dispose();
-                throw Oops.Oh("错误：" + ex);
+                throw Oops.Oh("错误：" + ex.Message);
             }
 
         }

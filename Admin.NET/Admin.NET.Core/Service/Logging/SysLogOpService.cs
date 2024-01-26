@@ -33,7 +33,7 @@ public class SysLogOpService : IDynamicApiController, ITransient
         return await _sysLogOpRep.AsQueryable()
             .WhereIF(!string.IsNullOrWhiteSpace(input.StartTime.ToString()), u => u.CreateTime >= input.StartTime)
             .WhereIF(!string.IsNullOrWhiteSpace(input.EndTime.ToString()), u => u.CreateTime <= input.EndTime)
-            .WhereIF(!string.IsNullOrWhiteSpace(input.ActionName.ToString()), u => input.ActionName.Contains(u.ActionName))
+            .WhereIF(!string.IsNullOrWhiteSpace(input.ActionName), u => input.ActionName.Contains(u.ActionName))
             //.OrderBy(u => u.CreateTime, OrderByType.Desc)
             .OrderBuilder(input)
             .ToPagedListAsync(input.Page, input.PageSize);

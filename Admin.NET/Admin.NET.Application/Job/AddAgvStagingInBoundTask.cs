@@ -99,14 +99,15 @@ public class AddAgvStagingInBoundTask : IJob
                                               .Where(x => x.InAndOutBoundNum == taskstaging.InAndOutBoundNum)
                                               .ExecuteCommandAsync();
 
-                    await _WorkBin.AsUpdateable()
-                          .SetColumns(it => new EG_WMS_WorkBin
-                          {
-                              StorageNum = endStorage,
-                              UpdateTime = DateTime.Now,
-                          })
-                          .Where(x => x.InAndOutBoundNum == taskstaging.InAndOutBoundNum)
-                          .ExecuteCommandAsync();
+                    // 没有料箱（宇翔）
+                    //await _WorkBin.AsUpdateable()
+                    //      .SetColumns(it => new EG_WMS_WorkBin
+                    //      {
+                    //          StorageNum = endStorage,
+                    //          UpdateTime = DateTime.Now,
+                    //      })
+                    //      .Where(x => x.InAndOutBoundNum == taskstaging.InAndOutBoundNum)
+                    //      .ExecuteCommandAsync();
 
                     // 修改暂存任务
 
@@ -153,7 +154,7 @@ public class AddAgvStagingInBoundTask : IJob
                 {
                     // 回滚事务
                     scope.Dispose();
-                    throw Oops.Oh("错误：" + ex);
+                    throw Oops.Oh("错误：" + ex.Message);
                 }
             }
         }

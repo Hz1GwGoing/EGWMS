@@ -22,7 +22,7 @@ public class IInandoutbound : IDynamicApiController, ITransient
     /// <returns></returns>
     [HttpPost]
     [ApiDescriptionSettings(Name = "AgvJoinStorageTask")]
-    public async Task AgvJoinStorageTask(AgvJoinDto input)
+    public async Task AgvJoinStorageTask(AgvJoinBoundNewDto input)
     {
         try
         {

@@ -72,7 +72,7 @@ public class AddAgvStagingOutBoundTask : IJob
                         .Where((a, b) => a.StorageNum == requestStorage && b.OutboundStatus == 0 && a.IsDelete == false && b.IsDelete == false)
                         .ToList();
 
-                    string wbnum = "";
+                    //string wbnum = "";
                     int sumcount = 0;
                     for (int i = 0; i < tem_InventoryDetails.Count; i++)
                     {
@@ -96,14 +96,14 @@ public class AddAgvStagingOutBoundTask : IJob
                         sumcount += invCount[0].ICountAll;
 
                         // 得到每个料箱编号
-                        if (tem_InventoryDetails.Count > 1)
-                        {
-                            wbnum = tem_InventoryDetails[i].WorkBinNum + "," + wbnum;
-                        }
-                        else
-                        {
-                            wbnum = tem_InventoryDetails[i].WorkBinNum;
-                        }
+                        //if (tem_InventoryDetails.Count > 1)
+                        //{
+                        //    wbnum = tem_InventoryDetails[i].WorkBinNum + "," + wbnum;
+                        //}
+                        //else
+                        //{
+                        //    wbnum = tem_InventoryDetails[i].WorkBinNum;
+                        //}
 
                     }
 
@@ -146,7 +146,7 @@ public class AddAgvStagingOutBoundTask : IJob
                                                   StorageNum = requestStorage,
                                                   RegionNum = regionnum,
                                                   WHNum = whnum,
-                                                  WorkBinNum = wbnum,
+                                                  //WorkBinNum = wbnum,
                                                   UpdateTime = DateTime.Now,
 
                                               })
